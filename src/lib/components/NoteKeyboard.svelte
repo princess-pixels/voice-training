@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { TonePlayer } from '$lib/audio/tone';
+	import { PitchSmoother } from '$lib/audio/smoothing';
 	import { centsOff, keysForRange, ON_PITCH_CENTS, type NoteKey } from '$lib/audio/notes';
 	import type { PitchRange } from '$lib/types';
 
@@ -33,7 +34,26 @@
 		referenceHz = selected?.hz ?? null;
 	});
 
-	const cents = $derived(selected && currentHz > 0 ? centsOff(currentHz, selected.hz) : null);
+	// The readout follows a rolling median rather than the raw 25 ms frames: a
+	// held note shimmers by a few Hz, which flipped "On it" on and off. Frames
+	// are pushed as they arrive; a slow timer reads the median, so the number
+	// changes ten times a second and clears itself once the voice stops.
+	const smoother = new PitchSmoother(350);
+	let smoothedHz = $state(0);
+	$effect(() => {
+		smoother.push(currentHz, performance.now());
+	});
+	$effect(() => {
+		if (!selected) return;
+		const timer = setInterval(() => (smoothedHz = smoother.read(performance.now()) ?? 0), 100);
+		return () => {
+			clearInterval(timer);
+			smoother.clear();
+			smoothedHz = 0;
+		};
+	});
+
+	const cents = $derived(selected && smoothedHz > 0 ? centsOff(smoothedHz, selected.hz) : null);
 	const onPitch = $derived(cents !== null && Math.abs(cents) <= ON_PITCH_CENTS);
 
 	// One player for the component's life; closing the context releases the
