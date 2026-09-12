@@ -1,0 +1,55 @@
+import type { RequestHandler } from './$types';
+import { getSessionById } from '$lib/server/db';
+import { openAudio } from '$lib/server/audio';
+import { parseRange } from '$lib/server/range';
+import { error, isHttpError } from '@sveltejs/kit';
+
+/**
+ * Stream a session's recording, honouring Range requests so the <audio>
+ * scrubber works. Without 206 support the element can play but cannot seek.
+ */
+export const GET: RequestHandler = async ({ params, request }) => {
+	try {
+		const session = await getSessionById(params.id);
+		if (!session) {
+			error(404, { message: 'Session not found' });
+		}
+
+		const audio = await openAudio(session.audioKey);
+		if (!audio) {
+			error(404, { message: 'No audio file for this session' });
+		}
+
+		// Older sessions predate the stored type; the object's own metadata is
+		// the next best source, then the historical default.
+		const contentType = session.audioType ?? audio.type ?? 'audio/webm';
+		const headers: Record<string, string> = {
+			'Content-Type': contentType,
+			'Accept-Ranges': 'bytes',
+			'Cache-Control': 'private, max-age=3600'
+		};
+
+		const range = parseRange(request.headers.get('range'), audio.size);
+
+		if (range.kind === 'unsatisfiable') {
+			return new Response(null, {
+				status: 416,
+				headers: { ...headers, 'Content-Range': `bytes */${audio.size}` }
+			});
+		}
+
+		if (range.kind === 'partial') {
+			const { start, end } = range.range;
+			headers['Content-Range'] = `bytes ${start}-${end}/${audio.size}`;
+			headers['Content-Length'] = String(end - start + 1);
+			return new Response(audio.stream(start, end), { status: 206, headers });
+		}
+
+		headers['Content-Length'] = String(audio.size);
+		return new Response(audio.stream(), { status: 200, headers });
+	} catch (err) {
+		if (isHttpError(err)) throw err;
+		console.error('Error streaming audio:', err);
+		error(500, { message: 'Failed to stream audio' });
+	}
+};

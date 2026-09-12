@@ -1,0 +1,10 @@
+# Package manager and build output
+node_modules
+build
+.svelte-kit
+bun.lock
+
+# Generated / opaque
+static
+LICENSE
+coverage

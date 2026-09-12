@@ -1,0 +1,60 @@
+name: Release
+
+# Pushing a tag like v1.0.0 builds the single-file binaries for every platform
+# and publishes them as a GitHub release. The tag must match package.json.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.x
+
+      - name: Tag matches package.json
+        run: |
+          version="v$(bun -p 'require("./package.json").version')"
+          if [ "$version" != "${GITHUB_REF_NAME}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package.json ($version)"; exit 1
+          fi
+
+      - run: bun ci
+      - run: bun run lint
+      - run: bun run check
+      - run: bun test --coverage
+      - run: bun run build
+
+      # Bun downloads the runtime for each target on first use; five targets, one job.
+      - run: bun run build:binary bun-linux-x64 bun-linux-arm64 bun-darwin-arm64 bun-darwin-x64 bun-windows-x64
+
+      # tar.gz keeps the executable bit on Linux and macOS; Windows gets a zip.
+      - name: Package
+        run: |
+          cd dist
+          for f in voice-training-linux-* voice-training-darwin-*; do
+            tar -czf "$f.tar.gz" "$f" && rm "$f"
+          done
+          for f in voice-training-windows-*.exe; do
+            zip -q "${f%.exe}.zip" "$f" && rm "$f"
+          done
+          sha256sum * > SHA256SUMS.txt
+          ls -la
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # --notes is prepended to the generated changelog; --notes-file is not documented to combine.
+          gh release create "${GITHUB_REF_NAME}" dist/* \
+            --title "voice-training ${GITHUB_REF_NAME}" \
+            --generate-notes \
+            --notes "$(cat .github/release-notes.md)"

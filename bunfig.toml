@@ -1,0 +1,17 @@
+[install]
+# Single-package project; hoisted is what this repo has always had. Stated so a
+# future Bun default change (isolated is the default for new workspaces) can't
+# silently reshape node_modules.
+linker = "hoisted"
+# Refuse packages published less than three days ago. Cheap supply-chain insurance.
+minimumReleaseAge = 259200
+
+[test]
+coverage = true
+coverageReporter = ["text", "lcov"]
+# Fractions, not percents, and Bun applies them to EACH measured file (it exits 1
+# without naming the file). Every measured file was at 100% on 2026-09-03.
+coverageThreshold = { lines = 0.85, functions = 0.9 }
+# Everything under src/lib is measured; the export/import round trip runs
+# through the system tar in a temp directory.
+coveragePathIgnorePatterns = []
