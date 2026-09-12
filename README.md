@@ -149,7 +149,9 @@ Recordings are streamed through the app from the data folder; the folder is neve
 directly, and audio keys are validated so a request cannot reach outside it. Uploads are
 capped at 50 MB of audio and 200k pitch points per session, and every session field is
 validated server-side. The server sends a nonce-based Content-Security-Policy and the
-usual hardening headers.
+usual hardening headers, and answers only to `localhost` and the hostname in `ORIGIN`
+(any other `Host` header gets a 403), so a web page whose DNS name points at your machine
+cannot use the API. With `HOST_HEADER` set, the proxy is trusted to do that instead.
 
 ## Configuration
 
@@ -234,6 +236,10 @@ expect. The log line names the folder.
 **Mic not working**
 → The browser blocks mic access over plain HTTP except on `localhost`. From another device
 you need HTTPS; see [Keep it running](#keep-it-running).
+
+**Every page says "Host ... is not allowed"**
+→ You opened the app at a name or address that is neither `localhost` nor the hostname in
+`ORIGIN`. Set `ORIGIN` to the URL you open the app at; see [Keep it running](#keep-it-running).
 
 **Saving a recording fails with 403 or 413**
 → 403: `ORIGIN` does not match the URL in your browser. 413: `BODY_SIZE_LIMIT` is too small

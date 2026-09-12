@@ -2,6 +2,7 @@ import type { Handle } from '@sveltejs/kit';
 import { seedExercises } from '$lib/server/exercises';
 import { migrateDatabase } from '$lib/server/db';
 import { ensureAudioDir } from '$lib/server/audio';
+import { hostPolicy, isAllowedHost } from '$lib/server/host';
 
 // One-time startup tasks: open the database, make sure the data directory is ready.
 // Runs once on first module load (server start) — subsequent requests are no-ops.
@@ -34,9 +35,22 @@ async function bootstrap() {
 
 bootstrap();
 
-// Response hardening. The Content-Security-Policy itself comes from kit.csp in
-// svelte.config.js, which adds the per-request script nonces.
+// Read once at startup; see host.ts for what it allows and why.
+const hosts = hostPolicy(process.env);
+
+// Request and response hardening. The Content-Security-Policy itself comes
+// from kit.csp in svelte.config.js, which adds the per-request script nonces.
 export const handle: Handle = async ({ event, resolve }) => {
+	// The adapter builds event.url from ORIGIN, so the raw header is the only
+	// place a DNS-rebinding request still shows its real name.
+	const host = event.request.headers.get('host');
+	if (!isAllowedHost(host, hosts)) {
+		return new Response(
+			`Host ${JSON.stringify(host ?? '')} is not allowed. Open the app at the URL in ORIGIN (or on localhost); see README "Keep it running".`,
+			{ status: 403, headers: { 'Content-Type': 'text/plain' } }
+		);
+	}
+
 	const response = await resolve(event);
 	response.headers.set('X-Content-Type-Options', 'nosniff');
 	response.headers.set('X-Frame-Options', 'DENY');

@@ -5,6 +5,8 @@ import type { RangeTestMode } from '$lib/types';
 import type { RequestHandler } from './$types';
 
 const MODES: RangeTestMode[] = ['full', 'modal'];
+// Same ceiling as a session's notes.
+const MAX_NOTES_LENGTH = 5000;
 
 function parseMode(value: unknown): RangeTestMode {
 	if (typeof value !== 'string' || !MODES.includes(value as RangeTestMode)) {
@@ -36,7 +38,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		highHz,
 		// Recomputed server-side so the stored value always matches the stored bounds.
 		semitones: semitonesBetween(lowHz, highHz),
-		notes: typeof body.notes === 'string' ? body.notes : '',
+		notes: typeof body.notes === 'string' ? body.notes.slice(0, MAX_NOTES_LENGTH) : '',
 		createdAt: new Date()
 	});
 
