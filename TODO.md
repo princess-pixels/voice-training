@@ -3,6 +3,12 @@
 Known rough edges and ideas, roughly in the order they are worth doing. Each item
 says where it lives and why it matters, so it can be picked up cold.
 
+State as of 2026-09-12 (evening): 1.1.0 adds the reference-note strip under the
+graph (`NoteKeyboard.svelte`, `audio/notes.ts`, `audio/tone.ts`, `audio/smoothing.ts`).
+Deploy note for the hosted install: the server lazy-loads page chunks by filename,
+so restart the service right after every `bun run build`; a rebuild under a running
+service leaves unvisited pages answering 500 until the restart.
+
 State as of 2026-09-12: the portable edition is complete (steps 1 to 6 below). The app
 is one binary on SQLite and local files, the hosted install runs on it, and a `v*` tag
 publishes builds for five platforms. Everything before that paragraph block is history.

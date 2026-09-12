@@ -1,3 +1,5 @@
+**New in 1.1.0: reference notes.** A strip of notes around your target range sits under the pitch graph in the recording studio. Tap one to hear it (a short blip, or sustained), it is drawn as a line on the graph, and a readout says how far sharp or flat you are while you hum, with "On it" inside 10 cents. Arrow keys step a semitone. The pitch exercises that used to send you to a piano app or tuner now point at the strip.
+
 One file, no install. Download the build for your machine, unpack it, run it, and the app opens in your browser at http://localhost:3000. Your data goes to your user data folder; `voice-training --help` lists the options.
 
 | Platform                                   | File                                 |
