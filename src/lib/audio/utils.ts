@@ -1,4 +1,5 @@
 import type { PitchRange } from '$lib/types';
+import { midiFromHz, noteName } from './notes';
 
 export function formatHz(hz: number): string {
 	if (hz === 0) return '—';
@@ -11,16 +12,10 @@ export function formatDuration(seconds: number): string {
 	return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-const NOTE_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
-
 /** Nearest musical note for a frequency, e.g. 220 -> "A3". */
 export function noteFromHz(hz: number): string {
 	if (hz <= 0) return '—';
-	// MIDI note 69 is A4 = 440 Hz.
-	const midi = Math.round(69 + 12 * Math.log2(hz / 440));
-	const name = NOTE_NAMES[((midi % 12) + 12) % 12];
-	const octave = Math.floor(midi / 12) - 1;
-	return `${name}${octave}`;
+	return noteName(midiFromHz(hz));
 }
 
 /** Size of a pitch interval in semitones — the standard way to express vocal range. */

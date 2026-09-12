@@ -6,6 +6,7 @@
 	import type { Exercise, PitchRange, PitchData, Session } from '$lib/types';
 	import PitchVisualizer from './PitchVisualizer.svelte';
 	import PitchStats from './PitchStats.svelte';
+	import NoteKeyboard from './NoteKeyboard.svelte';
 
 	interface Props {
 		exercise?: Exercise | null;
@@ -46,6 +47,10 @@
 	let saveError = $state<string | null>(null);
 	let lastBlob = $state<Blob | null>(null);
 	let lastPitchData = $state<PitchData | null>(null);
+	/** The note chosen on the reference strip, drawn on the graph while it is chosen. */
+	let referenceHz = $state<number | null>(null);
+	// Pitch exercises are about hitting notes, so the strip starts open for them.
+	let showNotes = $state(untrack(() => exercise?.category === 'pitch'));
 
 	// Exercise-specific range takes priority, otherwise the user's saved setting.
 	// Always set it: the store is a module singleton, so a range left behind by a
@@ -242,7 +247,32 @@
 			currentPitch={recorderStore.currentPitch}
 			currentTime={recorderStore.elapsed}
 			height={embedded ? 260 : 350}
+			{referenceHz}
 		/>
+	</div>
+
+	<!-- Reference notes -->
+	<div class="space-y-2">
+		<button
+			type="button"
+			onclick={() => (showNotes = !showNotes)}
+			aria-expanded={showNotes}
+			class="text-sm text-surface-400 hover:text-surface-200 inline-flex items-center gap-1.5"
+		>
+			<span class="inline-block transition-transform {showNotes ? 'rotate-90' : ''}">▸</span>
+			Reference notes
+			{#if !showNotes && referenceHz}
+				<span class="text-accent-400">· {Math.round(referenceHz)} Hz</span>
+			{/if}
+		</button>
+		<!-- Stays mounted while collapsed so the chosen note and a sustained tone survive. -->
+		<div hidden={!showNotes}>
+			<NoteKeyboard
+				targetRange={recorderStore.targetRange}
+				currentHz={showSummary ? 0 : recorderStore.currentPitch}
+				bind:referenceHz
+			/>
+		</div>
 	</div>
 
 	<!-- Stats -->

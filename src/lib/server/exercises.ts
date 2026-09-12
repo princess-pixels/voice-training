@@ -142,9 +142,9 @@ Target: Work toward consistently reaching 180-220 Hz comfortably. Practice 10 gl
 		category: 'pitch' as const,
 		title: 'Sustain Target Pitch',
 		description: 'Hold a steady pitch in the feminine range to build muscle memory.',
-		instructions: `Use a piano app or tuner to find your target pitch (start around 180-200 Hz for beginners). Play the note and match it with a hum or "oo" sound.
+		instructions: `Open the reference notes under the pitch graph and tap a note near the bottom of your target range (around 180-200 Hz if you are starting out). Match it with a hum or "oo" sound; the readout shows how far off you are and the line on the graph shows where the note sits.
 
-Hold the pitch steady for 10 seconds, focusing on keeping it stable without wavering. Use your tuner to check you're staying on target.
+Hold the pitch steady for 10 seconds, focusing on keeping it stable without wavering. Keep your trace on the line.
 
 Rest, then repeat. Try to sustain 200 Hz, then gradually work up to 220 Hz over time. Do 10 repetitions, resting between each.`,
 		targetRange: DEFAULT_PITCH_RANGE,
@@ -155,9 +155,9 @@ Rest, then repeat. Try to sustain 200 Hz, then gradually work up to 220 Hz over 
 		category: 'pitch' as const,
 		title: 'Pitch Matching',
 		description: 'Train your ear and voice to find and hold specific pitches.',
-		instructions: `Use a piano app, keyboard, or pitch pipe. Play a note in your target range (start at middle C or higher), then immediately sing or hum that same pitch.
+		instructions: `Use the reference notes under the pitch graph. Tap a note in your target range (the highlighted ones), then immediately sing or hum that same pitch.
 
-Hold for 5 seconds, then check with a tuner to see if you're matching. Adjust and try again if needed.
+Hold for 5 seconds and watch the readout: it says "On it" within 10 cents, otherwise how far sharp or flat you are. Adjust and try again if needed.
 
 Practice with 5 different notes across your target range. This develops pitch accuracy and helps you learn what different frequencies feel like in your voice.`,
 		targetRange: DEFAULT_PITCH_RANGE,
@@ -345,7 +345,7 @@ Record yourself and listen. There should be clear pitch movement throughout. Pra
 
 "The old bookstore on the corner had always been my favorite place in the city. The owner, Mrs. Patterson, knew exactly which books I would love before I even asked. Every Saturday morning, I would spend hours browsing the dusty shelves, discovering stories that would stay with me for weeks. The smell of old paper and the quiet creak of wooden floors made it feel like a second home."
 
-Focus on consistency - don't let your pitch drop or resonance move backward as you get distracted by the content. Use a tuner to check your average pitch stays in range. Record and review.`,
+Focus on consistency - don't let your pitch drop or resonance move backward as you get distracted by the content. Check that the Average readout stays in range. Record and review.`,
 		estimatedMinutes: 5,
 		difficulty: 'intermediate' as const
 	},

@@ -51,6 +51,9 @@ options, all of which are in [Configuration](#configuration) below.
 - **Recording studio** — real-time pitch visualization with feminine / androgynous /
   masculine range overlays, then playback with the pitch timeline. Detection is the YIN
   algorithm over the Web Audio API, amplitude-gated and clamped to 70–500 Hz.
+- **Reference notes** — a strip of notes around your target range under the graph. Tap one
+  to hear it (a short blip, or sustained), it is drawn as a line on the graph, and a cents
+  readout says how far sharp or flat you are while you hum. No piano app or tuner needed.
 - **Pitch Range Test** — guided lowest→highest comfortable pitch measurement, reported in
   Hz, note names and semitones, charted over time, with full-range and modal-voice series
   kept apart.

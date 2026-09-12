@@ -1,6 +1,11 @@
 <script lang="ts">
 	import type { PitchPoint, PitchRange } from '$lib/types';
-	import { DEFAULT_TARGET_RANGE, getPitchCategory, getPitchCategoryColor } from '$lib/audio/utils';
+	import {
+		DEFAULT_TARGET_RANGE,
+		getPitchCategory,
+		getPitchCategoryColor,
+		noteFromHz
+	} from '$lib/audio/utils';
 
 	interface Props {
 		mode: 'live' | 'playback';
@@ -10,6 +15,8 @@
 		currentPitch?: number;
 		currentTime?: number;
 		height?: number;
+		/** A note to draw as a horizontal line, e.g. the one chosen on the reference strip. */
+		referenceHz?: number | null;
 	}
 
 	let {
@@ -18,7 +25,8 @@
 		targetRange = DEFAULT_TARGET_RANGE,
 		currentPitch = 0,
 		currentTime = 0,
-		height = 300
+		height = 300,
+		referenceHz = null
 	}: Props = $props();
 
 	let canvas: HTMLCanvasElement;
@@ -177,6 +185,28 @@
 		);
 	}
 
+	/** The reference note: a solid line across the graph with its name at the right edge. */
+	function drawReference(ctx: CanvasRenderingContext2D, layout: Layout) {
+		if (!referenceHz || referenceHz <= 0) return;
+		const y = freqToY(layout, referenceHz);
+		ctx.strokeStyle = '#c084fc'; // accent-400
+		ctx.lineWidth = 1.5;
+		ctx.beginPath();
+		ctx.moveTo(MARGIN.left, y);
+		ctx.lineTo(MARGIN.left + layout.graphWidth, y);
+		ctx.stroke();
+
+		ctx.fillStyle = '#c084fc';
+		ctx.font = 'bold 10px Inter, system-ui, sans-serif';
+		ctx.textAlign = 'right';
+		ctx.textBaseline = 'bottom';
+		ctx.fillText(
+			`${noteFromHz(referenceHz)} · ${Math.round(referenceHz)} Hz`,
+			MARGIN.left + layout.graphWidth - 4,
+			y - 3
+		);
+	}
+
 	function drawLiveDot(ctx: CanvasRenderingContext2D, layout: Layout) {
 		const x = MARGIN.left + layout.graphWidth; // Right edge
 		const y = freqToY(layout, currentPitch);
@@ -256,6 +286,7 @@
 			layout.timeRange = now - layout.minTime || 1;
 			const points = pitchData.filter((p) => p.t >= layout.minTime && p.hz > 0);
 			drawStatic(ctx, layout, points);
+			drawReference(ctx, layout);
 			if (currentPitch > 0) drawLiveDot(ctx, layout);
 			return;
 		}
@@ -284,6 +315,8 @@
 		ctx.drawImage(staticLayer!, 0, 0);
 		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+		// Drawn over the cached layer: it changes independently of the points.
+		drawReference(ctx, layout);
 		if (currentTime > 0) drawCursor(ctx, layout, points);
 	});
 </script>
