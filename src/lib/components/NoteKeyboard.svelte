@@ -56,6 +56,35 @@
 	const cents = $derived(selected && smoothedHz > 0 ? centsOff(smoothedHz, selected.hz) : null);
 	const onPitch = $derived(cents !== null && Math.abs(cents) <= ON_PITCH_CENTS);
 
+	// The visual readout changes ten times a second; a screen reader must not
+	// hear every one of those. A separate hidden region speaks on transitions
+	// only (note chosen, voice heard, on pitch, sharp, flat, voice gone), and
+	// refreshes an off-pitch reading at most once a second.
+	let announcement = $state('');
+	let lastState = '';
+	let lastSpokenAt = 0;
+	$effect(() => {
+		const state = !selected
+			? 'none'
+			: cents === null
+				? `silent:${selected.midi}`
+				: onPitch
+					? 'on'
+					: cents > 0
+						? 'sharp'
+						: 'flat';
+		const now = performance.now();
+		const offPitch = state === 'sharp' || state === 'flat';
+		if (state === lastState && !(offPitch && now - lastSpokenAt >= 1000)) return;
+		lastState = state;
+		lastSpokenAt = now;
+		if (state === 'none') announcement = '';
+		else if (state.startsWith('silent'))
+			announcement = `${selected!.name}, ${Math.round(selected!.hz)} hertz`;
+		else if (state === 'on') announcement = 'On pitch';
+		else announcement = `${Math.abs(Math.round(cents!))} cents ${state}`;
+	});
+
 	// One player for the component's life; closing the context releases the
 	// audio hardware when the studio unmounts.
 	const player = new TonePlayer({ onChange: (p) => (playing = p) });
@@ -120,8 +149,8 @@
 			<p class="text-xs text-surface-500">Tap a note, then hum it. Arrow keys step a semitone.</p>
 		</div>
 
-		<!-- Match readout -->
-		<div class="min-w-30 text-right" aria-live="polite">
+		<!-- Match readout. Visual only; the hidden region below is what is announced. -->
+		<div class="min-w-30 text-right" aria-hidden="true">
 			{#if selected}
 				<div class="text-xs text-surface-400">
 					{selected.name} · {Math.round(selected.hz)} Hz
@@ -148,6 +177,7 @@
 				<div class="text-sm text-surface-500">no note chosen</div>
 			{/if}
 		</div>
+		<div class="sr-only" role="status" aria-live="polite">{announcement}</div>
 	</div>
 
 	<!-- Keys -->

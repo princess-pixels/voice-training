@@ -240,7 +240,10 @@
 
 	<!-- Error Display -->
 	{#if recorderStore.error}
-		<div class="bg-red-500/20 border border-red-500/50 text-red-300 px-4 py-3 rounded-lg">
+		<div
+			role="alert"
+			class="bg-red-500/20 border border-red-500/50 text-red-300 px-4 py-3 rounded-lg"
+		>
 			<p class="font-medium">Error</p>
 			<p class="text-sm">{recorderStore.error}</p>
 			<button
@@ -349,8 +352,9 @@
 
 		<!-- Recording Status -->
 		{#if recorderStore.isRecording}
-			<div class="flex items-center gap-2 text-sm">
-				<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+			<div role="status" class="flex items-center gap-2 text-sm">
+				<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse motion-reduce:animate-none"
+				></span>
 				<span class="text-surface-400">
 					{recorderStore.isPaused ? 'Paused' : 'Recording...'}
 				</span>
@@ -394,6 +398,7 @@
 			<!-- Save Error -->
 			{#if saveError}
 				<div
+					role="alert"
 					class="bg-red-500/20 border border-red-500/50 text-red-300 px-4 py-3 rounded-lg text-sm"
 				>
 					{saveError}

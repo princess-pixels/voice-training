@@ -34,6 +34,8 @@
 	let lastSaved = $state<Session | null>(null);
 	/** Bound to the studio: a take is in progress or waiting to be saved. */
 	let recording = $state(false);
+	/** Looking back at one step of a finished routine, from the completion card. */
+	let reviewing = $state(false);
 
 	const currentStep = $derived(steps[currentIndex]);
 	const currentExercise = $derived(currentStep ? exerciseFor(currentStep.exerciseId) : undefined);
@@ -153,12 +155,19 @@
 		};
 	}
 
+	/** Put drained seconds back on the clock when the save that carried them failed. */
+	function rebank(seconds: number) {
+		banked += seconds;
+		if (enteredAt === null && document.visibilityState === 'visible') enteredAt = Date.now();
+	}
+
+	/** False when the save failed; saveError says why and the caller keeps its state. */
 	async function patchStep(
 		index: number,
 		update: { status?: PracticeStepStatus; addSeconds?: number; sessionId?: string },
 		keepalive = false
-	) {
-		if (!day) return;
+	): Promise<boolean> {
+		if (!day) return false;
 		saveError = null;
 		try {
 			const response = await fetch(`/api/practice/${day._id}`, {
@@ -175,24 +184,40 @@
 			// is yesterday's document and must not displace today's.
 			const updated = revive(await response.json());
 			if (day?._id === updated._id) day = updated;
+			return true;
 		} catch (err) {
 			saveError = err instanceof Error ? err.message : 'Could not save progress';
+			return false;
 		}
 	}
 
-	/** Bank the clock on the step being left, then move. */
+	/**
+	 * Bank the clock on the step being left, then move. A failed save keeps the
+	 * seconds on the clock and stays put rather than losing them to the next step.
+	 */
 	async function goToStep(index: number) {
 		if (recording || index === currentIndex) return;
 		const seconds = drain();
-		if (seconds > 0) await patchStep(currentIndex, { addSeconds: seconds });
+		if (seconds > 0 && !(await patchStep(currentIndex, { addSeconds: seconds }))) {
+			rebank(seconds);
+			return;
+		}
 		currentIndex = index;
 		lastSaved = null;
+		// From the completion card, this is a look back at a finished step.
+		reviewing = allDone;
 	}
 
 	async function resolveStep(status: 'done' | 'skipped') {
 		const from = currentIndex;
 		const seconds = drain();
-		await patchStep(from, { status, addSeconds: seconds });
+		if (!(await patchStep(from, { status, addSeconds: seconds }))) {
+			// The server did not take the step: the time and the mark are still
+			// the user's, so the UI must not move on as if they were saved.
+			rebank(seconds);
+			return;
+		}
+		reviewing = false;
 		if (!isLastStep) {
 			currentIndex = from + 1;
 			lastSaved = null;
@@ -206,7 +231,10 @@
 	/** A take saved by the embedded studio: attach it, which marks the step done. */
 	async function onSaved(session: Session) {
 		lastSaved = session;
-		await patchStep(currentIndex, { sessionId: session._id, addSeconds: drain() });
+		const seconds = drain();
+		if (!(await patchStep(currentIndex, { sessionId: session._id, addSeconds: seconds }))) {
+			rebank(seconds);
+		}
 	}
 
 	async function restartRoutine() {
@@ -218,6 +246,7 @@
 			day = revive(await response.json());
 			currentIndex = 0;
 			lastSaved = null;
+			reviewing = false;
 		} catch (err) {
 			saveError = err instanceof Error ? err.message : 'Could not reset the routine';
 		}
@@ -238,23 +267,42 @@
 
 	// History strip: the last two weeks ending on the current day, from the
 	// day's own key so it matches the server's calendar, not the browser's.
+	// The loader returns the most recent rows, not the last 14 days, so the
+	// caption counts only the rows that fall inside the strip.
+	// Today's row is taken from the live document rather than the loaded list,
+	// which stops being current the moment a step is marked done.
 	const historyByDay = $derived(new Map(data.history.map((h) => [h.day, h])));
-	const historyKeys = $derived(day ? dayKeysEndingAt(day._id, 14) : []);
-	const historyMinutes = $derived(
-		data.history.reduce((sum, h) => sum + h.seconds, 0) > 0
-			? Math.round(data.history.reduce((sum, h) => sum + h.seconds, 0) / 60)
-			: 0
+	const todaySummary = $derived(
+		day
+			? {
+					day: day._id,
+					doneSteps: doneCount,
+					totalSteps: steps.length,
+					seconds: totalSeconds,
+					complete: allDone
+				}
+			: null
 	);
-	const practicedDays = $derived(data.history.filter((h) => h.doneSteps > 0).length);
+	const historyKeys = $derived(day ? dayKeysEndingAt(day._id, 14) : []);
+	const windowHistory = $derived(
+		historyKeys.flatMap((key) => {
+			const h = key === todaySummary?.day ? todaySummary : historyByDay.get(key);
+			return h ? [h] : [];
+		})
+	);
+	const historyMinutes = $derived(
+		Math.round(windowHistory.reduce((sum, h) => sum + h.seconds, 0) / 60)
+	);
+	const practicedDays = $derived(windowHistory.filter((h) => h.doneSteps > 0).length);
 
 	function historyClass(key: string): string {
-		const h = historyByDay.get(key);
+		const h = key === todaySummary?.day ? todaySummary : historyByDay.get(key);
 		if (!h || h.doneSteps === 0) return 'bg-surface-800';
 		return h.complete ? 'bg-emerald-500' : 'bg-primary-500';
 	}
 
 	function historyTitle(key: string): string {
-		const h = historyByDay.get(key);
+		const h = key === todaySummary?.day ? todaySummary : historyByDay.get(key);
 		if (!h || h.doneSteps === 0) return `${key}: no practice`;
 		return `${key}: ${h.doneSteps} of ${h.totalSteps} steps, ${formatDuration(h.seconds)}`;
 	}
@@ -277,7 +325,10 @@
 	</div>
 
 	{#if saveError}
-		<div class="bg-red-500/20 border border-red-500/50 text-red-300 px-4 py-3 rounded-lg text-sm">
+		<div
+			role="alert"
+			class="bg-red-500/20 border border-red-500/50 text-red-300 px-4 py-3 rounded-lg text-sm"
+		>
 			{saveError}
 		</div>
 	{/if}
@@ -290,7 +341,8 @@
 			</p>
 		</div>
 	{:else}
-		<!-- Step rail -->
+		<!-- Step rail. The bar is the visual; the button around it is the hit area,
+		     tall enough for a thumb (WCAG asks for 24 px). -->
 		<div class="flex gap-2">
 			{#each steps as step, index (step.exerciseId)}
 				<button
@@ -302,19 +354,23 @@
 						: step.status === 'skipped'
 							? ' (skipped)'
 							: ''}"
-					class="flex-1 h-1.5 rounded-full transition-colors disabled:cursor-not-allowed {index ===
-						currentIndex && step.status === 'pending'
-						? 'bg-primary-500'
-						: statusClass[step.status]} {index === currentIndex
-						? 'ring-2 ring-primary-500/40 ring-offset-2 ring-offset-surface-950'
-						: ''}"
+					class="group flex-1 py-3 disabled:cursor-not-allowed focus-visible:outline-none"
 					aria-label="Go to step {index + 1}: {step.title}"
 					aria-current={index === currentIndex ? 'step' : undefined}
-				></button>
+				>
+					<span
+						class="block h-1.5 rounded-full transition-colors group-focus-visible:ring-2 group-focus-visible:ring-primary-400 {index ===
+							currentIndex && step.status === 'pending'
+							? 'bg-primary-500'
+							: statusClass[step.status]} {index === currentIndex
+							? 'ring-2 ring-primary-500/40 ring-offset-2 ring-offset-surface-950'
+							: ''}"
+					></span>
+				</button>
 			{/each}
 		</div>
 
-		{#if allDone}
+		{#if allDone && !reviewing}
 			<!-- Completion -->
 			<div
 				class="bg-surface-900 border border-emerald-500/30 rounded-2xl p-10 text-center space-y-5"
@@ -378,6 +434,16 @@
 				<div>
 					<p class="text-sm text-primary-400 font-medium mb-2">
 						Step {currentIndex + 1} of {steps.length} · {currentStep.purpose}
+						{#if reviewing}
+							·
+							<button
+								type="button"
+								onclick={() => (reviewing = false)}
+								class="text-surface-400 hover:text-surface-200 underline underline-offset-2"
+							>
+								Back to summary
+							</button>
+						{/if}
 					</p>
 					<div class="flex flex-wrap items-center gap-3 mb-3">
 						<h2 class="text-2xl font-semibold text-surface-100">{currentStep.title}</h2>
@@ -462,6 +528,7 @@
 
 				{#if lastSaved}
 					<div
+						role="status"
 						class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm"
 					>
 						<span class="text-emerald-400 font-medium">Take saved ✓</span>
