@@ -25,18 +25,16 @@ route's narrow query (C06), pure logic and constants out of db.ts (D09), reduced
 canvas contrast and the small semantics (E12, E13, E15) and the docs fixes (B07, B08,
 E18, E21), the export as a same-origin POST (B03), the dead record flow (A11), the YIN
 tests in cents with the dead confidence gate and the tab comment (C03, C09, C11) and the
-changelog and contributing guide (E22) are done.
+changelog and contributing guide (E22), the shared formatters and API helper with the
+import script folded into the CLI (D10, E14), the dead helpers and third reviver (D06,
+A12), the confirms and focus after delete (E10) and the cached playback points (C07) are
+done.
 
 ## Glow-ups
 
-- [ ] **D06 · Tested pure helpers are dead; the pages reimplement them.**
-      `nextStepIndex`, `isPracticed`, `getAudioDevices`, and a third hand-rolled
-      `PracticeDay` reviver. A client-safe `src/lib/practice.ts` next to `days.ts`.
 - [ ] **C05 · Pitch points are stored at 74 bytes each with a field nothing reads.**
       Round `t` to 1 ms and `hz` to 0.1 Hz in `addPoint`, make `confidence` optional:
       1.7 MB → 0.6 MB per ten-minute take, through upload, SQLite, page payload and export.
-- [ ] **C07 · Playback re-filters the whole point array on every `timeupdate`.**
-      `PitchVisualizer.svelte:527-528`. Cache `points` and `timeRange` in `staticFor`.
 - [ ] **C08 · Live mode repaints the full background every hop, off the animation
       frame.** Cache the band, grid and axes offscreen; paint through `requestAnimationFrame`
       with a dirty flag.
@@ -45,14 +43,6 @@ changelog and contributing guide (E22) are done.
 - [ ] **D08 · Svelte 5 idiom slips.** `busy` derived in an `$effect`, the layout drawer
       closed by an effect on `page.url` instead of `afterNavigate`, `$effect` as `onMount`
       in settings, the range test pushing into a deep `$state` array at 40 Hz.
-- [ ] **D10 / E14 · Client-side duplication.** Four date formatters (three hard-wired to
-      `en-US`), two delete flows, six `fetch` decoders, and `scripts/import.ts`
-      re-implementing the CLI's import branch. `src/lib/format.ts`, a small
-      `src/lib/api.ts`, and `bun src/cli.ts import`.
-- [ ] **E10 · Discard has no confirmation; the two delete confirms disagree; no undo.**
-      `RecordingStudio.svelte:100-106`, `sessions/+page.svelte:30`.
-- [ ] **A12 · `revive()` and the practice wire shape are typed as if JSON carried
-      `Date`s.** Move `JsonDate<T>` from `import.ts` into `types.ts` and use it on both sides.
 - [ ] **A13 · Strictness gaps.** `noUncheckedIndexedAccess`, a discriminated `CliArgs`
       union, validated search params on the exercises page, no `selected!` in NoteKeyboard.
 - [ ] **B06 · Release supply chain.** Pin actions to SHAs, `permissions: contents: read`

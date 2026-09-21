@@ -4,7 +4,9 @@
 	import { categoryLabel, categoryBadgeClass } from '$lib/categories';
 	import { formatDuration, formatHz } from '$lib/audio/utils';
 	import { dayKeysEndingAt, localDayKey } from '$lib/days';
-	import type { PracticeDay, PracticeStepStatus, Session } from '$lib/types';
+	import { nextStepIndex, revivePracticeDay } from '$lib/practiceDay';
+	import { errorMessage, request } from '$lib/api';
+	import type { JsonDate, PracticeDay, PracticeStepStatus, Session } from '$lib/types';
 	import type { PageData } from './$types';
 
 	interface Props {
@@ -23,13 +25,8 @@
 	const steps = $derived(day?.steps ?? []);
 	const exerciseFor = (exerciseId: string) => data.exercises[exerciseId];
 
-	function firstPending(d: PracticeDay | null): number {
-		const i = d?.steps.findIndex((s) => s.status === 'pending') ?? -1;
-		return i === -1 ? Math.max(0, (d?.steps.length ?? 1) - 1) : i;
-	}
-
 	// Same shape: follows the loaded day until the user moves, then the move wins.
-	let currentIndex = $derived(firstPending(data.day));
+	let currentIndex = $derived(data.day ? nextStepIndex(data.day) : 0);
 	/** The take just saved on the current step, shown inline until the step changes. */
 	let lastSaved = $state<Session | null>(null);
 	/** Bound to the studio: a take is in progress or waiting to be saved. */
@@ -140,21 +137,6 @@
 		}
 	}
 
-	function revive(raw: PracticeDay): PracticeDay {
-		// JSON turns the dates into strings; only completedAt's null-ness is read
-		// here, but keep the type honest for anything that looks closer.
-		return {
-			...raw,
-			startedAt: new Date(raw.startedAt),
-			updatedAt: new Date(raw.updatedAt),
-			completedAt: raw.completedAt ? new Date(raw.completedAt) : null,
-			steps: raw.steps.map((s) => ({
-				...s,
-				completedAt: s.completedAt ? new Date(s.completedAt) : null
-			}))
-		};
-	}
-
 	/** Put drained seconds back on the clock when the save that carried them failed. */
 	function rebank(seconds: number) {
 		banked += seconds;
@@ -170,23 +152,18 @@
 		if (!day) return false;
 		saveError = null;
 		try {
-			const response = await fetch(`/api/practice/${day._id}`, {
+			const reply = await request<JsonDate<PracticeDay>>(`/api/practice/${day._id}`, {
 				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ step: index, ...update }),
+				body: { step: index, ...update },
 				keepalive
 			});
-			if (!response.ok) {
-				const body = await response.json().catch(() => null);
-				throw new Error(body?.message ?? `Save failed (${response.status})`);
-			}
 			// A keepalive PATCH from before a rollover can land after it; the reply
 			// is yesterday's document and must not displace today's.
-			const updated = revive(await response.json());
+			const updated = revivePracticeDay(reply);
 			if (day?._id === updated._id) day = updated;
 			return true;
 		} catch (err) {
-			saveError = err instanceof Error ? err.message : 'Could not save progress';
+			saveError = errorMessage(err, 'Could not save progress');
 			return false;
 		}
 	}
@@ -241,14 +218,16 @@
 		if (!day) return;
 		saveError = null;
 		try {
-			const response = await fetch(`/api/practice/${day._id}?action=reset`, { method: 'POST' });
-			if (!response.ok) throw new Error(`Reset failed (${response.status})`);
-			day = revive(await response.json());
+			day = revivePracticeDay(
+				await request<JsonDate<PracticeDay>>(`/api/practice/${day._id}?action=reset`, {
+					method: 'POST'
+				})
+			);
 			currentIndex = 0;
 			lastSaved = null;
 			reviewing = false;
 		} catch (err) {
-			saveError = err instanceof Error ? err.message : 'Could not reset the routine';
+			saveError = errorMessage(err, 'Could not reset the routine');
 		}
 	}
 
@@ -589,7 +568,7 @@
 							</button>
 						{:else}
 							<button
-								onclick={() => goToStep(firstPending(day))}
+								onclick={() => goToStep(day ? nextStepIndex(day) : 0)}
 								disabled={recording}
 								class="flex-1 min-w-[140px] px-4 py-2.5 bg-primary-500 hover:bg-primary-600 disabled:bg-surface-700 disabled:text-surface-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
 							>

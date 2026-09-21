@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { DEFAULT_TARGET_RANGE } from '$lib/audio/utils';
 	import { pickDayLabelIndices } from '$lib/days';
+	import { formatDayMonth } from '$lib/format';
 	interface TrendPoint {
 		date: Date;
 		avgHz: number;
@@ -154,7 +155,7 @@
 		for (const index of pickDayLabelIndices(dates, 5)) {
 			const x = padding.left + (chartW * index) / (trendData.length - 1 || 1);
 			const date = dates[index];
-			const label = `${date.getMonth() + 1}/${date.getDate()}`;
+			const label = formatDayMonth(date);
 			ctx.fillText(label, x, padding.top + chartH + 20);
 		}
 	}

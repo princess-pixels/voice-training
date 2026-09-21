@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { invalidate } from '$app/navigation';
+	import { tick } from 'svelte';
 	import { formatDuration, pitchBandClass } from '$lib/audio/utils';
+	import { formatDate, formatTime } from '$lib/format';
+	import { deleteSession as apiDeleteSession, errorMessage } from '$lib/api';
+	import { DELETE_SESSION_CONFIRM } from '$lib/copy';
 	import type { PageData } from './$types';
 
 	interface Props {
@@ -10,41 +14,21 @@
 	let { data }: Props = $props();
 
 	let deleteError = $state<string | null>(null);
-
-	function formatDate(date: Date): string {
-		return new Date(date).toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric'
-		});
-	}
-
-	function formatTime(date: Date): string {
-		return new Date(date).toLocaleTimeString('en-US', {
-			hour: 'numeric',
-			minute: '2-digit'
-		});
-	}
+	let heading = $state<HTMLHeadingElement | null>(null);
 
 	async function deleteSession(id: string) {
-		if (!confirm('Are you sure you want to delete this session?')) {
-			return;
-		}
+		if (!confirm(DELETE_SESSION_CONFIRM)) return;
 
 		deleteError = null;
 		try {
-			const response = await fetch(`/api/sessions/${id}`, {
-				method: 'DELETE'
-			});
-
-			if (response.ok) {
-				await invalidate('app:sessions');
-			} else {
-				const body = await response.json().catch(() => null);
-				deleteError = body?.message ?? `Failed to delete session (HTTP ${response.status})`;
-			}
+			await apiDeleteSession(id);
+			await invalidate('app:sessions');
+			// The button that was pressed is gone with its row; land on the heading
+			// rather than on <body>.
+			await tick();
+			heading?.focus();
 		} catch (err) {
-			deleteError = err instanceof Error ? err.message : 'Failed to delete session';
+			deleteError = errorMessage(err, 'Failed to delete session');
 		}
 	}
 </script>
@@ -55,7 +39,9 @@
 
 <div class="max-w-6xl mx-auto px-4 py-8">
 	<header class="mb-8">
-		<h1 class="text-3xl font-bold text-surface-100">Session History</h1>
+		<h1 bind:this={heading} tabindex="-1" class="text-3xl font-bold text-surface-100 outline-none">
+			Session History
+		</h1>
 		<p class="text-surface-400 mt-2">Review your past practice sessions</p>
 	</header>
 

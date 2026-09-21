@@ -53,6 +53,10 @@ async function main(loadServer: () => Promise<unknown>): Promise<void> {
 			const report = await importArchive(args.archive!);
 			console.log(formatReport(report));
 			process.exitCode = report.sessions.failed.length > 0 ? 1 : 0;
+		} catch (err) {
+			// A missing or broken archive is a message, not a stack trace.
+			console.error(`Import failed: ${err instanceof Error ? err.message : String(err)}`);
+			process.exitCode = 1;
 		} finally {
 			closeDatabase();
 		}

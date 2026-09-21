@@ -4,6 +4,7 @@
 	import { DEFAULT_TARGET_RANGE } from '$lib/audio/utils';
 	import { getAudioDevices, getMicrophoneStream } from '$lib/audio/mic';
 	import { describeMicError } from '$lib/audio/micErrors';
+	import { errorMessage, request } from '$lib/api';
 
 	let { data }: { data: PageData } = $props();
 
@@ -151,16 +152,7 @@
 				high: Math.max(lowHz, highHz)
 			};
 
-			const response = await fetch('/api/settings', {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ targetRange })
-			});
-
-			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
-				throw new Error(errorData.message || `HTTP ${response.status}`);
-			}
+			await request<void>('/api/settings', { method: 'PUT', body: { targetRange } });
 
 			saveStatus = 'success';
 			setTimeout(() => {
@@ -168,7 +160,7 @@
 			}, 2000);
 		} catch (err) {
 			saveStatus = 'error';
-			saveError = err instanceof Error ? err.message : 'Failed to save settings';
+			saveError = errorMessage(err, 'Failed to save settings');
 		}
 	}
 </script>

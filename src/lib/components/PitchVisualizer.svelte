@@ -56,7 +56,16 @@
 	// Playback: everything except the cursor is rendered once to an offscreen
 	// canvas, so a timeupdate only costs one drawImage plus the cursor.
 	let staticLayer: HTMLCanvasElement | null = null;
-	let staticFor: { points: PitchPoint[]; low: number; high: number } | null = null;
+	// `source` is the prop array the layer was built from; `points` its voiced
+	// subset and `timeRange` its extent, kept so a timeupdate (up to 60 a
+	// second) does not filter and scan up to 200k points again.
+	let staticFor: {
+		source: PitchPoint[];
+		points: PitchPoint[];
+		timeRange: number;
+		low: number;
+		high: number;
+	} | null = null;
 
 	// Resize observer to handle responsive sizing
 	$effect(() => {
@@ -298,15 +307,15 @@
 			return;
 		}
 
-		const points = pitchData.filter((p) => p.hz > 0);
-		layout.timeRange = Math.max(lastTime(points), 1);
+		const samePoints = staticFor?.source === pitchData;
+		const points = samePoints ? staticFor!.points : pitchData.filter((p) => p.hz > 0);
+		layout.timeRange = samePoints ? staticFor!.timeRange : Math.max(lastTime(points), 1);
 
 		const stale =
 			!staticLayer ||
-			!staticFor ||
-			staticFor.points !== pitchData ||
-			staticFor.low !== targetRange.low ||
-			staticFor.high !== targetRange.high;
+			!samePoints ||
+			staticFor!.low !== targetRange.low ||
+			staticFor!.high !== targetRange.high;
 		if (stale) {
 			staticLayer = document.createElement('canvas');
 			staticLayer.width = canvas.width;
@@ -315,7 +324,13 @@
 			if (!sctx) return;
 			sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 			drawStatic(sctx, layout, points);
-			staticFor = { points: pitchData, low: targetRange.low, high: targetRange.high };
+			staticFor = {
+				source: pitchData,
+				points,
+				timeRange: layout.timeRange,
+				low: targetRange.low,
+				high: targetRange.high
+			};
 		}
 
 		ctx.setTransform(1, 0, 0, 1, 0, 0);
