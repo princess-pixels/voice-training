@@ -10,6 +10,7 @@ import type { DailyRoutine } from './routine';
 export const STEP_STATUSES: PracticeStepStatus[] = ['pending', 'done', 'skipped'];
 
 export { DAY_KEY, localDayKey };
+export { isPracticed, nextStepIndex, revivePracticeDay } from '$lib/practiceDay';
 
 /** A fresh, untouched day built from a routine. */
 export function newPracticeDay(routine: DailyRoutine, now = new Date()): PracticeDay {
@@ -117,15 +118,4 @@ export function summarisePracticeDay(day: PracticeDay): PracticeDaySummary {
 		seconds: day.steps.reduce((sum, s) => sum + s.seconds, 0),
 		complete: day.completedAt !== null
 	};
-}
-
-/** True if at least one step was actually done, i.e. the day counts as practice. */
-export function isPracticed(day: Pick<PracticeDay, 'steps'>): boolean {
-	return day.steps.some((s) => s.status === 'done');
-}
-
-/** Index of the step to show on open: the first pending one, or the last if none. */
-export function nextStepIndex(day: Pick<PracticeDay, 'steps'>): number {
-	const i = day.steps.findIndex((s) => s.status === 'pending');
-	return i === -1 ? Math.max(0, day.steps.length - 1) : i;
 }

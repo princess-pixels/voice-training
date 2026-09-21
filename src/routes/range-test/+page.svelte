@@ -5,6 +5,8 @@
 	import { formatHz, noteFromHz, semitonesBetween, percentile } from '$lib/audio/utils';
 	import { getMicrophoneStream } from '$lib/audio/mic';
 	import { describeMicError } from '$lib/audio/micErrors';
+	import { formatDate } from '$lib/format';
+	import { errorMessage, request } from '$lib/api';
 	import type { RangeTest, RangeTestMode } from '$lib/types';
 	import type { PageData } from './$types';
 
@@ -153,19 +155,17 @@
 		isSaving = true;
 		saveError = null;
 		try {
-			const response = await fetch('/api/range-tests', {
+			await request<void>('/api/range-tests', {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ mode, lowHz, highHz, notes })
+				body: { mode, lowHz, highHz, notes }
 			});
-			if (!response.ok) throw new Error(await response.text());
 
 			// `data` is a plain prop object, so mutating data.history would not re-render.
 			// Re-run the load instead; it is a single 30-document query.
 			await invalidateAll();
 			saved = true;
 		} catch (err) {
-			saveError = err instanceof Error ? err.message : 'Failed to save range test';
+			saveError = errorMessage(err, 'Failed to save range test');
 		} finally {
 			isSaving = false;
 		}
@@ -175,25 +175,14 @@
 		const next: RangeTestMode = test.mode === 'modal' ? 'full' : 'modal';
 		relabelError = null;
 		try {
-			const response = await fetch(`/api/range-tests?id=${test._id}`, {
+			await request<void>(`/api/range-tests?id=${test._id}`, {
 				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ mode: next })
+				body: { mode: next }
 			});
-			if (!response.ok) throw new Error(await response.text());
-
 			await invalidateAll();
 		} catch (err) {
-			relabelError = err instanceof Error ? err.message : 'Failed to relabel test';
+			relabelError = errorMessage(err, 'Failed to relabel test');
 		}
-	}
-
-	function formatDate(date: Date | string): string {
-		return new Date(date).toLocaleDateString(undefined, {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric'
-		});
 	}
 
 	// Shared Hz scale for the history bars, padded a little at both ends.

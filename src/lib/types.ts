@@ -139,3 +139,16 @@ export interface PracticeDaySummary {
 	seconds: number;
 	complete: boolean;
 }
+
+/**
+ * `T` as it comes out of JSON.parse: every Date, however deep, is an ISO
+ * string. The API routes and the export archive both carry records this way;
+ * the pages and the importer revive them.
+ */
+export type JsonDate<T> = T extends Date
+	? string
+	: T extends (infer U)[]
+		? JsonDate<U>[]
+		: T extends object
+			? { [K in keyof T]: JsonDate<T[K]> }
+			: T;

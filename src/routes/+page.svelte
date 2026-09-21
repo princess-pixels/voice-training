@@ -8,6 +8,7 @@
 		pitchBandLabel
 	} from '$lib/audio/utils';
 	import { categoryLabel, categoryFillClass } from '$lib/categories';
+	import { formatRelativeDay } from '$lib/format';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -31,25 +32,6 @@
 		}
 		return `${minutes} min`;
 	});
-
-	function startOfLocalDay(d: Date): Date {
-		return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-	}
-
-	// "Today" means the local calendar day, matching the streak logic, not the
-	// last 24 hours. Math.round absorbs the hour a DST change adds or removes.
-	function formatSessionDate(date: Date): string {
-		const d = new Date(date);
-		const now = new Date();
-		const diffDays = Math.round(
-			(startOfLocalDay(now).getTime() - startOfLocalDay(d).getTime()) / (1000 * 60 * 60 * 24)
-		);
-
-		if (diffDays === 0) return 'Today';
-		if (diffDays === 1) return 'Yesterday';
-		if (diffDays < 7) return `${diffDays} days ago`;
-		return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-	}
 
 	// Get total category count for percentage calculation
 	const totalCategoryCount = $derived.by(() => {
@@ -386,7 +368,7 @@
 								</div>
 								<div>
 									<p class="font-medium text-surface-200">{session.title}</p>
-									<p class="text-xs text-surface-500">{formatSessionDate(session.createdAt)}</p>
+									<p class="text-xs text-surface-500">{formatRelativeDay(session.createdAt)}</p>
 								</div>
 							</div>
 							<div class="flex items-center gap-6">

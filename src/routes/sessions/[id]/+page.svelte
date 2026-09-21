@@ -3,6 +3,9 @@
 	import PitchVisualizer from '$lib/components/PitchVisualizer.svelte';
 	import PitchStats from '$lib/components/PitchStats.svelte';
 	import { formatDuration, formatHz } from '$lib/audio/utils';
+	import { formatDate, formatTime } from '$lib/format';
+	import { deleteSession as apiDeleteSession, errorMessage } from '$lib/api';
+	import { DELETE_SESSION_CONFIRM } from '$lib/copy';
 	import type { PageData } from './$types';
 
 	interface Props {
@@ -15,22 +18,6 @@
 	let currentTime = $state(0);
 	let deleteError = $state<string | null>(null);
 
-	function formatDate(date: Date): string {
-		return new Date(date).toLocaleDateString('en-US', {
-			weekday: 'long',
-			month: 'long',
-			day: 'numeric',
-			year: 'numeric'
-		});
-	}
-
-	function formatTime(date: Date): string {
-		return new Date(date).toLocaleTimeString('en-US', {
-			hour: 'numeric',
-			minute: '2-digit'
-		});
-	}
-
 	function handleTimeUpdate() {
 		if (audioElement) {
 			currentTime = audioElement.currentTime;
@@ -42,24 +29,14 @@
 	}
 
 	async function deleteSession() {
-		if (!confirm('Are you sure you want to delete this session? This action cannot be undone.')) {
-			return;
-		}
+		if (!confirm(DELETE_SESSION_CONFIRM)) return;
 
 		deleteError = null;
 		try {
-			const response = await fetch(`/api/sessions/${data.session._id}`, {
-				method: 'DELETE'
-			});
-
-			if (response.ok) {
-				await goto('/sessions');
-			} else {
-				const body = await response.json().catch(() => null);
-				deleteError = body?.message ?? `Failed to delete session (HTTP ${response.status})`;
-			}
+			await apiDeleteSession(data.session._id);
+			await goto('/sessions');
 		} catch (err) {
-			deleteError = err instanceof Error ? err.message : 'Failed to delete session';
+			deleteError = errorMessage(err, 'Failed to delete session');
 		}
 	}
 
@@ -92,7 +69,7 @@
 	<header class="mb-8">
 		<h1 class="text-3xl font-bold text-surface-100">{session.title}</h1>
 		<p class="text-surface-400 mt-2">
-			{formatDate(session.createdAt)} at {formatTime(session.createdAt)}
+			{formatDate(session.createdAt, 'long')} at {formatTime(session.createdAt)}
 		</p>
 	</header>
 

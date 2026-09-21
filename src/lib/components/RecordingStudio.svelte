@@ -3,6 +3,8 @@
 	import { goto } from '$app/navigation';
 	import { recorderStore } from '$lib/stores/recorder.svelte';
 	import { formatDuration } from '$lib/audio/utils';
+	import { errorMessage, request } from '$lib/api';
+	import { DISCARD_TAKE_CONFIRM } from '$lib/copy';
 	import type { Exercise, PitchRange, PitchData, Session } from '$lib/types';
 	import PitchVisualizer from './PitchVisualizer.svelte';
 	import PitchStats from './PitchStats.svelte';
@@ -101,6 +103,7 @@
 		recorderStore.resumeRecording();
 	}
 
+	/** Reset the studio for the next take; the summary and its take are gone. */
 	async function handleDiscard() {
 		recorderStore.reset();
 		showSummary = false;
@@ -110,6 +113,11 @@
 		// The summary (and whichever of its buttons was pressed) is gone now.
 		await tick();
 		recordButton?.focus();
+	}
+
+	/** Discard is one click from Save and throws away a take that may be minutes long. */
+	function confirmDiscard() {
+		if (confirm(DISCARD_TAKE_CONFIRM)) void handleDiscard();
 	}
 
 	function handlePrimary() {
@@ -143,19 +151,10 @@
 				formData.append('audioType', lastBlob.type);
 			}
 
-			const response = await fetch('/api/sessions', {
+			const result = await request<{ id: string; session: Session }>('/api/sessions', {
 				method: 'POST',
 				body: formData
 			});
-
-			if (!response.ok) {
-				const errorData = await response
-					.json()
-					.catch(() => ({ message: 'Failed to save session' }));
-				throw new Error(errorData.message || 'Failed to save session');
-			}
-
-			const result = await response.json();
 
 			if (embedded) {
 				// The host page shows the result; get ready for the next take.
@@ -168,7 +167,7 @@
 			// Takes made from the routine go through the embedded path above.
 			await goto(`/sessions/${result.id}`);
 		} catch (err) {
-			saveError = err instanceof Error ? err.message : 'Failed to save session';
+			saveError = errorMessage(err, 'Failed to save session');
 		} finally {
 			isSaving = false;
 		}
@@ -432,7 +431,7 @@
 					{/if}
 				</button>
 				<button
-					onclick={handleDiscard}
+					onclick={confirmDiscard}
 					disabled={isSaving}
 					class="px-4 py-2 bg-surface-700 hover:bg-surface-600 disabled:opacity-50 disabled:cursor-not-allowed text-surface-200 font-medium rounded-lg transition-colors"
 				>
