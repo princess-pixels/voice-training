@@ -1,0 +1,17 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    # Same three-day cooldown as bunfig.toml's minimumReleaseAge: a freshly
+    # published version is not proposed until it has been out for a while.
+    cooldown:
+      default-days: 3
+    groups:
+      dev-dependencies:
+        dependency-type: development
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

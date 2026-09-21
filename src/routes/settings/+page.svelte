@@ -329,11 +329,11 @@
 			<button
 				onclick={testMicrophone}
 				disabled={isTestingMic}
-				class="w-full sm:w-auto px-6 py-3 bg-accent-600 hover:bg-accent-500 disabled:bg-surface-800 disabled:text-surface-600 text-white font-medium rounded-xl transition-all duration-200 flex items-center justify-center gap-2"
+				class="w-full sm:w-auto px-6 py-3 bg-accent-600 hover:bg-accent-500 disabled:bg-surface-800 disabled:text-surface-400 text-white font-medium rounded-xl transition-all duration-200 flex items-center justify-center gap-2"
 			>
 				{#if isTestingMic}
 					<svg
-						class="animate-spin h-5 w-5"
+						class="animate-spin motion-reduce:animate-none h-5 w-5"
 						xmlns="http://www.w3.org/2000/svg"
 						fill="none"
 						viewBox="0 0 24 24"
@@ -435,7 +435,7 @@
 			>
 				{#if saveStatus === 'saving'}
 					<svg
-						class="animate-spin h-5 w-5"
+						class="animate-spin motion-reduce:animate-none h-5 w-5"
 						xmlns="http://www.w3.org/2000/svg"
 						fill="none"
 						viewBox="0 0 24 24"

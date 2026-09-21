@@ -9,6 +9,7 @@ const {
 	createSession,
 	deleteRangeTest,
 	deleteSession,
+	getSessionAudio,
 	getDashboardStats,
 	getDatabase,
 	getExerciseById,
@@ -159,6 +160,8 @@ describe('sessions', () => {
 	test('unknown and malformed ids read as null and delete as false', async () => {
 		expect(await getSessionById(UUID)).toBeNull();
 		expect(await getSessionById('nope')).toBeNull();
+		expect(await getSessionAudio(UUID)).toBeNull();
+		expect(await getSessionAudio('nope')).toBeNull();
 		expect(await deleteSession(UUID)).toBe(false);
 		expect(await deleteSession('nope')).toBe(false);
 	});

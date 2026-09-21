@@ -30,11 +30,19 @@ jobs:
       - run: bun run check
 
       # Tests with coverage against an in-memory SQLite database and a temp audio
-      # directory; bunfig.toml sets the threshold. No services needed.
+      # directory; bunfig.toml sets the threshold. No services needed. The
+      # threshold only applies to files a test imports; the gap script names
+      # the rest so the number is read honestly.
       - run: bun test --coverage
+      - run: bun scripts/coverage-gap.ts
 
       # Production bundle via svelte-adapter-bun. Bootstrap (database, data dir) runs at boot, not build.
       - run: bun run build
+
+      # The built server end to end: multipart upload, ranged playback, the
+      # host allowlist, the body limit, practice PATCH, export. Skipped above
+      # because the build did not exist yet.
+      - run: bun test src/server.test.ts
 
       # The single-file binary for this platform: keeps the CLI wrapper and the
       # asset embedding honest. Cross-compiles happen in release.yml on tags.

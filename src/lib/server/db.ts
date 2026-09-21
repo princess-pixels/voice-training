@@ -17,7 +17,8 @@ import type {
 	PracticeDaySummary,
 	PracticeStep
 } from '$lib/types';
-import { CATEGORY_ORDER } from '$lib/categories';
+import { CATEGORY_ORDER, DEFAULT_TARGET_RANGE } from '$lib/constants';
+import { calculateStreak } from '$lib/days';
 import {
 	applyStepUpdate,
 	detachSession,
@@ -26,7 +27,6 @@ import {
 	summarisePracticeDay,
 	type StepUpdate
 } from './practice';
-import { DEFAULT_TARGET_RANGE } from '$lib/audio/utils';
 import { dataDir, isInMemory } from './config';
 
 /**
@@ -364,6 +364,23 @@ export async function sessionExists(id: string): Promise<boolean> {
 			.query<{ id: string }, { id: string }>('SELECT id FROM sessions WHERE id = $id')
 			.get({ id }) !== null
 	);
+}
+
+/**
+ * Just the recording's key and type. The audio route is hit several times per
+ * playback and once per seek, and must not parse the pitch blob for each.
+ */
+export async function getSessionAudio(
+	id: string
+): Promise<Pick<Session, 'audioKey' | 'audioType'> | null> {
+	if (!isValidId(id)) return null;
+	const row = getDatabase()
+		.query<{ audio_key: string; audio_type: string | null }, { id: string }>(
+			'SELECT audio_key, audio_type FROM sessions WHERE id = $id'
+		)
+		.get({ id });
+	if (!row) return null;
+	return { audioKey: row.audio_key, audioType: row.audio_type ?? undefined };
 }
 
 export async function getSessionById(id: string): Promise<Session | null> {
@@ -878,32 +895,4 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 		categoryBreakdown,
 		todayPractice: today ? summarisePracticeDay(today) : null
 	};
-}
-
-/**
- * Consecutive practice days ending today or yesterday (a streak survives until
- * the end of the day after the last session).
- *
- * Each entry is either a session timestamp or a practice day key ("2026-09-03").
- * Days are local calendar days, matching the daily routine in routine.ts. The
- * previous implementation used UTC, so a session at 00:30 local time counted
- * for the day before and could silently break a streak.
- */
-export function calculateStreak(practiced: (Date | string)[], now = new Date()): number {
-	if (practiced.length === 0) return 0;
-
-	const days = new Set(practiced.map((d) => (typeof d === 'string' ? d : localDayKey(d))));
-
-	const cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-	// No session yet today is fine; start counting from yesterday in that case.
-	if (!days.has(localDayKey(cursor))) {
-		cursor.setDate(cursor.getDate() - 1);
-	}
-
-	let streak = 0;
-	while (days.has(localDayKey(cursor))) {
-		streak++;
-		cursor.setDate(cursor.getDate() - 1);
-	}
-	return streak;
 }

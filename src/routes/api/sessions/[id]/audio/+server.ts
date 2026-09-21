@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { getSessionById } from '$lib/server/db';
+import { getSessionAudio } from '$lib/server/db';
 import { isAudioType, openAudio } from '$lib/server/audio';
 import { parseRange } from '$lib/server/range';
 import { error } from '@sveltejs/kit';
@@ -9,7 +9,7 @@ import { error } from '@sveltejs/kit';
  * scrubber works. Without 206 support the element can play but cannot seek.
  */
 export const GET: RequestHandler = async ({ params, request }) => {
-	const session = await getSessionById(params.id);
+	const session = await getSessionAudio(params.id);
 	if (!session) {
 		error(404, { message: 'Session not found' });
 	}

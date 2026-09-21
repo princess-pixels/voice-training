@@ -181,7 +181,7 @@
 		if (runCategory !== null) ctx.stroke();
 
 		// Target range label
-		ctx.fillStyle = 'rgba(236, 72, 153, 0.7)';
+		ctx.fillStyle = '#ec4899'; // full-alpha pink: the 70% version fell under 4.5:1
 		ctx.font = '10px Inter, system-ui, sans-serif';
 		ctx.textAlign = 'left';
 		ctx.textBaseline = 'bottom';

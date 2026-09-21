@@ -36,7 +36,9 @@ Options
   --version        print the version
 
 Every option has an environment variable: DATA_DIR, PORT, HOST, OPEN=0|1.
-A .env file next to where you start it is read too. Options win over both.
+Behind a proxy or on a LAN also set ORIGIN (the URL you open the app at)
+and, for long recordings, BODY_SIZE_LIMIT (default 64M). A .env file next
+to where you start it is read too. Options win over both.
 
 Data folder defaults
   Linux    $XDG_DATA_HOME/voice-training or ~/.local/share/voice-training
