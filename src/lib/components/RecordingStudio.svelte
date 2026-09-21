@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { recorderStore } from '$lib/stores/recorder.svelte';
 	import { formatDuration } from '$lib/audio/utils';
@@ -51,6 +51,11 @@
 	let referenceHz = $state<number | null>(null);
 	// Pitch exercises are about hitting notes, so the strip starts open for them.
 	let showNotes = $state(untrack(() => exercise?.category === 'pitch'));
+	// Keyboard focus is moved by hand at each stage: the primary button stays
+	// mounted across Start/Stop, the summary takes focus when it appears, and the
+	// button gets it back when the summary goes.
+	let recordButton = $state<HTMLButtonElement | null>(null);
+	let titleInput = $state<HTMLInputElement | null>(null);
 
 	// Exercise-specific range takes priority, otherwise the user's saved setting.
 	// Always set it: the store is a module singleton, so a range left behind by a
@@ -81,6 +86,8 @@
 			lastBlob = result.blob;
 			lastPitchData = result.pitchData;
 			showSummary = true;
+			await tick();
+			titleInput?.focus();
 		} catch (err) {
 			// Release the mic and timers so the UI is not stuck in the recording
 			// state, then show why. reset() clears error, so set it afterwards.
@@ -97,12 +104,19 @@
 		recorderStore.resumeRecording();
 	}
 
-	function handleDiscard() {
+	async function handleDiscard() {
 		recorderStore.reset();
 		showSummary = false;
 		saveError = null;
 		title = defaultTitle(exercise);
 		notes = '';
+		// The summary (and whichever of its buttons was pressed) is gone now.
+		await tick();
+		recordButton?.focus();
+	}
+
+	function handlePrimary() {
+		return recorderStore.isRecording ? handleStop() : handleStart();
 	}
 
 	async function handleSave() {
@@ -292,19 +306,10 @@
 			{formatDuration(recorderStore.duration)}
 		</div>
 
-		<!-- Control Buttons -->
+		<!-- Control Buttons. One primary button toggles Start/Stop so it keeps
+		     keyboard focus across the whole take instead of unmounting under it. -->
 		<div class="flex items-center gap-4">
-			{#if !recorderStore.isRecording}
-				<!-- Record Button -->
-				<button
-					onclick={handleStart}
-					disabled={showSummary}
-					class="w-16 h-16 rounded-full bg-red-500 hover:bg-red-400 disabled:bg-surface-700 disabled:cursor-not-allowed flex items-center justify-center transition-all shadow-lg shadow-red-500/30 hover:shadow-red-500/50"
-					aria-label="Start recording"
-				>
-					<div class="w-6 h-6 rounded-full bg-white"></div>
-				</button>
-			{:else}
+			{#if recorderStore.isRecording}
 				<!-- Pause/Resume Button -->
 				<button
 					onclick={recorderStore.isPaused ? handleResume : handlePause}
@@ -323,16 +328,23 @@
 						</svg>
 					{/if}
 				</button>
-
-				<!-- Stop Button -->
-				<button
-					onclick={handleStop}
-					class="w-14 h-14 rounded-full bg-surface-700 hover:bg-surface-600 flex items-center justify-center transition-all border border-surface-600"
-					aria-label="Stop recording"
-				>
-					<div class="w-5 h-5 rounded bg-red-400"></div>
-				</button>
 			{/if}
+
+			<button
+				bind:this={recordButton}
+				onclick={handlePrimary}
+				disabled={showSummary}
+				class="w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-lg disabled:bg-surface-700 disabled:shadow-none disabled:cursor-not-allowed {recorderStore.isRecording
+					? 'bg-surface-700 hover:bg-surface-600 border border-surface-600 shadow-surface-900/30'
+					: 'bg-red-500 hover:bg-red-400 shadow-red-500/30 hover:shadow-red-500/50'}"
+				aria-label={recorderStore.isRecording ? 'Stop recording' : 'Start recording'}
+			>
+				{#if recorderStore.isRecording}
+					<div class="w-5 h-5 rounded bg-red-400"></div>
+				{:else}
+					<div class="w-6 h-6 rounded-full bg-white"></div>
+				{/if}
+			</button>
 		</div>
 
 		<!-- Recording Status -->
@@ -358,6 +370,7 @@
 				</label>
 				<input
 					id="session-title"
+					bind:this={titleInput}
 					type="text"
 					bind:value={title}
 					class="w-full px-3 py-2 bg-surface-800 border border-surface-700 rounded-lg text-surface-200 placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"

@@ -12,21 +12,13 @@ delete (A04), the missing error page (D04, E08), the pitch line drawn across sil
 (C01), page titles (E09), the README's first-run sentence (E17), the sessions table on
 phones (E01), the shared validation module (D01, A05, A06) and the one error-handling
 strategy per route (D05), the midnight-safe dashboard tests and per-install export
-sweep (D07) and the three stale comments (D11, E20) are already closed.
+sweep (D07), the three stale comments (D11, E20), keyboard focus through a take (E02)
+and plain-language microphone errors (E04, E07) are already closed.
 
 ## Bugs
 
-- [ ] **E02 · Keyboard focus is dropped at every stage of a recording.**
-      `RecordingStudio.svelte:297-335,350-435`. Start unmounts on press, Stop unmounts on
-      press, the summary mounts unfocused. One persistent primary button whose label
-      toggles, and move focus to the title input when the summary appears.
 - [ ] **E03 · Step rail buttons are 6 px tall.** `practice/+page.svelte:252-269`. Give
       each step a real hit area and keep the thin bar as the visual.
-- [ ] **E04 / E07 · Mic failures show raw browser error strings.** `recorder.svelte.ts:139`,
-      `mic.ts:16`, `settings/+page.svelte:52-72`. Branch on `err.name` and on
-      `!navigator.mediaDevices` for plain-language messages shared by the studio, the range
-      test and Settings; treat an empty device list as its own state instead of
-      "Loading devices..." forever.
 - [ ] **E05 · The cents readout is an `aria-live` region updated ten times a second.**
       `NoteKeyboard.svelte:462`. Announce from a separate hidden region at most once a
       second or only on transitions.
