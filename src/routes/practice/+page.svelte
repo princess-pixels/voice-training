@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import { beforeNavigate, invalidateAll } from '$app/navigation';
 	import RecordingStudio from '$lib/components/RecordingStudio.svelte';
 	import { categoryLabel, categoryBadgeClass } from '$lib/categories';
@@ -16,7 +15,9 @@
 
 	// The day is the source of truth; every action round-trips through the API
 	// and replaces it, so a reload or another device sees the same progress.
-	let day = $state<PracticeDay | null>(untrack(() => data.day));
+	// Writable derived: assignments below override it until the loader hands
+	// over a different document (the midnight rollover), which wins again.
+	let day = $derived<PracticeDay | null>(data.day);
 	let saveError = $state<string | null>(null);
 
 	const steps = $derived(day?.steps ?? []);
@@ -27,7 +28,8 @@
 		return i === -1 ? Math.max(0, (d?.steps.length ?? 1) - 1) : i;
 	}
 
-	let currentIndex = $state(untrack(() => firstPending(data.day)));
+	// Same shape: follows the loaded day until the user moves, then the move wins.
+	let currentIndex = $derived(firstPending(data.day));
 	/** The take just saved on the current step, shown inline until the step changes. */
 	let lastSaved = $state<Session | null>(null);
 	/** Bound to the studio: a take is in progress or waiting to be saved. */
@@ -60,6 +62,11 @@
 		if (enteredAt === null) return;
 		const start = enteredAt;
 		const tick = () => {
+			// A page left open across midnight rolls over on its own.
+			if (isStale() && !recording) {
+				void rollOver();
+				return;
+			}
 			const stretch = Math.min(MAX_STRETCH_SECONDS, Math.floor((Date.now() - start) / 1000));
 			elapsed = banked + stretch;
 		};
@@ -75,12 +82,10 @@
 			if (document.visibilityState === 'hidden') {
 				const seconds = drain(false);
 				if (seconds > 0) void patchStep(currentIndex, { addSeconds: seconds }, true);
-			} else {
+			} else if (isStale() && !recording) {
 				// Back after midnight: this page still points at yesterday's document.
-				if (day && localDayKey(new Date()) !== day._id) {
-					void invalidateAll();
-					return;
-				}
+				void rollOver();
+			} else {
 				enteredAt = Date.now();
 			}
 		};
@@ -95,6 +100,42 @@
 		elapsed = 0;
 		enteredAt = restart && document.visibilityState === 'visible' ? Date.now() : null;
 		return seconds;
+	}
+
+	/**
+	 * Today's key on the server's calendar, which is what the day document is
+	 * keyed on. A hosted install in another time zone than the phone would
+	 * otherwise think midnight came hours early (or late).
+	 */
+	function serverToday(): string {
+		const skewMs = (data.serverOffsetMinutes - new Date().getTimezoneOffset()) * 60_000;
+		return localDayKey(new Date(Date.now() - skewMs));
+	}
+
+	/** The server's calendar has moved past the day this page holds. */
+	function isStale(): boolean {
+		return day !== null && serverToday() !== day._id;
+	}
+
+	let rollingOver = false;
+	let lastRollOver = 0;
+	/** Bank what is on the clock against the old day, then load the new one. */
+	async function rollOver() {
+		// Once a minute at most: if the server disagrees about the date (a DST
+		// edge, say), this must not turn into a reload loop.
+		if (rollingOver || Date.now() - lastRollOver < 60_000) return;
+		rollingOver = true;
+		lastRollOver = Date.now();
+		try {
+			const seconds = drain(false);
+			if (seconds > 0) await patchStep(currentIndex, { addSeconds: seconds });
+			// Replaces data.day, so `day` and `currentIndex` follow it again.
+			await invalidateAll();
+			lastSaved = null;
+		} finally {
+			rollingOver = false;
+			if (document.visibilityState === 'visible') enteredAt = Date.now();
+		}
 	}
 
 	function revive(raw: PracticeDay): PracticeDay {
@@ -130,7 +171,10 @@
 				const body = await response.json().catch(() => null);
 				throw new Error(body?.message ?? `Save failed (${response.status})`);
 			}
-			day = revive(await response.json());
+			// A keepalive PATCH from before a rollover can land after it; the reply
+			// is yesterday's document and must not displace today's.
+			const updated = revive(await response.json());
+			if (day?._id === updated._id) day = updated;
 		} catch (err) {
 			saveError = err instanceof Error ? err.message : 'Could not save progress';
 		}

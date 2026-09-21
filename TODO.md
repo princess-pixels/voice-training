@@ -7,20 +7,10 @@ scores and the decisions behind the bigger changes are in [HISTORY.md](HISTORY.m
 State as of 2026-09-21: the round 3 audit scored 7.0 (Sept 3: 6.1). Its ids (A = correctness
 and types, B = security and deps, C = DSP and performance, D = architecture and testing,
 E = UX and docs) are kept below so a fix can name what it closes. The import trust
-boundary (B01, B02, B04) is already closed.
+boundary (B01, B02, B04) and the midnight rollover (A01, A02) are already closed.
 
 ## Bugs
 
-- [ ] **A01 · Practice page never adopts the new day after midnight.**
-      `practice/+page.svelte:19,30,72-89`. `day` and `currentIndex` are seeded once with
-      `untrack(() => data.day)`; `invalidateAll()` refreshes `data.day` but not the local
-      copy, so every PATCH after midnight writes into yesterday's row and the clock stays
-      stopped. Wrap the body in `{#key data.day?._id}` or reset the local state when the
-      id changes, and set `enteredAt` after the reload path too.
-- [ ] **A02 · Midnight detection compares the browser's calendar with the server's key.**
-      `practice/+page.svelte:80` vs `practice.ts:17`. A UTC server used from a CEST phone
-      thinks midnight passed two hours early and the timer silently stops on every refocus.
-      Have `load` return the server's today key and compare against that.
 - [ ] **A04 · Deleting a session leaves its id in `practice_days.steps[].sessionIds`.**
       `db.ts:408-412`. The practice page keeps a "latest take" link to a 404, and the
       export carries the dangling id along. Strip it inside the same transaction; optionally
