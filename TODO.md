@@ -8,7 +8,8 @@ State as of 2026-09-21: the round 3 audit scored 7.0 (Sept 3: 6.1). Its ids (A =
 and types, B = security and deps, C = DSP and performance, D = architecture and testing,
 E = UX and docs) are kept below so a fix can name what it closes. The import trust
 boundary (B01, B02, B04), the midnight rollover (A01, A02), dangling take ids after a
-delete (A04) and the missing error page (D04, E08) are already closed.
+delete (A04), the missing error page (D04, E08) and the pitch line drawn across
+silences (C01) are already closed.
 
 ## Bugs
 
@@ -25,9 +26,6 @@ delete (A04) and the missing error page (D04, E08) are already closed.
       tmpdir.** `db.test.ts:217-261`, `export.ts:102-124`. Use `setSystemTime` in the
       dashboard tests; scope `sweepStaleExports` to a `voice-training` subdirectory of
       `tmpdir()` so a test run cannot sweep a live server's in-flight export.
-- [ ] **C01 · Pitch line bridges silences.** `PitchVisualizer.svelte:394-407`. Unvoiced
-      frames are never stored and `drawStatic` joins every consecutive pair, so a breath
-      becomes a straight segment. Break the path when `p2.t - p1.t` exceeds a couple of hops.
 - [ ] **E02 · Keyboard focus is dropped at every stage of a recording.**
       `RecordingStudio.svelte:297-335,350-435`. Start unmounts on press, Stop unmounts on
       press, the summary mounts unfocused. One persistent primary button whose label
