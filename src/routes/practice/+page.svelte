@@ -375,7 +375,7 @@
 			<div
 				class="bg-surface-900 border border-emerald-500/30 rounded-2xl p-10 text-center space-y-5"
 			>
-				<div class="text-5xl">🌸</div>
+				<div class="text-5xl" aria-hidden="true">🌸</div>
 				<h2 class="text-2xl font-semibold text-surface-100">Routine complete</h2>
 				<p class="text-surface-400 max-w-md mx-auto">
 					{doneCount} of {steps.length} steps done{totalSeconds > 0

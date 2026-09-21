@@ -34,12 +34,14 @@ download, nothing to install, and every recording stays on your disk.
 
 The binaries are not code-signed, so the first start needs a confirmation: on macOS
 right-click the file, choose **Open**, and confirm; on Windows choose **More info**, then
-**Run anyway** on the SmartScreen prompt. The file is about 65 MB because it carries its
-own runtime; `SHA256SUMS.txt` on the release lets you verify a download.
+**Run anyway** on the SmartScreen prompt. The file is 60–90 MB depending on the platform
+because it carries its own runtime; `SHA256SUMS.txt` on the release lets you verify a
+download.
 
 Your data (a SQLite database and the recordings) lives in your user data folder:
-`~/.local/share/voice-training` on Linux, `~/Library/Application Support/voice-training`
-on macOS, `%APPDATA%\voice-training` on Windows. `voice-training --help` lists the
+`~/.local/share/voice-training` on Linux (or `$XDG_DATA_HOME/voice-training` when that
+is set), `~/Library/Application Support/voice-training` on macOS,
+`%APPDATA%\voice-training` on Windows. `voice-training --help` lists the
 options, all of which are in [Configuration](#configuration) below.
 
 ## What's inside
@@ -103,9 +105,11 @@ checkout and an `EnvironmentFile` for the settings; see [Configuration](#configu
 `localhost` or a secure origin. Bind to your LAN with `--host 0.0.0.0`, put a reverse proxy
 with TLS in front (Caddy's `tls internal` is the easiest for a home network), and set
 `ORIGIN` to the `https://` URL you open the app at. Without a matching `ORIGIN` the server
-rejects uploads with `403 Cross-site POST form submissions are forbidden`. If the proxy
-forwards `X-Forwarded-Proto` and `X-Forwarded-Host`, `PROTOCOL_HEADER=x-forwarded-proto`
-and `HOST_HEADER=x-forwarded-host` work too.
+rejects uploads with `403 Cross-site POST form submissions are forbidden`. With Caddy
+(which passes the client's `Host` through) `ORIGIN` alone is enough. Only for a proxy that
+rewrites `Host` set `HOST_HEADER=x-forwarded-host` (and `PROTOCOL_HEADER=x-forwarded-proto`);
+note that any `HOST_HEADER` turns the server's own host check off and trusts the proxy to
+do it, see [Your data](#your-data).
 
 ## Your data
 
@@ -177,7 +181,10 @@ The two "source" defaults for `ORIGIN` and `BODY_SIZE_LIMIT` are the ones that b
 ## From source
 
 You need [Bun](https://bun.com) 1.4+ (the database is `bun:sqlite`, so Node alone will not
-run it). Nothing else: no database server, no object storage, no Docker.
+run it; `package.json` pins the engine). Nothing else: no database server, no object
+storage, no Docker. Running from source needs the full `bun install`: the server bundle
+resolves `@sveltejs/kit` and `svelte` from `node_modules` at runtime, so an install with
+`--production` will not start it (the compiled binary carries everything).
 
 ```bash
 git clone https://github.com/princess-pixels/voice-training.git
@@ -189,9 +196,12 @@ bun run dev              # Vite dev server on :5173, data in ./data
 
 ```bash
 bun run check            # svelte-check: types and template errors
-bun test                 # YIN, pitch stats, routine, the storage layer (in-memory SQLite,
-                         # temp audio dir), export/import round trip; coverage thresholds on
+bun test                 # YIN, pitch stats, routine, validation, the storage layer (in-memory
+                         # SQLite, temp audio dir), export/import round trip; coverage thresholds on
+bun run coverage:gap     # what the coverage number leaves out: Bun only measures files a test
+                         # imports, so routes, components and the recorder store are not in it
 bun run build            # production bundle into ./build; run it with `bun ./build/index.js`
+bun run test:server      # the built server end to end over HTTP (needs ./build)
 bun run start -- --help  # the CLI entry, in development
 bun run build:binary     # dist/voice-training for this machine
 bun run build:binary bun-linux-x64 bun-darwin-arm64 bun-windows-x64   # or any Bun target

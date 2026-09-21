@@ -104,7 +104,7 @@
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 			{#each data.exercises as exercise (exercise._id)}
 				<div
-					class="group bg-surface-900 border border-surface-800 rounded-xl p-6 transition-all duration-200 hover:border-surface-700 hover:shadow-xl hover:shadow-black/20 hover:-translate-y-0.5"
+					class="group bg-surface-900 border border-surface-800 rounded-xl p-6 transition-all duration-200 hover:border-surface-700 hover:shadow-xl hover:shadow-black/20 hover:-translate-y-0.5 motion-reduce:hover:translate-y-0"
 				>
 					<!-- Badges Row -->
 					<div class="flex flex-wrap gap-2 mb-4">
@@ -163,6 +163,7 @@
 						<button
 							type="button"
 							class="flex items-center gap-2 text-sm text-primary-400 hover:text-primary-300 transition-colors"
+							aria-expanded={expandedExercises.has(exercise._id)}
 							onclick={() => toggleInstructions(exercise._id)}
 						>
 							<span>Instructions</span>
@@ -185,9 +186,7 @@
 							</svg>
 						</button>
 						{#if expandedExercises.has(exercise._id)}
-							<div
-								class="mt-3 text-sm text-surface-400 leading-relaxed animate-in fade-in slide-in-from-top-2 duration-200"
-							>
+							<div class="mt-3 text-sm text-surface-400 leading-relaxed">
 								{exercise.instructions}
 							</div>
 						{/if}

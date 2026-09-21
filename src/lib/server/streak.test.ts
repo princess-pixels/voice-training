@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { calculateStreak } from './db';
+import { calculateStreak } from '$lib/days';
 
 // Local-time constructor. The streak must count calendar days in the server's
 // zone, so the test builds dates the same way regardless of what TZ is set to.

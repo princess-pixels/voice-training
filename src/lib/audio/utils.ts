@@ -35,8 +35,7 @@ export function percentile(values: number[], p: number): number {
 	return sorted[index];
 }
 
-/** The feminine preset; what every range falls back to when nothing is configured. */
-export const DEFAULT_TARGET_RANGE: PitchRange = { low: 180, high: 300 };
+export { DEFAULT_TARGET_RANGE } from '$lib/constants';
 
 /**
  * Where a pitch sits relative to the user's own target range. This is the

@@ -83,7 +83,7 @@
 			? 'bg-emerald-500/10 border-emerald-500/30 hover:border-emerald-500/50'
 			: 'bg-surface-900 border-surface-800 hover:border-primary-500/40'}"
 	>
-		<span class="text-3xl">{today?.complete ? '🌸' : '🎤'}</span>
+		<span class="text-3xl" aria-hidden="true">{today?.complete ? '🌸' : '🎤'}</span>
 		<div class="flex-1 min-w-[200px]">
 			<p class="font-semibold text-surface-100">
 				{#if !today}
@@ -154,7 +154,7 @@
 					href="/practice"
 					class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-xl transition-all duration-200 shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40"
 				>
-					<span class="text-lg">🌸</span>
+					<span class="text-lg" aria-hidden="true">🌸</span>
 					Start Today's Practice
 				</a>
 				<a
@@ -423,7 +423,7 @@
 						href="/practice"
 						class="flex items-center gap-3 w-full p-4 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-xl transition-all duration-200 shadow-lg shadow-primary-500/20 hover:shadow-primary-500/30"
 					>
-						<span class="text-lg">🌸</span>
+						<span class="text-lg" aria-hidden="true">🌸</span>
 						Today's Practice
 					</a>
 					<a

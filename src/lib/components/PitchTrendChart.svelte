@@ -134,7 +134,7 @@
 		}
 
 		// Draw Y-axis labels
-		ctx.fillStyle = '#737373'; // surface-500
+		ctx.fillStyle = '#8f8f8f'; // lifted from surface-500 to clear 4.5:1 on surface-900
 		ctx.font = '11px Inter, system-ui, sans-serif';
 		ctx.textAlign = 'right';
 
@@ -146,7 +146,7 @@
 
 		// Draw X-axis labels (dates)
 		ctx.textAlign = 'center';
-		ctx.fillStyle = '#737373';
+		ctx.fillStyle = '#8f8f8f';
 
 		// One label per day: several sessions on the same day would otherwise
 		// repeat the date under each of them.
@@ -183,7 +183,13 @@
 
 <div bind:this={container} class="w-full">
 	{#if trendData.length > 0}
-		<canvas bind:this={canvas} class="w-full" style="height: {chartHeight}px;"></canvas>
+		<canvas bind:this={canvas} class="w-full" style="height: {chartHeight}px;">
+			Average pitch over the last {trendData.length}
+			{trendData.length === 1 ? 'session' : 'sessions'}: from {Math.round(trendData[0].avgHz)} Hz to {Math.round(
+				trendData[trendData.length - 1].avgHz
+			)} Hz, target {targetRange.low} to {targetRange.high}
+			Hz.
+		</canvas>
 	{:else}
 		<div class="flex items-center justify-center h-[250px] text-surface-500">
 			<p>No pitch data available yet</p>

@@ -20,18 +20,13 @@ check (C04) and row-before-file ordering on delete (A08) are already closed. Eve
 from the round is closed; what is left is glow-ups and docs. Of those, pitch labels tied
 to the user's own range (E06, E16), YIN reading the newest part of the frame (C02),
 routine time in the practice total (A14) and local dates in audio keys and export names
-(D12) are done.
+(D12), the end-to-end server test and the coverage-gap script (D03, D02), the audio
+route's narrow query (C06), pure logic and constants out of db.ts (D09), reduced motion,
+canvas contrast and the small semantics (E12, E13, E15) and the docs fixes (B07, B08,
+E18, E21) are done.
 
 ## Glow-ups
 
-- [ ] **D02 · The coverage number is a false signal.** `bunfig.toml:11-17`. Measured
-      files are 2,530 of 8,605 source lines; Bun only instruments what a test imports, so
-      routes, components, the store and the client audio path never trip the threshold.
-      Fix the bunfig comment and make the gap visible in CI.
-- [ ] **D03 · Nothing tests the HTTP layer end to end.** CI boots the binary for
-      `--version` only. A `server.test.ts` that spawns `build/index.js` with a temp
-      `DATA_DIR` and exercises multipart POST, Range 206/416, a bad `Host`, practice PATCH
-      and export, run after the build step.
 - [ ] **D06 · Tested pure helpers are dead; the pages reimplement them.**
       `nextStepIndex`, `isPracticed`, `getAudioDevices`, and a third hand-rolled
       `PracticeDay` reviver. A client-safe `src/lib/practice.ts` next to `days.ts`.
@@ -41,9 +36,6 @@ routine time in the practice total (A14) and local dates in audio keys and expor
 - [ ] **C05 · Pitch points are stored at 74 bytes each with a field nothing reads.**
       Round `t` to 1 ms and `hz` to 0.1 Hz in `addPoint`, make `confidence` optional:
       1.7 MB → 0.6 MB per ten-minute take, through upload, SQLite, page payload and export.
-- [ ] **C06 · Audio route parses the full pitch blob on every Range request.**
-      `sessions/[id]/audio/+server.ts:148`. A `getSessionAudio(id)` that selects only
-      `audio_key, audio_type`.
 - [ ] **C07 · Playback re-filters the whole point array on every `timeupdate`.**
       `PitchVisualizer.svelte:527-528`. Cache `points` and `timeRange` in `staticFor`.
 - [ ] **C08 · Live mode repaints the full background every hop, off the animation
@@ -54,22 +46,12 @@ routine time in the practice total (A14) and local dates in audio keys and expor
 - [ ] **D08 · Svelte 5 idiom slips.** `busy` derived in an `$effect`, the layout drawer
       closed by an effect on `page.url` instead of `afterNavigate`, `$effect` as `onMount`
       in settings, the range test pushing into a deep `$state` array at 40 Hz.
-- [ ] **D09 · `db.ts` carries pure logic and imports client presentation modules.**
-      `calculateStreak` into `days.ts`; `CATEGORY_ORDER` and `DEFAULT_TARGET_RANGE` into a
-      dependency-free `constants.ts`.
 - [ ] **D10 / E14 · Client-side duplication.** Four date formatters (three hard-wired to
       `en-US`), two delete flows, six `fetch` decoders, and `scripts/import.ts`
       re-implementing the CLI's import branch. `src/lib/format.ts`, a small
       `src/lib/api.ts`, and `bun src/cli.ts import`.
 - [ ] **E10 · Discard has no confirmation; the two delete confirms disagree; no undo.**
       `RecordingStudio.svelte:100-106`, `sessions/+page.svelte:30`.
-- [ ] **E12 · No reduced-motion handling; the exercise-card animation classes are dead.**
-      `motion-reduce:` variants on the pulsing dot and card lift; the `tailwindcss-animate`
-      classes in `exercises/+page.svelte:185` compile to nothing.
-- [ ] **E13 · Canvas text below AA; the trend chart has no fallback content.**
-      `PitchTrendChart.svelte:227,239,276`, `PitchVisualizer.svelte:177-185`.
-- [ ] **E15 · Small semantics.** `aria-expanded` on the instructions toggle, `aria-hidden`
-      on decorative emoji, readable disabled-but-informative labels.
 - [ ] **A12 · `revive()` and the practice wire shape are typed as if JSON carried
       `Date`s.** Move `JsonDate<T>` from `import.ts` into `types.ts` and use it on both sides.
 - [ ] **A13 · Strictness gaps.** `noUncheckedIndexedAccess`, a discriminated `CliArgs`
@@ -98,14 +80,6 @@ routine time in the practice total (A14) and local dates in audio keys and expor
 - [ ] **A11 · The `?day=&step=` record flow is dead code.** Nothing links to it; the
       practice page attaches takes through `onSaved`. Remove the prop, the form fields and
       the server attach block, or link it and test it.
-- [ ] **B07 · README recommends `HOST_HEADER`, which turns the host check off.**
-      `README.md:106-108`. With Caddy, `ORIGIN` alone is enough; say what the header costs.
-- [ ] **B08 · No engine pin, no dependency bot, from-source runtime needs devDependencies.**
-      `engines` and `packageManager` in `package.json`, a `dependabot.yml`, and one README
-      sentence that from-source needs a full `bun install`.
-- [ ] **E18 · LICENSE has no copyright holder.** `LICENSE:3`, plus `author` in `package.json`.
-- [ ] **E21 · `--help` and README drift.** `ORIGIN` and `BODY_SIZE_LIMIT` on the `--help`
-      env line; "60–90 MB depending on platform"; mention `$XDG_DATA_HOME`.
 - [ ] **E22 · No changelog, no contributing guidance.** A `CHANGELOG.md` the release job
       reads the top section of; a five-line `CONTRIBUTING.md`.
 

@@ -340,7 +340,7 @@
 				<button
 					onclick={isLow ? finishLowPhase : finishHighPhase}
 					disabled={!enoughSamples}
-					class="px-8 py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-surface-800 disabled:text-surface-600 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
+					class="px-8 py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-surface-800 disabled:text-surface-400 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
 				>
 					{isLow ? 'Next: highest note' : 'Finish test'}
 				</button>

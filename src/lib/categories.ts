@@ -2,14 +2,8 @@ import type { ExerciseCategory } from '$lib/types';
 
 // Single source of truth for how exercise categories are ordered, named and coloured.
 // Order is roughly the order you'd work through them in a session.
-export const CATEGORY_ORDER: ExerciseCategory[] = [
-	'warmup',
-	'sovt',
-	'pitch',
-	'resonance',
-	'intonation',
-	'reading'
-];
+export { CATEGORY_ORDER } from '$lib/constants';
+import { CATEGORY_ORDER } from '$lib/constants';
 
 // 'sovt' would render as "Sovt" if we just capitalised, hence the explicit map.
 const LABELS: Record<ExerciseCategory, string> = {
