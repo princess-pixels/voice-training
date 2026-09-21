@@ -3,8 +3,9 @@
 	import {
 		formatHz,
 		formatDuration,
-		getPitchCategory,
-		getPitchCategoryColor
+		pitchBand,
+		pitchBandColor,
+		pitchBandLabel
 	} from '$lib/audio/utils';
 	import { categoryLabel, categoryFillClass } from '$lib/categories';
 	import type { PageData } from './$types';
@@ -264,8 +265,8 @@
 			<!-- Avg Pitch -->
 			{#if true}
 				{@const avgPitch = recentAvgPitch}
-				{@const pitchCategory = getPitchCategory(avgPitch)}
-				{@const pitchColor = getPitchCategoryColor(pitchCategory)}
+				{@const pitchCategory = pitchBand(avgPitch, data.settings.targetRange)}
+				{@const pitchColor = pitchBandColor(pitchCategory)}
 				<div
 					class="bg-surface-900 rounded-xl border border-surface-800 p-5 relative overflow-hidden"
 				>
@@ -277,7 +278,9 @@
 						<div>
 							<p class="text-surface-500 text-sm font-medium mb-1">Avg Pitch (Recent)</p>
 							<p class="text-3xl font-bold text-surface-100">{formatHz(avgPitch)}</p>
-							<p class="text-xs mt-1" style="color: {pitchColor}">{pitchCategory}</p>
+							<p class="text-xs mt-1" style="color: {pitchColor}">
+								{pitchBandLabel(pitchCategory)}
+							</p>
 						</div>
 						<div
 							class="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -393,8 +396,8 @@
 								<div class="text-right hidden sm:block">
 									<p
 										class="text-sm font-medium"
-										style="color: {getPitchCategoryColor(
-											getPitchCategory(session.pitchData.avgPitch)
+										style="color: {pitchBandColor(
+											pitchBand(session.pitchData.avgPitch, session.targetRange)
 										)}"
 									>
 										{formatHz(session.pitchData.avgPitch)}

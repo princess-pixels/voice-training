@@ -3,6 +3,7 @@ import { mkdir, rm, rmdir, stat } from 'node:fs/promises';
 import { Readable } from 'node:stream';
 import { dirname, join, resolve, sep } from 'node:path';
 import { dataDir } from './config';
+import { localDayKey } from '$lib/days';
 
 /**
  * Recordings on local disk under `<data>/audio/`. Keys are relative paths
@@ -37,7 +38,9 @@ export function isAudioType(value: unknown): value is string {
 }
 
 export function generateAudioKey(sessionId: string, contentType = 'audio/webm'): string {
-	const date = new Date().toISOString().split('T')[0];
+	// The local calendar day, like practice days and the streak: a take at
+	// 00:30 belongs to the evening it was recorded on, not to UTC's yesterday.
+	const date = localDayKey(new Date());
 	// UUIDv7 is time-ordered, so keys within a day still list chronologically.
 	return `sessions/${date}/${sessionId}/${Bun.randomUUIDv7()}.${audioExtension(contentType)}`;
 }

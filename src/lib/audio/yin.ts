@@ -71,10 +71,15 @@ export function yin(
 	cmnd[0] = 1;
 
 	// Steps 1-3: difference function with cumulative mean normalisation.
+	// The window is halfSize samples wide and reaches tauMax + 1 samples past
+	// itself, so it is placed at the END of the buffer: getFloatTimeDomainData
+	// hands over the most recent samples last, and analysing from index 0
+	// would ignore the newest ~30 ms of every frame.
+	const offset = Math.max(0, buffer.length - halfSize - (tauMax + 1));
 	let runningSum = 0;
 	for (let tau = 1; tau <= tauMax + 1; tau++) {
 		let diff = 0;
-		for (let i = 0; i < halfSize; i++) {
+		for (let i = offset; i < offset + halfSize; i++) {
 			const delta = buffer[i] - buffer[i + tau];
 			diff += delta * delta;
 		}
