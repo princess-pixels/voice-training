@@ -20,6 +20,7 @@ import type {
 import { CATEGORY_ORDER } from '$lib/categories';
 import {
 	applyStepUpdate,
+	detachSession,
 	localDayKey,
 	resetPracticeDay,
 	summarisePracticeDay,
@@ -407,8 +408,37 @@ function countSessions(): number {
 
 export async function deleteSession(id: string): Promise<boolean> {
 	if (!isValidId(id)) return false;
-	// Bun counts cascaded rows (the points) in `changes`, hence >= 1.
-	return exec(getDatabase(), 'DELETE FROM sessions WHERE id = $id', { id }).changes >= 1;
+	const database = getDatabase();
+	return database
+		.transaction(() => {
+			// Bun counts cascaded rows (the points) in `changes`, hence >= 1.
+			const deleted = exec(database, 'DELETE FROM sessions WHERE id = $id', { id }).changes >= 1;
+			if (!deleted) return false;
+			// A take attached to a practice step would otherwise stay linked from
+			// the practice page, and ride along in every export, as a 404.
+			const days = database
+				.query<{ day: string }, { id: string }>(
+					`SELECT day FROM practice_days
+					 WHERE EXISTS (
+					   SELECT 1 FROM json_each(practice_days.steps) AS step,
+					                 json_each(step.value, '$.sessionIds') AS sid
+					   WHERE sid.value = $id
+					 )`
+				)
+				.all({ id });
+			const now = new Date();
+			for (const { day } of days) {
+				const current = readPracticeDay(database, day);
+				if (!current) continue;
+				exec(
+					database,
+					`UPDATE practice_days SET steps = $steps, started_at = $started_at, updated_at = $updated_at, completed_at = $completed_at WHERE day = $day`,
+					practiceDayParams(detachSession(current, id, now))
+				);
+			}
+			return true;
+		})
+		.immediate();
 }
 
 /** Every session in full, oldest first, one row at a time. */
