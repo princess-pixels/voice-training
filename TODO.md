@@ -9,7 +9,8 @@ and types, B = security and deps, C = DSP and performance, D = architecture and 
 E = UX and docs) are kept below so a fix can name what it closes. The import trust
 boundary (B01, B02, B04), the midnight rollover (A01, A02), dangling take ids after a
 delete (A04), the missing error page (D04, E08), the pitch line drawn across silences
-(C01), page titles (E09) and the README's first-run sentence (E17) are already closed.
+(C01), page titles (E09), the README's first-run sentence (E17) and the sessions table on
+phones (E01) are already closed.
 
 ## Bugs
 
@@ -40,8 +41,6 @@ delete (A04), the missing error page (D04, E08), the pitch line drawn across sil
 - [ ] **E05 · The cents readout is an `aria-live` region updated ten times a second.**
       `NoteKeyboard.svelte:462`. Announce from a separate hidden region at most once a
       second or only on transitions.
-- [ ] **E01 · Sessions table is clipped on phones.** `sessions/+page.svelte:84-113`.
-      `overflow-x-auto` as a stopgap, then a stacked card list below `md`.
 - [ ] **C04 · No octave-down check in YIN.** `yin.ts:78-97`. A weak fundamental near the
       top of the band reads an octave high or drops out. Check the minimum around `2·tau`.
 - [ ] **A07 · A failed PATCH still advances the step and drops the drained seconds.**

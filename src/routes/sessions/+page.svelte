@@ -85,7 +85,56 @@
 			</a>
 		</div>
 	{:else}
-		<div class="bg-surface-900 rounded-xl border border-surface-800 overflow-hidden">
+		<!-- Narrow screens: one card per session. A six-column table cannot shrink
+		     below its content, so on a phone it clipped the actions off the right edge. -->
+		<ul
+			class="md:hidden bg-surface-900 rounded-xl border border-surface-800 divide-y divide-surface-800"
+		>
+			{#each data.sessions as session}
+				<li class="p-4 space-y-3">
+					<div class="flex items-start justify-between gap-3">
+						<div class="min-w-0">
+							<div class="text-surface-200 font-medium truncate">{session.title}</div>
+							<div class="text-surface-500 text-sm">
+								{formatDate(session.createdAt)} · {formatTime(session.createdAt)}
+							</div>
+						</div>
+						<span
+							class="font-semibold shrink-0 {getPitchCategoryClass(session.pitchData.avgPitch)}"
+						>
+							{Math.round(session.pitchData.avgPitch)} Hz
+						</span>
+					</div>
+					<div class="flex items-center justify-between gap-3 text-sm">
+						<div class="flex items-center gap-3 text-surface-400">
+							<span>{formatDuration(session.duration)}</span>
+							<span class="text-primary-400 font-semibold"
+								>{Math.round(session.pitchData.timeInTargetPct)}% in target</span
+							>
+						</div>
+						<div class="flex items-center gap-4">
+							<a
+								href="/sessions/{session._id}"
+								class="py-2 text-primary-400 hover:text-primary-300 font-medium transition-colors"
+							>
+								View
+							</a>
+							<button
+								onclick={() => deleteSession(session._id)}
+								aria-label="Delete session {session.title}"
+								class="py-2 text-surface-500 hover:text-red-400 font-medium transition-colors"
+							>
+								Delete
+							</button>
+						</div>
+					</div>
+				</li>
+			{/each}
+		</ul>
+
+		<div
+			class="hidden md:block bg-surface-900 rounded-xl border border-surface-800 overflow-x-auto"
+		>
 			<table class="w-full">
 				<thead>
 					<tr class="border-b border-surface-800 bg-surface-900/50">
