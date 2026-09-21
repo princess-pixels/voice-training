@@ -7,6 +7,10 @@ top section as the GitHub release notes. The longer story behind each release is
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.2.0] - 2026-09-21
+
 ### Fixed
 
 - Import archives are a trust boundary: manifest paths are confined to the archive,
@@ -78,7 +82,8 @@ top section as the GitHub release notes. The longer story behind each release is
 - The recording studio with live pitch detection (YIN in a Worker), the range test,
   the exercise library, the dashboard.
 
-[Unreleased]: https://github.com/princess-pixels/voice-training/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/princess-pixels/voice-training/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/princess-pixels/voice-training/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/princess-pixels/voice-training/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/princess-pixels/voice-training/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/princess-pixels/voice-training/releases/tag/v1.0.0
