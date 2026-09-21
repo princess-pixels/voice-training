@@ -3,6 +3,7 @@ import {
 	getPracticeDay,
 	isValidId,
 	resetPracticeDaySteps,
+	sessionExists,
 	updatePracticeStep
 } from '$lib/server/db';
 import { DAY_KEY, STEP_STATUSES, type StepUpdate } from '$lib/server/practice';
@@ -70,6 +71,10 @@ export const GET: RequestHandler = async ({ params }) => {
 export const PATCH: RequestHandler = async ({ params, request }) => {
 	const dayKey = parseDay(params.day);
 	const { index, update } = parseUpdate(await request.json().catch(() => null));
+	// Well-formed is not enough: a step must only ever point at a take that exists.
+	if (update.sessionId && !(await sessionExists(update.sessionId))) {
+		error(400, 'sessionId does not refer to a saved session');
+	}
 
 	let day;
 	try {

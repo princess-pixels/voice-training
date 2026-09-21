@@ -81,6 +81,24 @@ export function applyStepUpdate(
 	};
 }
 
+/**
+ * Forget a recording that no longer exists. Returns the same object when the
+ * day never referenced it, so callers can skip the write. The step's status
+ * and time are the user's record and stay as they are.
+ */
+export function detachSession(day: PracticeDay, sessionId: string, now = new Date()): PracticeDay {
+	if (!day.steps.some((s) => s.sessionIds.includes(sessionId))) return day;
+	return {
+		...day,
+		steps: day.steps.map((s) =>
+			s.sessionIds.includes(sessionId)
+				? { ...s, sessionIds: s.sessionIds.filter((id) => id !== sessionId) }
+				: s
+		),
+		updatedAt: now
+	};
+}
+
 /** Put every step back to pending. Time spent and recordings are kept. */
 export function resetPracticeDay(day: PracticeDay, now = new Date()): PracticeDay {
 	return {

@@ -194,6 +194,25 @@ describe('sessions', () => {
 		expect(orphans).toBe(0);
 	});
 
+	test('delete detaches the session from the practice days it was attached to', async () => {
+		const gone = await createSession(sessionInput());
+		const kept = await createSession(sessionInput());
+		await getOrCreatePracticeDay(practiceDay('2026-09-10'));
+		await getOrCreatePracticeDay(practiceDay('2026-09-11'));
+		await updatePracticeStep('2026-09-10', 0, { sessionId: kept._id, addSeconds: 20 });
+		await updatePracticeStep('2026-09-10', 0, { sessionId: gone._id });
+		await updatePracticeStep('2026-09-10', 1, { sessionId: gone._id });
+		const untouched = await getPracticeDay('2026-09-11');
+
+		expect(await deleteSession(gone._id)).toBe(true);
+
+		const day = await getPracticeDay('2026-09-10');
+		expect(day!.steps.map((s) => s.sessionIds)).toEqual([[kept._id], []]);
+		expect(day!.steps.map((s) => s.status)).toEqual(['done', 'done']);
+		expect(day!.steps[0].seconds).toBe(20);
+		expect(await getPracticeDay('2026-09-11')).toEqual(untouched);
+	});
+
 	test('a session without stored points still reads', async () => {
 		const s = await createSession(sessionInput());
 		getDatabase().run('DELETE FROM session_points');

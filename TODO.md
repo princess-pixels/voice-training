@@ -7,14 +7,11 @@ scores and the decisions behind the bigger changes are in [HISTORY.md](HISTORY.m
 State as of 2026-09-21: the round 3 audit scored 7.0 (Sept 3: 6.1). Its ids (A = correctness
 and types, B = security and deps, C = DSP and performance, D = architecture and testing,
 E = UX and docs) are kept below so a fix can name what it closes. The import trust
-boundary (B01, B02, B04) and the midnight rollover (A01, A02) are already closed.
+boundary (B01, B02, B04), the midnight rollover (A01, A02) and dangling take ids after a
+delete (A04) are already closed.
 
 ## Bugs
 
-- [ ] **A04 · Deleting a session leaves its id in `practice_days.steps[].sessionIds`.**
-      `db.ts:408-412`. The practice page keeps a "latest take" link to a 404, and the
-      export carries the dangling id along. Strip it inside the same transaction; optionally
-      check `sessionExists` in the practice PATCH.
 - [ ] **A06 · Importer trusts nested archive shapes.** `import.ts` `readManifest` /
       `readSession`. Sessions and practice days are cast, not checked, and skip every cap
       the HTTP route enforces (200k points, title and notes length, duration, the settings

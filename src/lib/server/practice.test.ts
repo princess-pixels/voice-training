@@ -4,6 +4,7 @@ import type { DailyRoutine } from './routine';
 import { dayKeysEndingAt } from '$lib/days';
 import {
 	applyStepUpdate,
+	detachSession,
 	isPracticed,
 	localDayKey,
 	newPracticeDay,
@@ -212,5 +213,27 @@ describe('summarisePracticeDay, isPracticed, nextStepIndex', () => {
 	test('an empty routine has no steps to point at', () => {
 		const day = newPracticeDay({ steps: [], totalMinutes: 0 }, opened);
 		expect(nextStepIndex(day)).toBe(0);
+	});
+});
+
+describe('detachSession', () => {
+	test('removes the id from every step that holds it and keeps the rest of the record', () => {
+		let day = newPracticeDay(routine, opened);
+		day = applyStepUpdate(day, 0, { sessionId: 's1', addSeconds: 40 }, at(21, 1));
+		day = applyStepUpdate(day, 0, { sessionId: 's2' }, at(21, 2));
+		day = applyStepUpdate(day, 2, { sessionId: 's1' }, at(21, 3));
+
+		const after = detachSession(day, 's1', at(21, 4));
+		expect(after.steps.map((s) => s.sessionIds)).toEqual([['s2'], [], []]);
+		expect(after.steps[0]).toMatchObject({ status: 'done', seconds: 40 });
+		expect(after.steps[2].status).toBe('done');
+		expect(after.updatedAt).toEqual(at(21, 4));
+		// Never mutates its input.
+		expect(day.steps[0].sessionIds).toEqual(['s1', 's2']);
+	});
+
+	test('returns the same day when nothing referenced the session', () => {
+		const day = applyStepUpdate(newPracticeDay(routine, opened), 0, { sessionId: 's1' }, at(21, 1));
+		expect(detachSession(day, 'nope', at(21, 2))).toBe(day);
 	});
 });
