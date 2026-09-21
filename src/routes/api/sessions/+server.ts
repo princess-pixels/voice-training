@@ -2,7 +2,7 @@ import { DEFAULT_TARGET_RANGE } from '$lib/audio/utils';
 import type { RequestHandler } from './$types';
 import { createSession, isValidId, updatePracticeStep } from '$lib/server/db';
 import { DAY_KEY } from '$lib/server/practice';
-import { generateAudioKey, uploadAudio } from '$lib/server/audio';
+import { generateAudioKey, isAudioType, uploadAudio } from '$lib/server/audio';
 import type { PitchData, PitchPoint, PitchRange } from '$lib/types';
 import { summarisePitch } from '$lib/audio/stats';
 import { json, error, isHttpError } from '@sveltejs/kit';
@@ -16,9 +16,6 @@ const MAX_PITCH_POINTS = 200_000;
 const MAX_TITLE_LENGTH = 200;
 const MAX_NOTES_LENGTH = 5000;
 const MAX_DURATION_SECONDS = 4 * 60 * 60;
-
-// e.g. audio/webm;codecs=opus or audio/mp4. Anything else falls back to the file's own type.
-const AUDIO_TYPE = /^audio\/[A-Za-z0-9.+-]+(;[\w=.\- ]+)?$/;
 
 function text(formData: FormData, key: string): string {
 	const value = formData.get(key);
@@ -129,9 +126,15 @@ export const POST: RequestHandler = async ({ request }) => {
 				error(413, { message: 'Audio file too large' });
 			}
 			// Prefer the type the client declared: multipart parsers (Bun included) can
-			// replace the part's Content-Type with a guess from the filename.
+			// replace the part's Content-Type with a guess from the filename. Either
+			// way it has to be an audio type; a guessed text/html would otherwise be
+			// served back as such from the audio route.
 			const declared = text(formData, 'audioType');
-			audioType = AUDIO_TYPE.test(declared) ? declared : audioFile.type || 'audio/webm';
+			audioType = isAudioType(declared)
+				? declared
+				: isAudioType(audioFile.type)
+					? audioFile.type
+					: 'audio/webm';
 			audioKey = generateAudioKey(`temp-${Date.now()}`, audioType);
 			await uploadAudio(audioKey, await audioFile.arrayBuffer(), audioType);
 		}

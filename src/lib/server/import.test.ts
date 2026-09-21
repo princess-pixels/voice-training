@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, spyOn, test } from 'bun:test';
-import { mkdir, mkdtemp, rm, stat, utimes } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, rm, stat, symlink, utimes } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Exercise, PracticeDay, Session } from '$lib/types';
@@ -268,6 +268,122 @@ describe('importDirectory', () => {
 		const stored = await getSessionById(SESSION_1);
 		expect(stored!.audioKey).toMatch(/^sessions\/\d{4}-\d{2}-\d{2}\/6a99d69c6610f1d1a26d08a6\//);
 		expect((await openAudio(stored!.audioKey))!.size).toBe(3);
+	});
+
+	/** Every regular file under the data directory's audio tree. */
+	async function storedRecordings(dataDir: string): Promise<string[]> {
+		const entries = await readdir(join(dataDir, 'audio'), { recursive: true, withFileTypes: true });
+		return entries.filter((e) => e.isFile()).map((e) => e.name);
+	}
+
+	/** A one-session fixture whose manifest entry the test can rewrite. */
+	async function singleSessionFixture(name: string) {
+		const dir = join(root, name);
+		await writeFixture(dir);
+		const manifest = await Bun.file(join(dir, 'manifest.json')).json();
+		manifest.sessions = [manifest.sessions[0]];
+		const save = () => Bun.write(join(dir, 'manifest.json'), JSON.stringify(manifest));
+		await save();
+		return { dir, manifest, save };
+	}
+
+	test('refuses manifest paths that point outside the archive', async () => {
+		const dataDir = await freshDataDir();
+		const { importDirectory } = await imp();
+		const { sessionExists } = await db();
+		const secret = join(root, 'secret-outside.txt');
+		await Bun.write(secret, 'ssh-ed25519 AAAA');
+		const { dir, manifest, save } = await singleSessionFixture('fixture-traversal');
+
+		manifest.sessions[0].audioFile = '../secret-outside.txt';
+		await save();
+		let report = await importDirectory(dir);
+		expect(report.sessions.failed).toEqual([
+			`${SESSION_1}: archive path escapes the archive: ../secret-outside.txt`
+		]);
+		expect(report.audio.copied).toBe(0);
+		expect(await sessionExists(SESSION_1)).toBe(false);
+
+		manifest.sessions[0].audioFile = `audio/${SESSION_1}.webm`;
+		manifest.sessions[0].file = '../secret-outside.txt';
+		await save();
+		report = await importDirectory(dir);
+		expect(report.sessions.failed).toEqual([
+			`${SESSION_1}: archive path escapes the archive: ../secret-outside.txt`
+		]);
+		expect(await sessionExists(SESSION_1)).toBe(false);
+		await expect(storedRecordings(dataDir)).rejects.toThrow(); // audio/ never created
+	});
+
+	test('does not follow symlinks out of the archive', async () => {
+		const dataDir = await freshDataDir();
+		const { importDirectory } = await imp();
+		const secret = join(root, 'secret-linked.txt');
+		await Bun.write(secret, 'ssh-ed25519 AAAA');
+		const { dir, manifest, save } = await singleSessionFixture('fixture-symlink');
+
+		// A symlinked file, as GNU tar extracts a symlink member.
+		await rm(join(dir, 'audio', `${SESSION_1}.webm`));
+		await symlink(secret, join(dir, 'audio', `${SESSION_1}.webm`));
+		let report = await importDirectory(dir);
+		expect(report.sessions.failed).toEqual([
+			`${SESSION_1}: archive path escapes the archive: audio/${SESSION_1}.webm`
+		]);
+
+		// A symlinked directory with a relative path through it.
+		await symlink(root, join(dir, 'audio', 'out'));
+		manifest.sessions[0].audioFile = 'audio/out/secret-linked.txt';
+		await save();
+		report = await importDirectory(dir);
+		expect(report.sessions.failed).toEqual([
+			`${SESSION_1}: archive path escapes the archive: audio/out/secret-linked.txt`
+		]);
+
+		// A directory where a file should be.
+		manifest.sessions[0].audioFile = 'audio';
+		await save();
+		report = await importDirectory(dir);
+		expect(report.sessions.failed).toEqual([`${SESSION_1}: archive path is not a file: audio`]);
+		await expect(storedRecordings(dataDir)).rejects.toThrow();
+	});
+
+	test('drops a stored audio type that is not an audio type', async () => {
+		await freshDataDir();
+		const { importDirectory } = await imp();
+		const { getSessionById } = await db();
+		const { dir } = await singleSessionFixture('fixture-audiotype');
+		const s = {
+			...session(SESSION_1, null, 'placeholder-audio-key', '2026-09-03T20:20:44.701Z'),
+			audioType: 'text/html'
+		};
+		await Bun.write(join(dir, 'sessions', `${SESSION_1}.json`), JSON.stringify(s));
+
+		const report = await importDirectory(dir);
+		expect(report.sessions.added).toBe(1);
+		const stored = await getSessionById(SESSION_1);
+		expect(stored!.audioType).toBeUndefined();
+		expect(stored!.audioKey).toMatch(/\.webm$/);
+	});
+
+	test('a session that fails to insert leaves no recording behind', async () => {
+		const dataDir = await freshDataDir();
+		const { importDirectory } = await imp();
+		const { sessionExists } = await db();
+		const { dir } = await singleSessionFixture('fixture-insertfail');
+		const s = session(SESSION_1, null, 'placeholder-audio-key', '2026-09-03T20:20:44.701Z');
+		// Pitch points present, so it reads as a session, but no summary: NOT NULL in the schema.
+		await Bun.write(
+			join(dir, 'sessions', `${SESSION_1}.json`),
+			JSON.stringify({ ...s, pitchData: { points: s.pitchData.points } })
+		);
+
+		const report = await importDirectory(dir);
+		expect(report.sessions.added).toBe(0);
+		expect(report.audio.copied).toBe(0);
+		expect(report.sessions.failed).toHaveLength(1);
+		expect(report.sessions.failed[0]).toStartWith(`${SESSION_1}: `);
+		expect(await sessionExists(SESSION_1)).toBe(false);
+		expect(await storedRecordings(dataDir)).toEqual([]);
 	});
 
 	test('rejects things that are not an export', async () => {

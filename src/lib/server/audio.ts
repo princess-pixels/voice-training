@@ -26,6 +26,16 @@ export function audioTypeForKey(key: string): string {
 	return 'audio/webm';
 }
 
+// e.g. audio/webm;codecs=opus or audio/mp4. A stored type is echoed back as the
+// Content-Type of the recording, on the app's own origin, so it is never taken
+// from a multipart guess or an import archive without passing this.
+const AUDIO_TYPE = /^audio\/[A-Za-z0-9.+-]+(;[\w=.\- ]+)?$/;
+
+/** True for a MIME type this app is willing to store and serve for a recording. */
+export function isAudioType(value: unknown): value is string {
+	return typeof value === 'string' && value.length <= 100 && AUDIO_TYPE.test(value);
+}
+
 export function generateAudioKey(sessionId: string, contentType = 'audio/webm'): string {
 	const date = new Date().toISOString().split('T')[0];
 	// UUIDv7 is time-ordered, so keys within a day still list chronologically.
