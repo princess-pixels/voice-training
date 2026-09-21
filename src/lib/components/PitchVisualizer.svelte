@@ -112,6 +112,9 @@
 	}
 
 	/** Background, target band, grid, axes, the pitch line and the label: everything that is not the cursor. */
+	// The detector hops every 25 ms; four missed hops in a row is silence, not jitter.
+	const MAX_GAP_SECONDS = 0.1;
+
 	function drawStatic(ctx: CanvasRenderingContext2D, layout: Layout, points: PitchPoint[]) {
 		ctx.clearRect(0, 0, layout.width, layout.height);
 		ctx.fillStyle = '#171717'; // surface-900
@@ -161,6 +164,14 @@
 		for (let i = 0; i < points.length - 1; i++) {
 			const p1 = points[i];
 			const p2 = points[i + 1];
+			// Only voiced frames are stored, so a gap wider than a few hops is a
+			// breath or a pause. End the run there rather than drawing a straight
+			// line across the silence, coloured by neither side.
+			if (p2.t - p1.t > MAX_GAP_SECONDS) {
+				if (runCategory !== null) ctx.stroke();
+				runCategory = null;
+				continue;
+			}
 			const category = getPitchCategory((p1.hz + p2.hz) / 2);
 			if (category !== runCategory) {
 				if (runCategory !== null) ctx.stroke();
