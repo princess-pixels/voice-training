@@ -68,6 +68,7 @@ function session(id: string, exerciseId: string | null, audioKey: string, create
 				{ t: 0.025, hz: 210, confidence: 0.9 }
 			],
 			avgPitch: 205,
+			medianPitch: 200,
 			minPitch: 200,
 			maxPitch: 210,
 			timeInTargetPct: 100

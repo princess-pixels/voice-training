@@ -26,6 +26,7 @@ class RecorderStore {
 	// plain array: pushing into a deep $state array and re-filtering it in four
 	// $derived values made every frame cost O(n).
 	avgPitch = $state(0);
+	medianPitch = $state(0);
 	minPitch = $state(0);
 	maxPitch = $state(0);
 	timeInTargetPct = $state(0);
@@ -67,6 +68,7 @@ class RecorderStore {
 	private publishSummary(): void {
 		const s = this.accumulator.summary();
 		this.avgPitch = s.avgPitch;
+		this.medianPitch = s.medianPitch;
 		this.minPitch = s.minPitch;
 		this.maxPitch = s.maxPitch;
 		this.timeInTargetPct = s.timeInTargetPct;

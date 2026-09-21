@@ -6,6 +6,9 @@
 		/** The range the numbers are judged against: the take's own, or the live one. */
 		targetRange: PitchRange;
 		currentHz?: number;
+		/** The headline: the median of the voiced frames. */
+		medianHz: number;
+		/** The arithmetic mean, shown small under it for continuity with older numbers. */
 		avgHz: number;
 		minHz: number;
 		maxHz: number;
@@ -13,7 +16,8 @@
 		duration?: number;
 	}
 
-	let { targetRange, currentHz, avgHz, minHz, maxHz, timeInTargetPct, duration }: Props = $props();
+	let { targetRange, currentHz, medianHz, avgHz, minHz, maxHz, timeInTargetPct, duration }: Props =
+		$props();
 
 	function getCategoryBg(hz: number): string {
 		switch (pitchBand(hz, targetRange)) {
@@ -44,10 +48,13 @@
 	{/if}
 
 	<div class="flex-1 min-w-[100px] bg-surface-800/50 rounded-lg p-3 border border-surface-700/50">
-		<div class="text-xs text-surface-400 uppercase tracking-wider mb-1">Average</div>
+		<div class="text-xs text-surface-400 uppercase tracking-wider mb-1">Pitch (median)</div>
 		<div class="text-2xl font-bold text-surface-200">
-			{formatHz(avgHz)}
+			{formatHz(medianHz)}
 		</div>
+		{#if avgHz > 0}
+			<div class="text-xs text-surface-500 mt-1">mean {formatHz(avgHz)}</div>
+		{/if}
 	</div>
 
 	<div class="flex-1 min-w-[100px] bg-surface-800/50 rounded-lg p-3 border border-surface-700/50">

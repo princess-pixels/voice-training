@@ -35,6 +35,10 @@ top section as the GitHub release notes. The longer story behind each release is
 
 - Pitch is graded against the user's own target range (below / in / above target)
   instead of fixed feminine / androgynous / masculine thresholds.
+- The headline pitch of a take, the session list, the dashboard and the trend is now
+  the median of the voiced frames, which a laugh or a glide cannot pull up the way
+  the mean was; the mean is still shown under it. Existing sessions get their median
+  computed from their stored points on first start (schema 2).
 - Export is a same-origin POST, one at a time.
 - Screen readers hear state changes (recording, saved, errors) and a quiet cents
   readout; animation honours reduced motion; canvas labels meet AA.

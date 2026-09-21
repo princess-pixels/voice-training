@@ -21,6 +21,7 @@ const session: Session = {
 	pitchData: {
 		points: [{ t: 0, hz: 200, confidence: 0.9 }],
 		avgPitch: 200,
+		medianPitch: 200,
 		minPitch: 200,
 		maxPitch: 200,
 		timeInTargetPct: 100
@@ -43,6 +44,7 @@ describe('export layout', () => {
 		expect(entry.audioFile).toBe('audio/66f0c0ffee0000000000abcd.m4a');
 		expect(entry.pitchData).toEqual({
 			avgPitch: 200,
+			medianPitch: 200,
 			minPitch: 200,
 			maxPitch: 200,
 			timeInTargetPct: 100

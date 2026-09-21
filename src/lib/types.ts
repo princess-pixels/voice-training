@@ -17,7 +17,14 @@ export interface PitchPoint {
 
 export interface PitchData {
 	points: PitchPoint[];
+	/** Arithmetic mean of the voiced frames, in Hz. Kept for continuity; the median is the headline. */
 	avgPitch: number;
+	/**
+	 * Median of the voiced frames, in Hz. Pitch is heard logarithmically and a
+	 * mean is pulled up by brief high excursions (a laugh, a glide), so this
+	 * is the number the app reports as "your pitch".
+	 */
+	medianPitch: number;
 	minPitch: number;
 	maxPitch: number;
 	timeInTargetPct: number;

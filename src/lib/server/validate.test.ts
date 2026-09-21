@@ -190,6 +190,7 @@ describe('sessions', () => {
 			pitchData: {
 				points: POINTS,
 				avgPitch: 205,
+				medianPitch: 200,
 				minPitch: 200,
 				maxPitch: 210,
 				timeInTargetPct: 100
@@ -212,7 +213,14 @@ describe('sessions', () => {
 			notes: '',
 			duration: 0,
 			targetRange: { low: 180, high: 300 },
-			pitchData: { points: [], avgPitch: 0, minPitch: 0, maxPitch: 0, timeInTargetPct: 0 }
+			pitchData: {
+				points: [],
+				avgPitch: 0,
+				medianPitch: 0,
+				minPitch: 0,
+				maxPitch: 0,
+				timeInTargetPct: 0
+			}
 		});
 	});
 
@@ -245,7 +253,14 @@ describe('sessions', () => {
 			audioKey: 'sessions/2026-09-03/x/a.webm',
 			audioType: 'audio/webm',
 			duration: 10 ** 9,
-			pitchData: { points: POINTS, avgPitch: 999, minPitch: 1, maxPitch: 2, timeInTargetPct: 0 },
+			pitchData: {
+				points: POINTS,
+				avgPitch: 999,
+				medianPitch: 999,
+				minPitch: 1,
+				maxPitch: 2,
+				timeInTargetPct: 0
+			},
 			targetRange: { low: 180, high: 300 },
 			notes: 'n'.repeat(6000),
 			createdAt: '2026-09-03T20:20:44.701Z'
@@ -260,6 +275,7 @@ describe('sessions', () => {
 		expect(parsed.pitchData).toEqual({
 			points: POINTS,
 			avgPitch: 205,
+			medianPitch: 200,
 			minPitch: 200,
 			maxPitch: 210,
 			timeInTargetPct: 100

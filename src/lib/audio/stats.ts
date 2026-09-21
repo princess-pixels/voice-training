@@ -8,6 +8,16 @@ export type PitchSummary = Omit<PitchData, 'points'>;
  * points (hz = 0) are ignored; with no voiced points it reports zeros rather
  * than NaN.
  */
+// Histogram bins are 10 cents wide, counted from A1 (55 Hz). ~600 bins span
+// the detector's 70–500 Hz, so the median is a short walk at summary time and
+// O(1) per point while recording.
+const BIN_CENTS = 10;
+const BIN_REF_HZ = 55;
+
+function binOf(hz: number): number {
+	return Math.round((1200 * Math.log2(hz / BIN_REF_HZ)) / BIN_CENTS);
+}
+
 export class PitchAccumulator {
 	private count = 0;
 	private sum = 0;
@@ -15,6 +25,9 @@ export class PitchAccumulator {
 	private max = -Infinity;
 	private inTarget = 0;
 	private range: PitchRange;
+	/** Per 10-cent bin: how many frames landed in it and their Hz sum, so the
+	 * median bin reports the mean of its own members (exact when they agree). */
+	private bins = new Map<number, { n: number; sum: number }>();
 
 	constructor(range: PitchRange) {
 		this.range = range;
@@ -27,6 +40,26 @@ export class PitchAccumulator {
 		if (point.hz < this.min) this.min = point.hz;
 		if (point.hz > this.max) this.max = point.hz;
 		if (point.hz >= this.range.low && point.hz <= this.range.high) this.inTarget++;
+		const bin = binOf(point.hz);
+		const b = this.bins.get(bin);
+		if (b) {
+			b.n++;
+			b.sum += point.hz;
+		} else {
+			this.bins.set(bin, { n: 1, sum: point.hz });
+		}
+	}
+
+	/** The lower median: the bin where the running count reaches half the frames. */
+	private median(): number {
+		const half = this.count / 2;
+		let seen = 0;
+		for (const bin of [...this.bins.keys()].sort((a, b) => a - b)) {
+			const b = this.bins.get(bin)!;
+			seen += b.n;
+			if (seen >= half) return b.sum / b.n;
+		}
+		return 0;
 	}
 
 	/** Change the target range; the in-target count is recomputed over `points`. */
@@ -40,10 +73,11 @@ export class PitchAccumulator {
 
 	summary(): PitchSummary {
 		if (this.count === 0) {
-			return { avgPitch: 0, minPitch: 0, maxPitch: 0, timeInTargetPct: 0 };
+			return { avgPitch: 0, medianPitch: 0, minPitch: 0, maxPitch: 0, timeInTargetPct: 0 };
 		}
 		return {
 			avgPitch: this.sum / this.count,
+			medianPitch: this.median(),
 			minPitch: this.min,
 			maxPitch: this.max,
 			timeInTargetPct: (this.inTarget / this.count) * 100

@@ -16,10 +16,12 @@
 
 	const hasSessions = $derived(stats.totalSessions > 0);
 
-	// Calculate average pitch from recent sessions
+	// Where the voice has been sitting lately: the mean of the recent sessions'
+	// median pitches. The median per session keeps a laugh or a glide from
+	// pulling the number up; the mean across a handful of sessions is fine.
 	const recentAvgPitch = $derived.by(() => {
 		if (stats.recentSessions.length === 0) return 0;
-		const sum = stats.recentSessions.reduce((acc, s) => acc + s.pitchData.avgPitch, 0);
+		const sum = stats.recentSessions.reduce((acc, s) => acc + s.pitchData.medianPitch, 0);
 		return sum / stats.recentSessions.length;
 	});
 
@@ -258,7 +260,7 @@
 					></div>
 					<div class="flex items-start justify-between">
 						<div>
-							<p class="text-surface-500 text-sm font-medium mb-1">Avg Pitch (Recent)</p>
+							<p class="text-surface-500 text-sm font-medium mb-1">Pitch (recent)</p>
 							<p class="text-3xl font-bold text-surface-100">{formatHz(avgPitch)}</p>
 							<p class="text-xs mt-1" style="color: {pitchColor}">
 								{pitchBandLabel(pitchCategory)}
@@ -379,10 +381,10 @@
 									<p
 										class="text-sm font-medium"
 										style="color: {pitchBandColor(
-											pitchBand(session.pitchData.avgPitch, session.targetRange)
+											pitchBand(session.pitchData.medianPitch, session.targetRange)
 										)}"
 									>
-										{formatHz(session.pitchData.avgPitch)}
+										{formatHz(session.pitchData.medianPitch)}
 									</p>
 								</div>
 								<a

@@ -15,10 +15,12 @@ import type {
 	PitchSummary,
 	PracticeDay,
 	PracticeDaySummary,
-	PracticeStep
+	PracticeStep,
+	PitchPoint
 } from '$lib/types';
 import { CATEGORY_ORDER, DEFAULT_TARGET_RANGE } from '$lib/constants';
 import { calculateStreak } from '$lib/days';
+import { summarisePitch } from '$lib/audio/stats';
 import {
 	applyStepUpdate,
 	detachSession,
@@ -57,6 +59,7 @@ CREATE TABLE IF NOT EXISTS sessions (
 	audio_type TEXT,
 	duration INTEGER NOT NULL,
 	avg_pitch REAL NOT NULL,
+	median_pitch REAL,
 	min_pitch REAL NOT NULL,
 	max_pitch REAL NOT NULL,
 	time_in_target_pct REAL NOT NULL,
@@ -116,7 +119,8 @@ CREATE TABLE IF NOT EXISTS settings (
 );
 `;
 
-const SCHEMA_VERSION = 1;
+// 1: the portable edition's tables. 2: sessions.median_pitch, backfilled from the points.
+const SCHEMA_VERSION = 2;
 
 function databasePath(): string {
 	if (isInMemory()) return ':memory:';
@@ -140,10 +144,39 @@ function applySchema(database: Database): void {
 		.get()!;
 	if (user_version >= SCHEMA_VERSION) return;
 	database.transaction(() => {
+		if (user_version === 1) {
+			database.run('ALTER TABLE sessions ADD COLUMN median_pitch REAL');
+		}
 		database.run(SCHEMA);
+		if (user_version >= 1 && user_version < 2) backfillMedianPitch(database);
 		database.run(`PRAGMA user_version = ${SCHEMA_VERSION}`);
 	})();
 	if (user_version === 0 && !isInMemory()) console.log(`[db] Created ${databasePath()}`);
+}
+
+/** Schema 2: the median of every existing session's points, once. */
+function backfillMedianPitch(database: Database): void {
+	const rows = database
+		.query<{ id: string; points: string; low: number; high: number }, []>(
+			`SELECT s.id, p.points, s.target_low AS low, s.target_high AS high
+			 FROM sessions s JOIN session_points p ON p.session_id = s.id
+			 WHERE s.median_pitch IS NULL`
+		)
+		.all();
+	for (const row of rows) {
+		let points: PitchPoint[];
+		try {
+			points = JSON.parse(row.points);
+		} catch {
+			continue;
+		}
+		const { medianPitch } = summarisePitch(points, { low: row.low, high: row.high });
+		exec(database, 'UPDATE sessions SET median_pitch = $median WHERE id = $id', {
+			median: medianPitch,
+			id: row.id
+		});
+	}
+	if (rows.length > 0) console.log(`[db] Computed the median pitch of ${rows.length} sessions`);
 }
 
 /** The open connection, opened (and migrated) on first use. */
@@ -179,6 +212,8 @@ interface SessionRow {
 	audio_type: string | null;
 	duration: number;
 	avg_pitch: number;
+	/** Null only for a session written before schema 2 whose points could not be read. */
+	median_pitch: number | null;
 	min_pitch: number;
 	max_pitch: number;
 	time_in_target_pct: number;
@@ -189,7 +224,7 @@ interface SessionRow {
 }
 
 const SESSION_COLUMNS =
-	'id, exercise_id, title, audio_key, audio_type, duration, avg_pitch, min_pitch, max_pitch, time_in_target_pct, target_low, target_high, notes, created_at';
+	'id, exercise_id, title, audio_key, audio_type, duration, avg_pitch, median_pitch, min_pitch, max_pitch, time_in_target_pct, target_low, target_high, notes, created_at';
 
 function toSessionSummary(row: SessionRow): SessionSummary {
 	return {
@@ -201,6 +236,7 @@ function toSessionSummary(row: SessionRow): SessionSummary {
 		duration: row.duration,
 		pitchData: {
 			avgPitch: row.avg_pitch,
+			medianPitch: row.median_pitch ?? row.avg_pitch,
 			minPitch: row.min_pitch,
 			maxPitch: row.max_pitch,
 			timeInTargetPct: row.time_in_target_pct
@@ -331,7 +367,7 @@ export async function createSession(data: Omit<Session, '_id'>, id = newId()): P
 		exec(
 			database,
 			`INSERT INTO sessions (${SESSION_COLUMNS})
-			 VALUES ($id, $exercise_id, $title, $audio_key, $audio_type, $duration, $avg_pitch, $min_pitch, $max_pitch, $time_in_target_pct, $target_low, $target_high, $notes, $created_at)`,
+			 VALUES ($id, $exercise_id, $title, $audio_key, $audio_type, $duration, $avg_pitch, $median_pitch, $min_pitch, $max_pitch, $time_in_target_pct, $target_low, $target_high, $notes, $created_at)`,
 			{
 				id,
 				exercise_id: data.exerciseId,
@@ -340,6 +376,7 @@ export async function createSession(data: Omit<Session, '_id'>, id = newId()): P
 				audio_type: data.audioType ?? null,
 				duration: data.duration,
 				avg_pitch: data.pitchData.avgPitch,
+				median_pitch: data.pitchData.medianPitch,
 				min_pitch: data.pitchData.minPitch,
 				max_pitch: data.pitchData.maxPitch,
 				time_in_target_pct: data.pitchData.timeInTargetPct,
@@ -843,7 +880,8 @@ export interface DashboardStats {
 	totalSessions: number;
 	totalPracticeTime: number;
 	practiceStreak: number;
-	pitchTrend: { date: Date; avgHz: number }[];
+	/** One point per session: its median pitch (the mean for sessions the backfill could not read). */
+	pitchTrend: { date: Date; hz: number }[];
 	categoryBreakdown: { category: string; count: number }[];
 	/** Today's routine progress, or null if the practice page has not been opened today. */
 	todayPractice: PracticeDaySummary | null;
@@ -870,12 +908,13 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 		.all()
 		.map((r) => new Date(r.created_at));
 	const pitchTrend = database
-		.query<{ created_at: number; avg_pitch: number }, []>(
-			'SELECT created_at, avg_pitch FROM sessions ORDER BY created_at DESC, id DESC LIMIT 30'
+		.query<{ created_at: number; hz: number }, []>(
+			`SELECT created_at, COALESCE(median_pitch, avg_pitch) AS hz
+			 FROM sessions ORDER BY created_at DESC, id DESC LIMIT 30`
 		)
 		.all()
 		.reverse()
-		.map((r) => ({ date: new Date(r.created_at), avgHz: r.avg_pitch }));
+		.map((r) => ({ date: new Date(r.created_at), hz: r.hz }));
 	const categoryBreakdown = database
 		.query<{ category: string; count: number }, []>(
 			`SELECT e.category AS category, COUNT(*) AS count
