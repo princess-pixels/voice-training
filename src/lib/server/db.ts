@@ -37,17 +37,10 @@ import { dataDir, isInMemory } from './config';
 
 export const DATABASE_FILE = 'voice-training.db';
 
-/**
- * Ids are UUIDv7 (time-ordered, so they sort like createdAt). The 24-hex form
- * is what the Mongo years produced; imported data keeps those ids so its
- * sessions still point at their exercises.
- */
-const ID_PATTERN =
-	/^(?:[0-9a-f]{24}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
-
-export function isValidId(id: string): boolean {
-	return ID_PATTERN.test(id);
-}
+// Id validation lives with the other input rules; re-exported so callers of
+// the storage module do not need to know that.
+import { isValidId } from './validate';
+export { isValidId };
 
 function newId(): string {
 	return Bun.randomUUIDv7();
