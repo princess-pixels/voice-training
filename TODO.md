@@ -13,29 +13,19 @@ delete (A04), the missing error page (D04, E08), the pitch line drawn across sil
 phones (E01), the shared validation module (D01, A05, A06) and the one error-handling
 strategy per route (D05), the midnight-safe dashboard tests and per-install export
 sweep (D07), the three stale comments (D11, E20), keyboard focus through a take (E02)
-and plain-language microphone errors (E04, E07) are already closed.
+plain-language microphone errors (E04, E07), the practice page's step rail, failed-save
+handling, history window and review-after-completion (E03, A07, A09, A10), the quiet
+cents announcer (E05) and live regions on state and error messages (E11) are already
+closed.
 
 ## Bugs
 
-- [ ] **E03 · Step rail buttons are 6 px tall.** `practice/+page.svelte:252-269`. Give
-      each step a real hit area and keep the thin bar as the visual.
-- [ ] **E05 · The cents readout is an `aria-live` region updated ten times a second.**
-      `NoteKeyboard.svelte:462`. Announce from a separate hidden region at most once a
-      second or only on transitions.
 - [ ] **C04 · No octave-down check in YIN.** `yin.ts:78-97`. A weak fundamental near the
       top of the band reads an octave high or drops out. Check the minimum around `2·tau`.
-- [ ] **A07 · A failed PATCH still advances the step and drops the drained seconds.**
-      `practice/+page.svelte:92-98,140-156`. Return a boolean from `patchStep` and re-bank on
-      failure.
 - [ ] **A08 · Audio is removed before the row on delete, written before the row on
       create.** `api/sessions/[id]/+server.ts:30-44`, `api/sessions/+server.ts:135-149`.
       Row first, then file; clean up the file if `createSession` fails; remove the empty
       per-session directory.
-- [ ] **A09 · History strip counters include rows outside the two-week window.**
-      `practice/+page.svelte:197-204`. Filter `data.history` to `historyKeys` before summing.
-- [ ] **A10 · Clicking a step in the completion list does nothing visible.**
-      `practice/+page.svelte:273,295-301`. A `reviewing` flag so a finished step can be
-      reopened without "Run it again".
 
 ## Glow-ups
 
@@ -85,8 +75,6 @@ and plain-language microphone errors (E04, E07) are already closed.
       `src/lib/api.ts`, and `bun src/cli.ts import`.
 - [ ] **E10 · Discard has no confirmation; the two delete confirms disagree; no undo.**
       `RecordingStudio.svelte:100-106`, `sessions/+page.svelte:30`.
-- [ ] **E11 · State changes are not announced.** `role="status"` on saved and recording
-      indicators, `role="alert"` on error boxes; the timer stays out of any live region.
 - [ ] **E12 · No reduced-motion handling; the exercise-card animation classes are dead.**
       `motion-reduce:` variants on the pulsing dot and card lift; the `tailwindcss-animate`
       classes in `exercises/+page.svelte:185` compile to nothing.

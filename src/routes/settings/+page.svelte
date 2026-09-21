@@ -296,7 +296,7 @@
 					</p>
 				{/if}
 			{:else if micError}
-				<div class="p-4 bg-red-950/30 border border-red-900/50 rounded-xl">
+				<div role="alert" class="p-4 bg-red-950/30 border border-red-900/50 rounded-xl">
 					<p class="text-red-400 text-sm">{micError}</p>
 					<button
 						onclick={() => enumerateDevices(true)}
@@ -419,9 +419,11 @@
 			<div>
 				<h2 class="text-xl font-semibold text-surface-100">Save Changes</h2>
 				{#if saveStatus === 'success'}
-					<p class="text-sm text-green-400 mt-1">Settings saved successfully!</p>
+					<p role="status" class="text-sm text-green-400 mt-1">Settings saved successfully!</p>
 				{:else if saveStatus === 'error'}
-					<p class="text-sm text-red-400 mt-1">{saveError || 'Failed to save settings'}</p>
+					<p role="alert" class="text-sm text-red-400 mt-1">
+						{saveError || 'Failed to save settings'}
+					</p>
 				{:else}
 					<p class="text-sm text-surface-400 mt-1">Update your voice training preferences</p>
 				{/if}

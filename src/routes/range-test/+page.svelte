@@ -228,7 +228,10 @@
 	</div>
 
 	{#if micError}
-		<div class="bg-red-500/20 border border-red-500/50 text-red-300 px-4 py-3 rounded-lg">
+		<div
+			role="alert"
+			class="bg-red-500/20 border border-red-500/50 text-red-300 px-4 py-3 rounded-lg"
+		>
 			{micError}
 		</div>
 	{/if}
@@ -420,6 +423,7 @@
 
 				{#if saveError}
 					<div
+						role="alert"
 						class="bg-red-500/20 border border-red-500/50 text-red-300 px-4 py-3 rounded-lg text-sm"
 					>
 						{saveError}
@@ -428,7 +432,7 @@
 
 				<div class="flex flex-wrap gap-3">
 					{#if saved}
-						<p class="flex-1 text-emerald-400 text-sm self-center">Saved ✨</p>
+						<p role="status" class="flex-1 text-emerald-400 text-sm self-center">Saved ✨</p>
 					{:else}
 						<button
 							onclick={save}
@@ -473,6 +477,7 @@
 
 		{#if relabelError}
 			<div
+				role="alert"
 				class="bg-red-500/20 border border-red-500/50 text-red-300 px-4 py-2 rounded-lg text-sm mb-4"
 			>
 				{relabelError}
