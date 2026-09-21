@@ -85,7 +85,7 @@
 			: 'hidden'}"
 	>
 		<div class="p-6 hidden md:block">
-			<h1 class="text-xl font-bold text-primary-400">Voice Training</h1>
+			<span class="block text-xl font-bold text-primary-400">Voice Training</span>
 			<p class="text-sm text-surface-400 mt-1">Feminization Practice</p>
 		</div>
 		<ul class="flex-1 p-3 md:px-3 md:py-0 space-y-1">

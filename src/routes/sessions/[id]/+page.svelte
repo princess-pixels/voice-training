@@ -68,6 +68,10 @@
 	const pitchData = $derived(session.pitchData);
 </script>
 
+<svelte:head>
+	<title>{session.title} — Voice Training</title>
+</svelte:head>
+
 <div class="max-w-6xl mx-auto px-4 py-8">
 	<!-- Back link -->
 	<a

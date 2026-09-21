@@ -29,8 +29,8 @@ download, nothing to install, and every recording stays on your disk.
    ./voice-training
    ```
 
-3. Your browser opens on http://localhost:3000. Allow the microphone when asked, and
-   you're on Today's Practice.
+3. Your browser opens on the Dashboard at http://localhost:3000. Open Today's Practice
+   and press the red record button; the browser asks for the microphone the first time.
 
 The binaries are not code-signed, so the first start needs a confirmation: on macOS
 right-click the file, choose **Open**, and confirm; on Windows choose **More info**, then

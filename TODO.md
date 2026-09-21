@@ -8,8 +8,8 @@ State as of 2026-09-21: the round 3 audit scored 7.0 (Sept 3: 6.1). Its ids (A =
 and types, B = security and deps, C = DSP and performance, D = architecture and testing,
 E = UX and docs) are kept below so a fix can name what it closes. The import trust
 boundary (B01, B02, B04), the midnight rollover (A01, A02), dangling take ids after a
-delete (A04), the missing error page (D04, E08) and the pitch line drawn across
-silences (C01) are already closed.
+delete (A04), the missing error page (D04, E08), the pitch line drawn across silences
+(C01), page titles (E09) and the README's first-run sentence (E17) are already closed.
 
 ## Bugs
 
@@ -42,8 +42,6 @@ silences (C01) are already closed.
       second or only on transitions.
 - [ ] **E01 · Sessions table is clipped on phones.** `sessions/+page.svelte:84-113`.
       `overflow-x-auto` as a stopgap, then a stacked card list below `md`.
-- [ ] **E17 · README's first-run sentence does not match what happens.** `README.md:32-33`.
-      The binary opens the Dashboard, and the mic prompt appears on the first record press.
 - [ ] **C04 · No octave-down check in YIN.** `yin.ts:78-97`. A weak fundamental near the
       top of the band reads an octave high or drops out. Check the minimum around `2·tau`.
 - [ ] **A07 · A failed PATCH still advances the step and drops the drained seconds.**
@@ -58,8 +56,6 @@ silences (C01) are already closed.
 - [ ] **A10 · Clicking a step in the completion list does nothing visible.**
       `practice/+page.svelte:273,295-301`. A `reviewing` flag so a finished step can be
       reopened without "Run it again".
-- [ ] **E09 · Five pages share the title "Voice Training"; two `h1`s on desktop.** Set a
-      title per page; make the sidebar brand a span.
 
 ## Glow-ups
 

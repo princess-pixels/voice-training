@@ -172,6 +172,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Settings — Voice Training</title>
+</svelte:head>
+
 <div class="max-w-2xl mx-auto px-4 py-8">
 	<h1
 		class="text-3xl font-bold mb-8 bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent"

@@ -64,6 +64,10 @@
 	const todayMinutes = $derived(today ? Math.round(today.seconds / 60) : 0);
 </script>
 
+<svelte:head>
+	<title>Dashboard — Voice Training</title>
+</svelte:head>
+
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<!-- Welcome Header -->
 	<div class="mb-8">
