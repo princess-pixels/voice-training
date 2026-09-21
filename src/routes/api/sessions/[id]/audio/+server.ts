@@ -1,6 +1,6 @@
 import type { RequestHandler } from './$types';
 import { getSessionById } from '$lib/server/db';
-import { openAudio } from '$lib/server/audio';
+import { isAudioType, openAudio } from '$lib/server/audio';
 import { parseRange } from '$lib/server/range';
 import { error, isHttpError } from '@sveltejs/kit';
 
@@ -20,9 +20,9 @@ export const GET: RequestHandler = async ({ params, request }) => {
 			error(404, { message: 'No audio file for this session' });
 		}
 
-		// Older sessions predate the stored type; the object's own metadata is
-		// the next best source, then the historical default.
-		const contentType = session.audioType ?? audio.type ?? 'audio/webm';
+		// Older sessions predate the stored type, and a stored type is only trusted
+		// if it is an audio type: the key's extension is the fallback either way.
+		const contentType = isAudioType(session.audioType) ? session.audioType : audio.type;
 		const headers: Record<string, string> = {
 			'Content-Type': contentType,
 			'Accept-Ranges': 'bytes',

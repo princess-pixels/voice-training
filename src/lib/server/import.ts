@@ -1,7 +1,7 @@
 import { $ } from 'bun';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, realpath, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import type { Exercise, PracticeDay, RangeTest, Session, UserSettings } from '$lib/types';
 import {
 	createRangeTest,
@@ -15,7 +15,7 @@ import {
 	rangeTestExists,
 	sessionExists
 } from './db';
-import { generateAudioKey, importAudio, isSafeAudioKey } from './audio';
+import { deleteAudio, generateAudioKey, importAudio, isAudioType, isSafeAudioKey } from './audio';
 import { EXPORT_FORMAT, type Manifest } from './exportLayout';
 
 /**
@@ -25,6 +25,11 @@ import { EXPORT_FORMAT, type Manifest } from './exportLayout';
  * grew since, changes nothing it should not.
  *
  * Manifest v1 (no practiceDays) and v2 are both accepted.
+ *
+ * An archive is a trust boundary: it may have been made by someone else, and
+ * every recording it carries ends up served from this install's own origin.
+ * So the paths in the manifest are confined to the extracted directory, tar
+ * symlinks are not followed, and a stored audio type has to be one.
  */
 
 export interface ImportReport {
@@ -59,7 +64,10 @@ type JsonDate<T> = { [K in keyof T]: T[K] extends Date | null ? string | null : 
 
 /** Import an already-extracted export (a directory holding manifest.json). */
 export async function importDirectory(dir: string): Promise<ImportReport> {
-	const manifest = await readManifest(join(dir, 'manifest.json'));
+	// Canonical, so a symlinked tmpdir (macOS /var → /private/var) still
+	// compares equal to the resolved paths of the files inside it.
+	const root = await realpath(dir);
+	const manifest = await readManifest(join(root, 'manifest.json'));
 
 	const report: ImportReport = {
 		manifestVersion: manifest.version,
@@ -100,33 +108,37 @@ export async function importDirectory(dir: string): Promise<ImportReport> {
 			report.sessions.skipped++;
 			continue;
 		}
-		let session: Session;
+		// One bad session is reported and skipped, never allowed to abort the run
+		// or to leave a recording behind without its row.
+		let copiedKey: string | null = null;
 		try {
-			session = await readSession(join(dir, entry.file));
-		} catch (err) {
-			report.sessions.failed.push(`${entry._id}: ${(err as Error).message}`);
-			continue;
-		}
+			const file = await archiveFile(root, entry.file);
+			if (!file) throw new Error('session file missing from archive');
+			const session = await readSession(file);
 
-		let audioKey = session.audioKey;
-		if (entry.audioFile) {
-			const source = join(dir, entry.audioFile);
-			if (await Bun.file(source).exists()) {
+			let audioKey = session.audioKey;
+			const audioType = isAudioType(session.audioType) ? session.audioType : undefined;
+			const source = entry.audioFile ? await archiveFile(root, entry.audioFile) : null;
+			if (source) {
 				if (!isSafeAudioKey(audioKey) || audioKey === 'placeholder-audio-key') {
-					audioKey = generateAudioKey(session._id, session.audioType);
+					audioKey = generateAudioKey(session._id, audioType);
 				}
 				await importAudio(audioKey, source);
-				report.audio.copied++;
-			} else {
-				report.audio.missing++;
+				copiedKey = audioKey;
 			}
-		} else {
-			report.audio.missing++;
-		}
 
-		const { _id, ...data } = session;
-		await createSession({ ...data, exerciseId: remap(data.exerciseId), audioKey }, _id);
-		report.sessions.added++;
+			const { _id, ...data } = session;
+			await createSession(
+				{ ...data, audioType, exerciseId: remap(data.exerciseId), audioKey },
+				_id
+			);
+			report.sessions.added++;
+			if (copiedKey) report.audio.copied++;
+			else report.audio.missing++;
+		} catch (err) {
+			if (copiedKey) await deleteAudio(copiedKey);
+			report.sessions.failed.push(`${entry._id}: ${(err as Error).message}`);
+		}
 	}
 
 	for (const test of manifest.rangeTests) {
@@ -193,9 +205,28 @@ async function readManifest(path: string): Promise<ValidManifest> {
 	return { ...raw, practiceDays: (raw.practiceDays ?? []) as RawPracticeDay[] };
 }
 
+/**
+ * Resolve a manifest path to a regular file inside the extracted archive.
+ * Null when the entry is absent (a recording the exporter could not find).
+ * Throws when it points outside the archive or at anything but a plain file:
+ * the manifest is attacker-controlled, tar extracts symlinks as symlinks, and
+ * whatever this returns gets copied into the library and served.
+ */
+async function archiveFile(root: string, rel: unknown): Promise<string | null> {
+	if (typeof rel !== 'string' || !rel) throw new Error('archive path must be a string');
+	let real: string;
+	try {
+		real = await realpath(resolve(root, rel));
+	} catch {
+		return null;
+	}
+	if (!real.startsWith(root + sep)) throw new Error(`archive path escapes the archive: ${rel}`);
+	if (!(await stat(real)).isFile()) throw new Error(`archive path is not a file: ${rel}`);
+	return real;
+}
+
 async function readSession(path: string): Promise<Session> {
 	const file = Bun.file(path);
-	if (!(await file.exists())) throw new Error('session file missing from archive');
 	const raw = (await file.json()) as JsonDate<Session>;
 	if (!Array.isArray(raw.pitchData?.points)) throw new Error('session file has no pitch points');
 	return { ...raw, createdAt: date(raw.createdAt) };
