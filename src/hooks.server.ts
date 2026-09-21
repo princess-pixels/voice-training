@@ -1,4 +1,4 @@
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, HandleServerError } from '@sveltejs/kit';
 import { seedExercises } from '$lib/server/exercises';
 import { migrateDatabase } from '$lib/server/db';
 import { ensureAudioDir } from '$lib/server/audio';
@@ -58,4 +58,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// The app is the only thing that should ever ask for the mic here.
 	response.headers.set('Permissions-Policy', 'microphone=(self), camera=(), geolocation=()');
 	return response;
+};
+
+// Unexpected errors only; error() calls from loads and routes never come here.
+// The one place they are logged, with the path, and the one shape the error
+// page ever sees (App.Error in app.d.ts).
+export const handleError: HandleServerError = ({ error, event, status }) => {
+	console.error(`[${status}] ${event.request.method} ${event.url.pathname}`, error);
+	return { message: 'Something went wrong on the server' };
 };
