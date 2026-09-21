@@ -11,6 +11,12 @@ updates:
     groups:
       dev-dependencies:
         dependency-type: development
+    ignore:
+      # TypeScript 7 is the native compiler; svelte-check needs TS 6 alongside
+      # it and the --tsgo flag, so that move is a planned migration (TODO.md),
+      # not a bump. Minor and patch updates still come through.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
   - package-ecosystem: github-actions
     directory: /
     schedule:

@@ -38,6 +38,10 @@ live redraws (C08) are done. D08 and A13 are deliberately left for the release a
 - [ ] **D08 · Svelte 5 idiom slips.** `busy` derived in an `$effect`, the layout drawer
       closed by an effect on `page.url` instead of `afterNavigate`, `$effect` as `onMount`
       in settings, the range test pushing into a deep `$state` array at 40 Hz.
+- [ ] **TypeScript 7.** Dependabot proposed 7.0.2 (PR #2, closed): `bun test` and the build
+      pass on it, but svelte-check 4.7 needs TypeScript 6 installed alongside under an npm
+      alias plus its `--tsgo` flag. Do it with A13, as one typing pass; dependabot ignores
+      TS majors until then.
 - [ ] **A13 · Strictness gaps.** `noUncheckedIndexedAccess`, a discriminated `CliArgs`
       union, validated search params on the exercises page, no `selected!` in NoteKeyboard.
 - [ ] **History page.** The strip shows two weeks; a `/practice/history` page with
