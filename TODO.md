@@ -27,8 +27,7 @@ E18, E21), the export as a same-origin POST (B03), the dead record flow (A11), t
 tests in cents with the dead confidence gate and the tab comment (C03, C09, C11) and the
 changelog and contributing guide (E22), the shared formatters and API helper with the
 import script folded into the CLI (D10, E14), the dead helpers and third reviver (D06,
-A12), the confirms and focus after delete (E10) and the cached playback points (C07) are
-done.
+A12), the confirms and focus after delete (E10) and the cached playback points (C07) and the pinned, attested release pipeline (B06) are done.
 
 ## Glow-ups
 
@@ -45,8 +44,6 @@ done.
       in settings, the range test pushing into a deep `$state` array at 40 Hz.
 - [ ] **A13 · Strictness gaps.** `noUncheckedIndexedAccess`, a discriminated `CliArgs`
       union, validated search params on the exercises page, no `selected!` in NoteKeyboard.
-- [ ] **B06 · Release supply chain.** Pin actions to SHAs, `permissions: contents: read`
-      on CI, an exact Bun patch instead of `1.4.x`, and build provenance attestation.
 - [ ] **History page.** The strip shows two weeks; a `/practice/history` page with
       per-step times and the takes of each day is the natural next step once there
       is a month of data to look at.
