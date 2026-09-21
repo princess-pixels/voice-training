@@ -11,14 +11,11 @@ boundary (B01, B02, B04), the midnight rollover (A01, A02), dangling take ids af
 delete (A04), the missing error page (D04, E08), the pitch line drawn across silences
 (C01), page titles (E09), the README's first-run sentence (E17), the sessions table on
 phones (E01), the shared validation module (D01, A05, A06) and the one error-handling
-strategy per route (D05) are already closed.
+strategy per route (D05), the midnight-safe dashboard tests and per-install export
+sweep (D07) and the three stale comments (D11, E20) are already closed.
 
 ## Bugs
 
-- [ ] **D07 · Dashboard tests can flake across midnight; export sweep shares the system
-      tmpdir.** `db.test.ts:217-261`, `export.ts:102-124`. Use `setSystemTime` in the
-      dashboard tests; scope `sweepStaleExports` to a `voice-training` subdirectory of
-      `tmpdir()` so a test run cannot sweep a live server's in-flight export.
 - [ ] **E02 · Keyboard focus is dropped at every stage of a recording.**
       `RecordingStudio.svelte:297-335,350-435`. Start unmounts on press, Stop unmounts on
       press, the summary mounts unfocused. One persistent primary button whose label
@@ -137,8 +134,6 @@ strategy per route (D05) are already closed.
 - [ ] **A11 · The `?day=&step=` record flow is dead code.** Nothing links to it; the
       practice page attaches takes through `onSaved`. Remove the prop, the form fields and
       the server attach block, or link it and test it.
-- [ ] **D11 / E20 · Stale comments.** `config.ts:8-9` (the flag landed in `cli.ts`),
-      `range-test/+page.svelte:21-22` (the hop is 40 Hz, not 60 fps), `bunfig.toml:15`.
 - [ ] **B07 · README recommends `HOST_HEADER`, which turns the host check off.**
       `README.md:106-108`. With Caddy, `ORIGIN` alone is enough; say what the header costs.
 - [ ] **B08 · No engine pin, no dependency bot, from-source runtime needs devDependencies.**

@@ -12,6 +12,7 @@ coverageReporter = ["text", "lcov"]
 # Fractions, not percents, and Bun applies them to EACH measured file (it exits 1
 # without naming the file). Every measured file was at 100% on 2026-09-03.
 coverageThreshold = { lines = 0.85, functions = 0.9 }
-# Everything under src/lib is measured; the export/import round trip runs
-# through the system tar in a temp directory.
+# Bun only instruments files a test imports, so this measures the server and
+# audio modules the tests reach, not the routes, components or stores (see
+# TODO.md D02). The export/import round trip runs through the system tar.
 coveragePathIgnorePatterns = []

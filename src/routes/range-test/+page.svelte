@@ -18,7 +18,8 @@
 	// Only readings this confident count toward the result — the range is the one
 	// number we really don't want a noisy frame to distort.
 	const MIN_CONFIDENCE = 0.85;
-	// Roughly a second of sustained tone at 60fps before a phase can be finished.
+	// Roughly a second of sustained tone before a phase can be finished: the
+	// detector hops every 25 ms, and only confident voiced frames count.
 	const MIN_SAMPLES = 45;
 
 	const MODE_META: Record<

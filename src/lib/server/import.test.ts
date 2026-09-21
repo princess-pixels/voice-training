@@ -521,7 +521,7 @@ describe('export → import round trip', () => {
 			getSettings
 		} = await db();
 		const { generateAudioKey, uploadAudio, openAudio } = await audio();
-		const { buildExport } = await exp();
+		const { buildExport, exportStagingRoot } = await exp();
 		const { importArchive, formatReport } = await imp();
 
 		await freshDataDir();
@@ -569,14 +569,24 @@ describe('export → import round trip', () => {
 		});
 		const settings = await updateSettings({ targetRange: { low: 170, high: 240 } });
 
-		// A staging directory left by a crashed export an hour ago is swept first.
-		const stale = join(tmpdir(), 'voice-training-export-stale-test');
+		// A staging directory left by a crashed export an hour ago is swept first;
+		// one that belongs to another data directory is not this install's to touch.
+		const stale = join(exportStagingRoot(), 'export-stale-test');
+		const foreign = join(tmpdir(), 'voice-training', 'export-someone-else', 'export-stale');
 		await mkdir(stale, { recursive: true });
+		await mkdir(foreign, { recursive: true });
 		const old = new Date(Date.now() - 2 * 60 * 60 * 1000);
 		await utimes(stale, old, old);
+		await utimes(foreign, old, old);
 
 		const { dir, archivePath, manifest } = await buildExport();
 		await expect(stat(stale)).rejects.toThrow();
+		expect((await stat(foreign)).isDirectory()).toBe(true);
+		await rm(join(tmpdir(), 'voice-training', 'export-someone-else'), {
+			recursive: true,
+			force: true
+		});
+		expect(dir.startsWith(exportStagingRoot())).toBe(true);
 		expect(manifest.sessions[0].audioFile).toBe(`audio/${saved._id}.m4a`);
 
 		// Into a second, empty install.
@@ -598,7 +608,7 @@ describe('export → import round trip', () => {
 	});
 
 	test('export refuses to run without tar', async () => {
-		const { buildExport } = await exp();
+		const { buildExport, exportStagingRoot } = await exp();
 		const which = spyOn(Bun, 'which').mockReturnValue(null);
 		try {
 			await expect(buildExport()).rejects.toThrow(/needs the `tar` command/);
