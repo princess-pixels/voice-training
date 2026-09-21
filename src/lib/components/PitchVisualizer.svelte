@@ -53,6 +53,37 @@
 	let appliedHeight = 0;
 	let appliedDpr = 0;
 
+	// The background (surface, target band, grid, axes, label) depends only on
+	// the size and the target range, so it is painted once to an offscreen
+	// canvas and blitted; before, live mode redrew seven dashed lines and
+	// eight fillTexts every hop.
+	let backgroundLayer: HTMLCanvasElement | null = null;
+	let backgroundFor: {
+		width: number;
+		height: number;
+		dpr: number;
+		low: number;
+		high: number;
+	} | null = null;
+
+	// Live redraws are coalesced onto the animation frame: the pitch callback
+	// and the 100 ms timer both write state, so two effect runs could land
+	// between vsyncs and the second one was wasted. The effect snapshots what
+	// to draw and one frame draws it.
+	let frame: number | null = null;
+	let pending: Snapshot | null = null;
+
+	interface Snapshot {
+		mode: 'live' | 'playback';
+		pitchData: PitchPoint[];
+		targetRange: PitchRange;
+		currentPitch: number;
+		currentTime: number;
+		referenceHz: number | null;
+		containerWidth: number;
+		height: number;
+	}
+
 	// Playback: everything except the cursor is rendered once to an offscreen
 	// canvas, so a timeupdate only costs one drawImage plus the cursor.
 	let staticLayer: HTMLCanvasElement | null = null;
@@ -115,18 +146,18 @@
 		return Math.abs(nearest.t - t) < 0.1 ? nearest : null;
 	}
 
-	/** Background, target band, grid, axes, the pitch line and the label: everything that is not the cursor. */
 	// The detector hops every 25 ms; four missed hops in a row is silence, not jitter.
 	const MAX_GAP_SECONDS = 0.1;
 
-	function drawStatic(ctx: CanvasRenderingContext2D, layout: Layout, points: PitchPoint[]) {
+	/** Surface, target band, grid, axes and the range label: what never changes per hop. */
+	function drawBackground(ctx: CanvasRenderingContext2D, layout: Layout, range: PitchRange) {
 		ctx.clearRect(0, 0, layout.width, layout.height);
 		ctx.fillStyle = '#171717'; // surface-900
 		ctx.fillRect(0, 0, layout.width, layout.height);
 
 		// Target range band
-		const targetY1 = freqToY(layout, targetRange.high);
-		const targetY2 = freqToY(layout, targetRange.low);
+		const targetY1 = freqToY(layout, range.high);
+		const targetY2 = freqToY(layout, range.low);
 		ctx.fillStyle = 'rgba(236, 72, 153, 0.15)'; // primary-500 with low opacity
 		ctx.fillRect(MARGIN.left, targetY1, layout.graphWidth, targetY2 - targetY1);
 
@@ -158,10 +189,65 @@
 		ctx.lineTo(MARGIN.left + layout.graphWidth, MARGIN.top + layout.graphHeight);
 		ctx.stroke();
 
-		// Pitch line, coloured by where it sits against the target range.
-		// Consecutive segments of the same
-		// colour go into one path; stroking each segment on its own cost one
-		// draw call per point.
+		// Target range label
+		ctx.fillStyle = '#ec4899'; // full-alpha pink: the 70% version fell under 4.5:1
+		ctx.font = '10px Inter, system-ui, sans-serif';
+		ctx.textAlign = 'left';
+		ctx.textBaseline = 'bottom';
+		ctx.fillText(
+			`Target: ${range.low}-${range.high} Hz`,
+			MARGIN.left + 4,
+			freqToY(layout, range.low) - 2
+		);
+	}
+
+	/** Blit the cached background, rebuilding it when the size, dpr or range changed. */
+	function paintBackground(
+		ctx: CanvasRenderingContext2D,
+		layout: Layout,
+		dpr: number,
+		range: PitchRange
+	) {
+		const stale =
+			!backgroundLayer ||
+			!backgroundFor ||
+			backgroundFor.width !== layout.width ||
+			backgroundFor.height !== layout.height ||
+			backgroundFor.dpr !== dpr ||
+			backgroundFor.low !== range.low ||
+			backgroundFor.high !== range.high;
+		if (stale) {
+			backgroundLayer = document.createElement('canvas');
+			backgroundLayer.width = Math.round(layout.width * dpr);
+			backgroundLayer.height = Math.round(layout.height * dpr);
+			const bctx = backgroundLayer.getContext('2d');
+			if (!bctx) return;
+			bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			drawBackground(bctx, layout, range);
+			backgroundFor = {
+				width: layout.width,
+				height: layout.height,
+				dpr,
+				low: range.low,
+				high: range.high
+			};
+		}
+		ctx.setTransform(1, 0, 0, 1, 0, 0);
+		ctx.drawImage(backgroundLayer!, 0, 0);
+		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+	}
+
+	/**
+	 * The pitch line, coloured by where it sits against the target range.
+	 * Consecutive segments of the same colour go into one path; stroking each
+	 * segment on its own cost one draw call per point.
+	 */
+	function drawPitchLine(
+		ctx: CanvasRenderingContext2D,
+		layout: Layout,
+		points: PitchPoint[],
+		range: PitchRange
+	) {
 		ctx.lineWidth = 2;
 		ctx.lineCap = 'round';
 		ctx.lineJoin = 'round';
@@ -177,7 +263,7 @@
 				runCategory = null;
 				continue;
 			}
-			const category = pitchBand((p1.hz + p2.hz) / 2, targetRange);
+			const category = pitchBand((p1.hz + p2.hz) / 2, range);
 			if (category !== runCategory) {
 				if (runCategory !== null) ctx.stroke();
 				ctx.strokeStyle = pitchBandColor(category);
@@ -188,21 +274,14 @@
 			ctx.lineTo(timeToX(layout, p2.t), freqToY(layout, p2.hz));
 		}
 		if (runCategory !== null) ctx.stroke();
-
-		// Target range label
-		ctx.fillStyle = '#ec4899'; // full-alpha pink: the 70% version fell under 4.5:1
-		ctx.font = '10px Inter, system-ui, sans-serif';
-		ctx.textAlign = 'left';
-		ctx.textBaseline = 'bottom';
-		ctx.fillText(
-			`Target: ${targetRange.low}-${targetRange.high} Hz`,
-			MARGIN.left + 4,
-			freqToY(layout, targetRange.low) - 2
-		);
 	}
 
 	/** The reference note: a solid line across the graph with its name at the right edge. */
-	function drawReference(ctx: CanvasRenderingContext2D, layout: Layout) {
+	function drawReference(
+		ctx: CanvasRenderingContext2D,
+		layout: Layout,
+		referenceHz: number | null
+	) {
 		if (!referenceHz || referenceHz <= 0) return;
 		const y = freqToY(layout, referenceHz);
 		ctx.strokeStyle = '#c084fc'; // accent-400
@@ -223,10 +302,15 @@
 		);
 	}
 
-	function drawLiveDot(ctx: CanvasRenderingContext2D, layout: Layout) {
+	function drawLiveDot(
+		ctx: CanvasRenderingContext2D,
+		layout: Layout,
+		currentPitch: number,
+		range: PitchRange
+	) {
 		const x = MARGIN.left + layout.graphWidth; // Right edge
 		const y = freqToY(layout, currentPitch);
-		const color = pitchBandColor(pitchBand(currentPitch, targetRange));
+		const color = pitchBandColor(pitchBand(currentPitch, range));
 
 		// Glow effect
 		const gradient = ctx.createRadialGradient(x, y, 0, x, y, 12);
@@ -244,7 +328,12 @@
 		ctx.fill();
 	}
 
-	function drawCursor(ctx: CanvasRenderingContext2D, layout: Layout, points: PitchPoint[]) {
+	function drawCursor(
+		ctx: CanvasRenderingContext2D,
+		layout: Layout,
+		points: PitchPoint[],
+		currentTime: number
+	) {
 		const x = timeToX(layout, currentTime);
 
 		ctx.strokeStyle = '#ec4899'; // primary-500
@@ -265,8 +354,40 @@
 		}
 	}
 
-	// Redraw when anything visible changes
+	// Snapshot what to draw whenever anything visible changes, and draw it on
+	// the next animation frame: several changes inside one frame cost one draw.
 	$effect(() => {
+		pending = {
+			mode,
+			pitchData,
+			targetRange,
+			currentPitch,
+			currentTime,
+			referenceHz,
+			containerWidth,
+			height
+		};
+		if (frame === null) {
+			frame = requestAnimationFrame(() => {
+				frame = null;
+				if (pending) render(pending);
+			});
+		}
+	});
+	$effect(() => () => {
+		if (frame !== null) cancelAnimationFrame(frame);
+	});
+
+	function render({
+		mode,
+		pitchData,
+		targetRange,
+		currentPitch,
+		currentTime,
+		referenceHz,
+		containerWidth,
+		height
+	}: Snapshot) {
 		if (!canvas || containerWidth === 0) return;
 
 		const ctx = canvas.getContext('2d');
@@ -301,9 +422,10 @@
 			layout.minTime = Math.max(0, now - LIVE_WINDOW_SECONDS);
 			layout.timeRange = now - layout.minTime || 1;
 			const points = pitchData.filter((p) => p.t >= layout.minTime && p.hz > 0);
-			drawStatic(ctx, layout, points);
-			drawReference(ctx, layout);
-			if (currentPitch > 0) drawLiveDot(ctx, layout);
+			paintBackground(ctx, layout, dpr, targetRange);
+			drawPitchLine(ctx, layout, points, targetRange);
+			drawReference(ctx, layout, referenceHz);
+			if (currentPitch > 0) drawLiveDot(ctx, layout, currentPitch, targetRange);
 			return;
 		}
 
@@ -323,7 +445,8 @@
 			const sctx = staticLayer.getContext('2d');
 			if (!sctx) return;
 			sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-			drawStatic(sctx, layout, points);
+			paintBackground(sctx, layout, dpr, targetRange);
+			drawPitchLine(sctx, layout, points, targetRange);
 			staticFor = {
 				source: pitchData,
 				points,
@@ -338,9 +461,9 @@
 		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
 		// Drawn over the cached layer: it changes independently of the points.
-		drawReference(ctx, layout);
-		if (currentTime > 0) drawCursor(ctx, layout, points);
-	});
+		drawReference(ctx, layout, referenceHz);
+		if (currentTime > 0) drawCursor(ctx, layout, points, currentTime);
+	}
 </script>
 
 <div

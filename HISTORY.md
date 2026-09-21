@@ -56,8 +56,12 @@ contrast are handled, export is a same-origin POST built one at a time, and the 
 `?day=&step=` record flow is gone. `src/server.test.ts` drives the built server over
 HTTP in CI (host allowlist, CSP, body limit, multipart upload, ranged playback,
 practice PATCH, export), `bun run coverage:gap` names the 42 files no test imports,
-and a CHANGELOG.md feeds the release notes. Left for another day: C05, C07, C08, C10,
-D06, D08, D10 / E14, E10, A12, A13 and B06, all in TODO.md.
+and a CHANGELOG.md feeds the release notes. After dinner the rest followed: shared
+formatters and an API helper, the dead helpers and confirms, the cached playback points,
+the pinned and attested release pipeline, the median as the headline pitch (schema 2,
+backfilled), and the visualizer's cached background with live redraws on the animation
+frame, which Maya verified on the mic and which caught the octave check jumping on rough
+onsets (margin 0.05 → 0.1). Left for the release after 1.2.0: C05, D08 and A13.
 
 Two other things the round made plain. The 99.7 % coverage figure measures 29 % of
 the source, because Bun only instruments files a test imports: every route, every

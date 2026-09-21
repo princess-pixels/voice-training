@@ -55,9 +55,10 @@ export function lagBounds(
  * How much deeper the dip at double the lag has to be before it is taken as
  * the true period. On a clean tone the two dips are within a few hundredths
  * of each other; with the fundamental 10 dB under the second harmonic the
- * octave dip is deeper by 0.1 or more.
+ * octave dip is deeper by 0.1 or more. 0.05 was tried first and jumped an
+ * octave down on rough voice onsets (the first second of a hum); 0.1 does not.
  */
-const OCTAVE_MARGIN = 0.05;
+const OCTAVE_MARGIN = 0.1;
 
 export function yin(
 	buffer: Float32Array,
