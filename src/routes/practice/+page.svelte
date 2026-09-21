@@ -512,7 +512,7 @@
 					>
 						<span class="text-emerald-400 font-medium">Take saved ✓</span>
 						<span class="text-surface-300">
-							avg <span class="font-semibold">{formatHz(lastSaved.pitchData.avgPitch)}</span>
+							pitch <span class="font-semibold">{formatHz(lastSaved.pitchData.medianPitch)}</span>
 						</span>
 						<span class="text-surface-300">
 							<span class="font-semibold">{Math.round(lastSaved.pitchData.timeInTargetPct)}%</span>

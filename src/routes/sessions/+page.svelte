@@ -87,11 +87,11 @@
 						</div>
 						<span
 							class="font-semibold shrink-0 {pitchBandClass(
-								session.pitchData.avgPitch,
+								session.pitchData.medianPitch,
 								session.targetRange
 							)}"
 						>
-							{Math.round(session.pitchData.avgPitch)} Hz
+							{Math.round(session.pitchData.medianPitch)} Hz
 						</span>
 					</div>
 					<div class="flex items-center justify-between gap-3 text-sm">
@@ -169,11 +169,11 @@
 							<td class="py-4 px-6">
 								<span
 									class="font-semibold {pitchBandClass(
-										session.pitchData.avgPitch,
+										session.pitchData.medianPitch,
 										session.targetRange
 									)}"
 								>
-									{Math.round(session.pitchData.avgPitch)} Hz
+									{Math.round(session.pitchData.medianPitch)} Hz
 								</span>
 							</td>
 							<td class="py-4 px-6">

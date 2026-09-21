@@ -9,6 +9,7 @@ describe('summarisePitch', () => {
 	test('returns zeros for an empty timeline', () => {
 		expect(summarisePitch([], range)).toEqual({
 			avgPitch: 0,
+			medianPitch: 0,
 			minPitch: 0,
 			maxPitch: 0,
 			timeInTargetPct: 0
@@ -31,6 +32,27 @@ describe('summarisePitch', () => {
 	test('treats the range as inclusive at both ends', () => {
 		expect(summarisePitch([p(150), p(220)], range).timeInTargetPct).toBe(100);
 		expect(summarisePitch([p(149.9), p(220.1)], range).timeInTargetPct).toBe(0);
+	});
+
+	test('the median is not pulled up by brief excursions the way the mean is', () => {
+		// 90% of frames at 200 Hz, 10% at 400 Hz: a laugh in a steady take.
+		const points = [
+			...Array.from({ length: 90 }, (_, i) => p(200, i)),
+			...Array.from({ length: 10 }, (_, i) => p(400, 90 + i))
+		];
+		const stats = summarisePitch(points, range);
+		expect(stats.avgPitch).toBe(220);
+		expect(stats.medianPitch).toBe(200);
+	});
+
+	test('the median is the lower middle value, exact when the bin agrees, within 10 cents otherwise', () => {
+		expect(summarisePitch([p(100), p(200)], range).medianPitch).toBe(100);
+		expect(summarisePitch([p(100), p(200), p(300)], range).medianPitch).toBe(200);
+		// A glide: every frame in its own bin; the median lands within a bin of the true one.
+		const glide = Array.from({ length: 101 }, (_, i) => p(150 * Math.pow(2, i / 100), i));
+		const median = summarisePitch(glide, range).medianPitch;
+		const cents = 1200 * Math.log2(median / (150 * Math.pow(2, 50 / 100)));
+		expect(Math.abs(cents)).toBeLessThanOrEqual(10);
 	});
 
 	test('handles a long timeline without spreading into Math.min/max', () => {
@@ -61,7 +83,13 @@ describe('PitchAccumulator', () => {
 	test('reports zeros before any voiced point', () => {
 		const acc = new PitchAccumulator(range);
 		acc.add({ t: 0, hz: 0, confidence: 0 });
-		expect(acc.summary()).toEqual({ avgPitch: 0, minPitch: 0, maxPitch: 0, timeInTargetPct: 0 });
+		expect(acc.summary()).toEqual({
+			avgPitch: 0,
+			medianPitch: 0,
+			minPitch: 0,
+			maxPitch: 0,
+			timeInTargetPct: 0
+		});
 	});
 
 	test('setRange recounts time in target over the points so far', () => {

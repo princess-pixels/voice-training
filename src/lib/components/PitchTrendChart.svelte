@@ -4,7 +4,8 @@
 	import { formatDayMonth } from '$lib/format';
 	interface TrendPoint {
 		date: Date;
-		avgHz: number;
+		/** The session's median pitch. */
+		hz: number;
 	}
 
 	interface Props {
@@ -85,8 +86,8 @@
 		// Calculate data points
 		const points = trendData.map((d, i) => ({
 			x: padding.left + (chartW * i) / (trendData.length - 1 || 1),
-			y: padding.top + chartH - ((d.avgHz - minHz) / (maxHz - minHz)) * chartH,
-			hz: d.avgHz
+			y: padding.top + chartH - ((d.hz - minHz) / (maxHz - minHz)) * chartH,
+			hz: d.hz
 		}));
 
 		// Draw line
@@ -186,8 +187,8 @@
 	{#if trendData.length > 0}
 		<canvas bind:this={canvas} class="w-full" style="height: {chartHeight}px;">
 			Average pitch over the last {trendData.length}
-			{trendData.length === 1 ? 'session' : 'sessions'}: from {Math.round(trendData[0].avgHz)} Hz to {Math.round(
-				trendData[trendData.length - 1].avgHz
+			{trendData.length === 1 ? 'session' : 'sessions'}: from {Math.round(trendData[0].hz)} Hz to {Math.round(
+				trendData[trendData.length - 1].hz
 			)} Hz, target {targetRange.low} to {targetRange.high}
 			Hz.
 		</canvas>

@@ -280,6 +280,7 @@
 	<PitchStats
 		targetRange={recorderStore.targetRange}
 		currentHz={!showSummary ? recorderStore.currentPitch : undefined}
+		medianHz={recorderStore.medianPitch}
 		avgHz={recorderStore.avgPitch}
 		minHz={recorderStore.minPitch}
 		maxHz={recorderStore.maxPitch}

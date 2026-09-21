@@ -120,6 +120,7 @@
 				<h2 class="text-lg font-semibold text-surface-200 mb-4">Session Stats</h2>
 				<PitchStats
 					targetRange={session.targetRange}
+					medianHz={pitchData.medianPitch}
 					avgHz={pitchData.avgPitch}
 					minHz={pitchData.minPitch}
 					maxHz={pitchData.maxPitch}

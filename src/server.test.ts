@@ -191,6 +191,7 @@ describe.skipIf(!hasBuild)('built server', () => {
 		expect(saved.status).toBe(200);
 		const { id, session } = await saved.json();
 		expect(session.pitchData.avgPitch).toBe(205);
+		expect(session.pitchData.medianPitch).toBe(200);
 		expect(session.audioType).toBe('audio/webm');
 
 		const whole = await fetch(`${origin}/api/sessions/${id}/audio`);

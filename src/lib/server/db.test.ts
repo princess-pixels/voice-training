@@ -62,6 +62,7 @@ function sessionInput(overrides: Partial<Omit<Session, '_id'>> = {}): Omit<Sessi
 				{ t: 0.025, hz: 185, confidence: 0.95 }
 			],
 			avgPitch: 182.5,
+			medianPitch: 182.5,
 			minPitch: 180,
 			maxPitch: 185,
 			timeInTargetPct: 100
@@ -109,7 +110,7 @@ describe('database lifecycle', () => {
 		await migrateDatabase();
 		const db = getDatabase();
 		expect(db.query<{ user_version: number }, []>('PRAGMA user_version').get()!.user_version).toBe(
-			1
+			2
 		);
 		const tables = db
 			.query<{ name: string }, []>(
