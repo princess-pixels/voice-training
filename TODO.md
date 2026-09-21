@@ -27,17 +27,14 @@ E18, E21), the export as a same-origin POST (B03), the dead record flow (A11), t
 tests in cents with the dead confidence gate and the tab comment (C03, C09, C11) and the
 changelog and contributing guide (E22), the shared formatters and API helper with the
 import script folded into the CLI (D10, E14), the dead helpers and third reviver (D06,
-A12), the confirms and focus after delete (E10) and the cached playback points (C07) and the pinned, attested release pipeline (B06) and the median as the headline pitch (C10) are
-done. D08 and A13 are deliberately left for the release after 1.2.0.
+A12), the confirms and focus after delete (E10) and the cached playback points (C07) and the pinned, attested release pipeline (B06) and the median as the headline pitch (C10) and the cached background with frame-coalesced
+live redraws (C08) are done. D08 and A13 are deliberately left for the release after 1.2.0.
 
 ## Glow-ups
 
 - [ ] **C05 · Pitch points are stored at 74 bytes each with a field nothing reads.**
       Round `t` to 1 ms and `hz` to 0.1 Hz in `addPoint`, make `confidence` optional:
       1.7 MB → 0.6 MB per ten-minute take, through upload, SQLite, page payload and export.
-- [ ] **C08 · Live mode repaints the full background every hop, off the animation
-      frame.** Cache the band, grid and axes offscreen; paint through `requestAnimationFrame`
-      with a dirty flag.
 - [ ] **D08 · Svelte 5 idiom slips.** `busy` derived in an `$effect`, the layout drawer
       closed by an effect on `page.url` instead of `afterNavigate`, `$effect` as `onMount`
       in settings, the range test pushing into a deep `$state` array at 40 Hz.
