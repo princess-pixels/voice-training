@@ -23,16 +23,15 @@ routine time in the practice total (A14) and local dates in audio keys and expor
 (D12), the end-to-end server test and the coverage-gap script (D03, D02), the audio
 route's narrow query (C06), pure logic and constants out of db.ts (D09), reduced motion,
 canvas contrast and the small semantics (E12, E13, E15) and the docs fixes (B07, B08,
-E18, E21) are done.
+E18, E21), the export as a same-origin POST (B03), the dead record flow (A11), the YIN
+tests in cents with the dead confidence gate and the tab comment (C03, C09, C11) and the
+changelog and contributing guide (E22) are done.
 
 ## Glow-ups
 
 - [ ] **D06 · Tested pure helpers are dead; the pages reimplement them.**
       `nextStepIndex`, `isPracticed`, `getAudioDevices`, and a third hand-rolled
       `PracticeDay` reviver. A client-safe `src/lib/practice.ts` next to `days.ts`.
-- [ ] **B03 · `GET /api/export` builds the whole library on disk for any cross-origin
-      request.** Make it a POST (so the origin check applies) or require a custom header;
-      cap concurrent exports to one.
 - [ ] **C05 · Pitch points are stored at 74 bytes each with a field nothing reads.**
       Round `t` to 1 ms and `hz` to 0.1 Hz in `addPoint`, make `confidence` optional:
       1.7 MB → 0.6 MB per ten-minute take, through upload, SQLite, page payload and export.
@@ -66,22 +65,6 @@ E18, E21) are done.
       for more than a few minutes.
 
 ## Docs & drift
-
-- [ ] **C03 · The store's confidence gate can never fire.** `recorder.svelte.ts:106-113`.
-      YIN only reports lags below the 0.2 threshold, so confidence is always > 0.8 and the
-      0.55 check (and its comment) is dead. Delete it or make it real.
-- [ ] **C09 · The background-tab comment in the detector is wrong.**
-      `pitchDetector.ts:159-161`. Browsers throttle `setInterval` to 1 Hz when hidden, so
-      the pitch track thins to one point a second. Correct the comment, or capture frames
-      in an `AudioWorkletNode`.
-- [ ] **C11 · YIN tests assert ±0.5 %, not cents, and the noise test is vacuous.**
-      `yin.test.ts:35-39,73-76`. Assert cents, `hz === 0` on noise, add vibrato and
-      weak-fundamental cases.
-- [ ] **A11 · The `?day=&step=` record flow is dead code.** Nothing links to it; the
-      practice page attaches takes through `onSaved`. Remove the prop, the form fields and
-      the server attach block, or link it and test it.
-- [ ] **E22 · No changelog, no contributing guidance.** A `CHANGELOG.md` the release job
-      reads the top section of; a five-line `CONTRIBUTING.md`.
 
 ## Ideas
 

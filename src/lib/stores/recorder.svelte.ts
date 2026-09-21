@@ -104,15 +104,10 @@ class RecorderStore {
 				const t = this.activeSeconds();
 				this.elapsed = t;
 
-				// Skip low confidence readings. 0.55 lets legitimate low pitches through:
-				// YIN confidence naturally drops at lower Hz even on clean audio because
-				// fewer periods fit in the analysis window. The pitchDetector already
-				// clamps to 70-500 Hz so out-of-range junk can't leak through.
-				if (pitch.confidence < 0.55) {
-					this.currentPitch = 0;
-					return;
-				}
-
+				// No confidence gate here: yin() only reports a lag whose normalised
+				// difference is under its threshold, so every non-zero result already
+				// has confidence above 1 − threshold (0.8); unvoiced frames come as
+				// hz 0. The detector clamps to 70–500 Hz, so nothing out of band leaks.
 				this.currentPitch = pitch.hz;
 				this.addPoint({ t, hz: pitch.hz, confidence: pitch.confidence });
 			});

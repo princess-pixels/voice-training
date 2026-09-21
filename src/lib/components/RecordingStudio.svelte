@@ -12,8 +12,6 @@
 		exercise?: Exercise | null;
 		/** The user's saved target range from Settings. An exercise's own range wins over it. */
 		targetRange: PitchRange;
-		/** Set when opened from Today's Practice: the take is attached to that step on save. */
-		practice?: { day: string; step: number } | null;
 		/**
 		 * Inside another page: no header or exercise panel, a shorter graph, and a
 		 * saved take is handed to `onSaved` instead of navigating to its page.
@@ -27,7 +25,6 @@
 	let {
 		exercise = null,
 		targetRange,
-		practice = null,
 		embedded = false,
 		onSaved,
 		busy = $bindable(false)
@@ -138,10 +135,6 @@
 			formData.append('duration', recorderStore.duration.toString());
 			formData.append('targetRange', JSON.stringify(recorderStore.targetRange));
 			formData.append('pitchData', JSON.stringify(lastPitchData));
-			if (practice) {
-				formData.append('practiceDay', practice.day);
-				formData.append('practiceStep', String(practice.step));
-			}
 
 			if (lastBlob) {
 				formData.append('audio', lastBlob, 'session.webm');
@@ -172,9 +165,8 @@
 			}
 
 			// Client-side navigation: the unmount effect above releases the store.
-			// A take made from the routine goes back to the routine, which now has
-			// this step marked done; a free take lands on its own page.
-			await goto(practice ? '/practice' : `/sessions/${result.id}`);
+			// Takes made from the routine go through the embedded path above.
+			await goto(`/sessions/${result.id}`);
 		} catch (err) {
 			saveError = err instanceof Error ? err.message : 'Failed to save session';
 		} finally {
@@ -195,13 +187,6 @@
 					Practice your voice with real-time pitch feedback
 				{/if}
 			</p>
-			{#if practice}
-				<p class="text-sm text-surface-500 mt-1">
-					Step {practice.step + 1} of today's practice · saving marks it done ·
-					<a href="/practice" class="text-primary-400 hover:text-primary-300">back to the routine</a
-					>
-				</p>
-			{/if}
 		</div>
 
 		{#if exercise}

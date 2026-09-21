@@ -117,7 +117,7 @@ Everything is in the data folder: `voice-training.db` (SQLite) and `audio/` with
 file per recording. Back it up, move it, or point two installs at different folders with
 `--data-dir`; there is nothing else.
 
-**Export.** Settings has a **Download everything** button (`GET /api/export`) that packs
+**Export.** Settings has a **Download everything** button (`POST /api/export`) that packs
 the whole library into one `voice-training-export-YYYY-MM-DD.tar.gz`:
 
 ```

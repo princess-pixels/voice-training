@@ -23,6 +23,11 @@ function weakFundamental(hz: number, sampleRate: number): Float32Array {
 	return buffer;
 }
 
+/** Distance from `hz` to `reference` in cents. */
+function cents(hz: number, reference: number): number {
+	return 1200 * Math.log2(hz / reference);
+}
+
 /** Deterministic pseudo-random noise so the test never flakes. */
 function noise(): Float32Array {
 	const buffer = new Float32Array(BUFFER_SIZE);
@@ -42,10 +47,44 @@ describe('yin', () => {
 		[48000, 440],
 		[44100, 75],
 		[48000, 480]
-	])('at %d Hz sample rate detects a %d Hz tone within 0.5%', (sampleRate, hz) => {
+	])('at %d Hz sample rate detects a %d Hz tone within a cent', (sampleRate, hz) => {
 		const result = yin(tone(hz, sampleRate), sampleRate);
 		expect(result.confidence).toBeGreaterThan(0.9);
-		expect(Math.abs(result.hz - hz) / hz).toBeLessThan(0.005);
+		expect(Math.abs(cents(result.hz, hz))).toBeLessThan(1);
+	});
+
+	test('a tone under −20 dB of noise reads within 5 cents', () => {
+		const clean = tone(220, 48000);
+		const n = noise();
+		const buffer = new Float32Array(BUFFER_SIZE);
+		for (let i = 0; i < BUFFER_SIZE; i++) buffer[i] = clean[i] + 0.1 * n[i];
+		const result = yin(buffer, 48000);
+		expect(Math.abs(cents(result.hz, 220))).toBeLessThan(5);
+	});
+
+	test('vibrato of ±50 cents reads inside the vibrato, near its centre', () => {
+		// 6 Hz vibrato: a frame of 85 ms sees half a cycle, so the estimate
+		// lands somewhere inside the excursion, never outside it.
+		const sampleRate = 48000;
+		const buffer = new Float32Array(BUFFER_SIZE);
+		let phase = 0;
+		for (let i = 0; i < BUFFER_SIZE; i++) {
+			const hz = 220 * Math.pow(2, (50 / 1200) * Math.sin((2 * Math.PI * 6 * i) / sampleRate));
+			phase += (2 * Math.PI * hz) / sampleRate;
+			buffer[i] = 0.3 * Math.sin(phase) + 0.1 * Math.sin(2 * phase);
+		}
+		const result = yin(buffer, sampleRate);
+		expect(Math.abs(cents(result.hz, 220))).toBeLessThanOrEqual(50);
+		expect(result.confidence).toBeGreaterThan(0.8);
+	});
+
+	test('any reported pitch carries confidence above 1 − threshold', () => {
+		// So a consumer gating on a lower value is gating on nothing (C03).
+		for (const hz of [80, 120, 220, 330, 480]) {
+			const result = yin(tone(hz, 48000), 48000);
+			expect(result.hz).toBeGreaterThan(0);
+			expect(result.confidence).toBeGreaterThan(1 - DEFAULT_YIN_OPTIONS.threshold);
+		}
 	});
 
 	test('uses the real sample rate, so the same buffer reads differently at 48k vs 44.1k', () => {
@@ -106,9 +145,8 @@ describe('yin', () => {
 		expect(yin(new Float32Array(BUFFER_SIZE), 44100)).toEqual({ hz: 0, confidence: 0 });
 	});
 
-	test('returns no confident pitch for white noise', () => {
-		const result = yin(noise(), 44100);
-		expect(result.confidence).toBeLessThan(0.9);
+	test('returns no pitch at all for white noise', () => {
+		expect(yin(noise(), 44100)).toEqual({ hz: 0, confidence: 0 });
 	});
 
 	test('accepts a caller-provided scratch buffer and leaves the input untouched', () => {

@@ -280,8 +280,27 @@ describe.skipIf(!hasBuild)('built server', () => {
 		expect((await relabelled.json()).mode).toBe('full');
 	});
 
-	test('export streams a gzip archive named for today', async () => {
-		const res = await fetch(`${origin}/api/export`);
+	test('export is a same-origin POST that streams a gzip archive named for today', async () => {
+		// A GET, or a POST from another origin, must not make the server pack the library.
+		expect((await fetch(`${origin}/api/export`)).status).toBe(405);
+		const crossSite = await fetch(`${origin}/api/export`, {
+			method: 'POST',
+			headers: {
+				Origin: 'https://evil.example',
+				'content-type': 'application/x-www-form-urlencoded'
+			},
+			body: ''
+		});
+		expect(crossSite.status).toBe(403);
+
+		const res = await fetch(
+			`${origin}/api/export`,
+			sameOrigin({
+				method: 'POST',
+				headers: { 'content-type': 'application/x-www-form-urlencoded' },
+				body: ''
+			})
+		);
 		expect(res.status).toBe(200);
 		expect(res.headers.get('content-type')).toBe('application/gzip');
 		expect(res.headers.get('content-disposition')).toBe(

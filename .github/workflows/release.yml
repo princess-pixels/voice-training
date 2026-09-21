@@ -54,7 +54,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           # --notes is prepended to the generated changelog; --notes-file is not documented to combine.
+          # The notes are this release's section of CHANGELOG.md (up to the next
+          # "## [" heading) followed by the download table in release-notes.md.
+          section="$(awk -v v="${GITHUB_REF_NAME#v}" '
+            $0 ~ "^## \\[" v "\\]" { on = 1; next }
+            on && /^## \[/ { exit }
+            on { print }' CHANGELOG.md)"
+          notes="$(printf '%s\n\n%s' "${section}" "$(cat .github/release-notes.md)")"
           gh release create "${GITHUB_REF_NAME}" dist/* \
             --title "voice-training ${GITHUB_REF_NAME}" \
             --generate-notes \
-            --notes "$(cat .github/release-notes.md)"
+            --notes "${notes}"

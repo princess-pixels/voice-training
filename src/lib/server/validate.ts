@@ -257,20 +257,6 @@ export function parseSessionForm(form: FormData): NewSession {
 	};
 }
 
-/**
- * Which practice step a take belongs to, from the studio's optional form
- * fields. Both or neither; a day alone is an error, a step alone is ignored.
- */
-export function parsePracticeRef(form: FormData): { day: string; step: number } | null {
-	const day = parseText(form.get('practiceDay'), 10);
-	const stepRaw = parseText(form.get('practiceStep'), 10);
-	if (!day) return null;
-	if (!DAY_KEY.test(day)) fail('Invalid practiceDay');
-	const step = stepRaw === '' ? NaN : Number(stepRaw);
-	if (!Number.isInteger(step) || step < 0) fail('practiceStep must be a step index');
-	return { day, step };
-}
-
 /** An uploaded recording's size against the ceiling; 413, not 400. */
 export function checkAudioSize(bytes: number): void {
 	if (bytes > LIMITS.audioBytes) throw new ValidationError('Audio file too large', 413);
