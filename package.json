@@ -17,7 +17,6 @@
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "test": "bun test",
-    "test:server": "bun test src/server.test.ts",
     "coverage:gap": "bun scripts/coverage-gap.ts",
     "import": "bun scripts/import.ts",
     "format": "prettier --write .",

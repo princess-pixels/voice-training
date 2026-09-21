@@ -201,7 +201,7 @@ bun test                 # YIN, pitch stats, routine, validation, the storage la
 bun run coverage:gap     # what the coverage number leaves out: Bun only measures files a test
                          # imports, so routes, components and the recorder store are not in it
 bun run build            # production bundle into ./build; run it with `bun ./build/index.js`
-bun run test:server      # the built server end to end over HTTP (needs ./build)
+                         # once it exists, `bun test` also drives it end to end over HTTP
 bun run start -- --help  # the CLI entry, in development
 bun run build:binary     # dist/voice-training for this machine
 bun run build:binary bun-linux-x64 bun-darwin-arm64 bun-windows-x64   # or any Bun target

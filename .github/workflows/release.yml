@@ -35,8 +35,8 @@ jobs:
       - run: bun ci
       - run: bun run lint
       - run: bun run check
-      - run: bun test --coverage
       - run: bun run build
+      - run: bun test --coverage
 
       # Bun downloads the runtime for each target on first use; five targets, one job.
       - run: bun run build:binary bun-linux-x64 bun-linux-arm64 bun-darwin-arm64 bun-darwin-x64 bun-windows-x64

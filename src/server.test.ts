@@ -13,7 +13,9 @@ import { localDayKey } from '$lib/days';
  * body limit, the multipart parser, streaming), which the unit tests cannot
  * reach and which is where the Sept 3 audit's production-only bugs lived.
  *
- * Skipped when there is no build; CI runs it after `bun run build`.
+ * Skipped when there is no build; CI builds first so it runs with the rest.
+ * It runs inside the normal `bun test`, not alone: bunfig's per-file coverage
+ * threshold would fail a lone run that imports one small module.
  */
 
 const BUILD = 'build/index.js';

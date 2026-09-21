@@ -35,20 +35,19 @@ jobs:
       # svelte-check: types and template errors across .ts and .svelte files.
       - run: bun run check
 
+      # Production bundle via svelte-adapter-bun. Bootstrap (database, data dir)
+      # runs at boot, not build. Built before the tests so src/server.test.ts
+      # (the built server end to end: multipart upload, ranged playback, the
+      # host allowlist, the body limit, practice PATCH, export) is not skipped.
+      - run: bun run build
+
       # Tests with coverage against an in-memory SQLite database and a temp audio
-      # directory; bunfig.toml sets the threshold. No services needed. The
+      # directory; bunfig.toml sets the threshold, per measured file, which is
+      # why the server test runs in this same invocation rather than alone. The
       # threshold only applies to files a test imports; the gap script names
       # the rest so the number is read honestly.
       - run: bun test --coverage
       - run: bun scripts/coverage-gap.ts
-
-      # Production bundle via svelte-adapter-bun. Bootstrap (database, data dir) runs at boot, not build.
-      - run: bun run build
-
-      # The built server end to end: multipart upload, ranged playback, the
-      # host allowlist, the body limit, practice PATCH, export. Skipped above
-      # because the build did not exist yet.
-      - run: bun test src/server.test.ts
 
       # The single-file binary for this platform: keeps the CLI wrapper and the
       # asset embedding honest. Cross-compiles happen in release.yml on tags.
