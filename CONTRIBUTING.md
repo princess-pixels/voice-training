@@ -2,8 +2,9 @@
 
 Issues and pull requests are welcome. Before opening a PR:
 
-1. `bun install`, then `bun run lint`, `bun run check` and `bun test` all pass (CI runs
-   exactly these, then builds and runs `bun run test:server` against the build).
+1. `bun install`, then `bun run lint`, `bun run check`, `bun run build` and `bun test` all
+   pass (CI runs exactly these; with a build present, `bun test` also drives the built
+   server end to end).
 2. New behaviour has a test next to it; a bug fix has a test that fails without it.
 3. Add a line under **Unreleased** in [CHANGELOG.md](CHANGELOG.md) if a user would notice.
 4. Keep commits focused and say _why_ in the message; the _what_ is in the diff.
