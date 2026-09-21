@@ -206,7 +206,8 @@ Stack: SvelteKit 2 + Svelte 5 (runes), Tailwind CSS v4, `bun:sqlite`, the Web Au
 TypeScript. Tagging `vX.Y.Z` (matching `package.json`) builds and publishes the binaries
 for every platform through `.github/workflows/release.yml`.
 
-Known rough edges and next steps live in [TODO.md](TODO.md).
+Known rough edges and next steps live in [TODO.md](TODO.md); the dev log, audit scores and
+the reasoning behind the bigger changes are in [HISTORY.md](HISTORY.md).
 
 ```
 src/

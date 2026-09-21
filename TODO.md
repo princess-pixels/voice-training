@@ -1,195 +1,195 @@
 # TODO
 
-Known rough edges and ideas, roughly in the order they are worth doing. Each item
-says where it lives and why it matters, so it can be picked up cold.
+Open items, grouped by area and roughly in the order they are worth doing. Each says
+where it lives and why it matters, so it can be picked up cold. The dev log, audit
+scores and the decisions behind the bigger changes are in [HISTORY.md](HISTORY.md).
 
-State as of 2026-09-12 (evening): 1.1.0 adds the reference-note strip under the
-graph (`NoteKeyboard.svelte`, `audio/notes.ts`, `audio/tone.ts`, `audio/smoothing.ts`).
-Deploy note for the hosted install: the server lazy-loads page chunks by filename,
-so restart the service right after every `bun run build`; a rebuild under a running
-service leaves unvisited pages answering 500 until the restart.
+State as of 2026-09-21: the round 3 audit scored 7.0 (Sept 3: 6.1). Its ids (A = correctness
+and types, B = security and deps, C = DSP and performance, D = architecture and testing,
+E = UX and docs) are kept below so a fix can name what it closes. The import trust
+boundary (B01, B02, B04) is already closed.
 
-State as of 2026-09-12: the portable edition is complete (steps 1 to 6 below). The app
-is one binary on SQLite and local files, the hosted install runs on it, and a `v*` tag
-publishes builds for five platforms. Everything before that paragraph block is history.
+## Bugs
 
-State as of 2026-09-03 (evening): a second, stricter audit scored 6.1/10 (weights:
-correctness, security and DSP 0.15 each; architecture, performance and testing 0.10;
-types 0.08; UX 0.07; docs and deps 0.05). It found three production-only blockers
-that the first pass missed, all fixed the same evening:
+- [ ] **A01 · Practice page never adopts the new day after midnight.**
+      `practice/+page.svelte:19,30,72-89`. `day` and `currentIndex` are seeded once with
+      `untrack(() => data.day)`; `invalidateAll()` refreshes `data.day` but not the local
+      copy, so every PATCH after midnight writes into yesterday's row and the clock stays
+      stopped. Wrap the body in `{#key data.day?._id}` or reset the local state when the
+      id changes, and set `enteredAt` after the reload path too.
+- [ ] **A02 · Midnight detection compares the browser's calendar with the server's key.**
+      `practice/+page.svelte:80` vs `practice.ts:17`. A UTC server used from a CEST phone
+      thinks midnight passed two hours early and the timer silently stops on every refocus.
+      Have `load` return the server's today key and compare against that.
+- [ ] **A04 · Deleting a session leaves its id in `practice_days.steps[].sessionIds`.**
+      `db.ts:408-412`. The practice page keeps a "latest take" link to a 404, and the
+      export carries the dangling id along. Strip it inside the same transaction; optionally
+      check `sessionExists` in the practice PATCH.
+- [ ] **A06 · Importer trusts nested archive shapes.** `import.ts` `readManifest` /
+      `readSession`. Sessions and practice days are cast, not checked, and skip every cap
+      the HTTP route enforces (200k points, title and notes length, duration, the settings
+      range). Share the route's validation with `readSession` (see D01) and validate step
+      status and seconds.
+- [ ] **A05 · `request.json()` as implicit `any`; malformed bodies become 500s.**
+      `api/settings/+server.ts:18-27`, `api/range-tests/+server.ts:19-25`. A null body
+      throws a TypeError that the outer catch returns as 500. Copy the practice route's
+      `body: unknown` plus guard pattern, ideally as one shared `readJson`.
+- [ ] **D07 · Dashboard tests can flake across midnight; export sweep shares the system
+      tmpdir.** `db.test.ts:217-261`, `export.ts:102-124`. Use `setSystemTime` in the
+      dashboard tests; scope `sweepStaleExports` to a `voice-training` subdirectory of
+      `tmpdir()` so a test run cannot sweep a live server's in-flight export.
+- [ ] **D04 / E08 · No `+error.svelte` and no `handleError`.** `/nonexistent` and
+      `/sessions/<bad id>` render bare "404 Not Found" inside the layout. Add
+      `src/routes/+error.svelte` in the app's styling and a `handleError` in
+      `hooks.server.ts` as the single logging point.
+- [ ] **C01 · Pitch line bridges silences.** `PitchVisualizer.svelte:394-407`. Unvoiced
+      frames are never stored and `drawStatic` joins every consecutive pair, so a breath
+      becomes a straight segment. Break the path when `p2.t - p1.t` exceeds a couple of hops.
+- [ ] **E02 · Keyboard focus is dropped at every stage of a recording.**
+      `RecordingStudio.svelte:297-335,350-435`. Start unmounts on press, Stop unmounts on
+      press, the summary mounts unfocused. One persistent primary button whose label
+      toggles, and move focus to the title input when the summary appears.
+- [ ] **E03 · Step rail buttons are 6 px tall.** `practice/+page.svelte:252-269`. Give
+      each step a real hit area and keep the thin bar as the visual.
+- [ ] **E04 / E07 · Mic failures show raw browser error strings.** `recorder.svelte.ts:139`,
+      `mic.ts:16`, `settings/+page.svelte:52-72`. Branch on `err.name` and on
+      `!navigator.mediaDevices` for plain-language messages shared by the studio, the range
+      test and Settings; treat an empty device list as its own state instead of
+      "Loading devices..." forever.
+- [ ] **E05 · The cents readout is an `aria-live` region updated ten times a second.**
+      `NoteKeyboard.svelte:462`. Announce from a separate hidden region at most once a
+      second or only on transitions.
+- [ ] **E01 · Sessions table is clipped on phones.** `sessions/+page.svelte:84-113`.
+      `overflow-x-auto` as a stopgap, then a stacked card list below `md`.
+- [ ] **E17 · README's first-run sentence does not match what happens.** `README.md:32-33`.
+      The binary opens the Dashboard, and the mic prompt appears on the first record press.
+- [ ] **C04 · No octave-down check in YIN.** `yin.ts:78-97`. A weak fundamental near the
+      top of the band reads an octave high or drops out. Check the minimum around `2·tau`.
+- [ ] **A07 · A failed PATCH still advances the step and drops the drained seconds.**
+      `practice/+page.svelte:92-98,140-156`. Return a boolean from `patchStep` and re-bank on
+      failure.
+- [ ] **A08 · Audio is removed before the row on delete, written before the row on
+      create.** `api/sessions/[id]/+server.ts:30-44`, `api/sessions/+server.ts:135-149`.
+      Row first, then file; clean up the file if `createSession` fails; remove the empty
+      per-session directory.
+- [ ] **A09 · History strip counters include rows outside the two-week window.**
+      `practice/+page.svelte:197-204`. Filter `data.history` to `historyKeys` before summing.
+- [ ] **A10 · Clicking a step in the completion list does nothing visible.**
+      `practice/+page.svelte:273,295-301`. A `reviewing` flag so a finished step can be
+      reopened without "Run it again".
+- [ ] **E09 · Five pages share the title "Voice Training"; two `h1`s on desktop.** Set a
+      title per page; make the sidebar brand a span.
 
-- `BODY_SIZE_LIMIT` (adapter default 512K) rejected any recording over about two
-  minutes with a 413 before the route ran. Now set in `.env.example` and documented.
-- `ORIGIN` unset made the adapter assume `https`, so on `http://localhost:PORT`
-  every upload was a 403. Same fix.
-- The dashboard and session list serialised every session's full pitch point
-  array into the page. `listSessions` / `getRecentSessions` in `db.ts` now project
-  `pitchData.points` away and return `SessionSummary` (2.3 MB to 267 bytes per
-  50k-point session).
+## Glow-ups
 
-Later that evening the whole "bugs and polish" and "robustness" lists were cleared
-in one pass (malformed ids, page clamping, NaN range, atomic settings, local-day
-"Today", title effect, mic grab on the settings page, start re-entrancy, stop and
-delete errors surfaced, `goto` after save, `PageData` types, fractional live time,
-ranked exercise sort), followed by the performance list: YIN runs in a Worker on a
-fixed 25 ms hop, the recorder keeps a plain history with an incremental summary and
-publishes only a 12-second window to the live graph, the visualizer batches strokes,
-caches the playback layer offscreen and resizes the canvas only on layout changes.
-Then the audio, UX and housekeeping lists: YIN rejects above-band pitches instead
-of reporting their subharmonic, small text passes WCAG AA, the sidebar collapses to
-a drawer below `md`, the canvas has fallback text, pagination and delete buttons are
-labelled, there is an SVG favicon, the default range and category classes live in one
-place, the footer reads its version from `package.json`, MinIO is pinned, and the
-server sends a nonce-based CSP plus the usual hardening headers. Prettier is in,
-the repo is formatted, and CI checks it.
-
-With those in, the rubric lands around 7.5. The items below are what stands between
-that and an 8, roughly in order.
-
-Late that evening, after the first real use of Today's Practice: progress now lives in
-a `practiceDays` document per local day (`src/lib/server/practice.ts` is the pure,
-tested part; `db.ts` does the upsert-on-open and an optimistic-lock step update). The
-practice page reads and writes that document, the timer is wall-clock anchored and
-banks its seconds on every step change and on navigation, and a take recorded via
-`?day=&step=` on the record route attaches itself to the step and returns to the
-routine. The streak counts a routine with at least one done step, not only recordings.
-Export manifest is version 2 with `practiceDays`.
-
-Then, the same night: the recorder is embedded in the practice page
-(`RecordingStudio` has an `embedded` mode with an `onSaved` callback and a bindable
-`busy` flag that locks step changes mid-take), a saved take shows its summary inline
-and marks the step done, time on a step is the visible wall-clock time on it (paused
-while the tab is hidden, one stretch capped at 30 minutes, no button), the dashboard
-has a today banner, the practice page a two-week history strip, and a tab that comes
-back after midnight reloads onto the new day.
-
-## Today's Practice, next
-
+- [ ] **D01 · Validation rules live in `+server.ts`, untested and duplicated.** The
+      sessions POST alone carries ~110 lines of parsing closed over `RequestHandler`;
+      `MAX_NOTES_LENGTH` is declared twice; a local `parseRange` collides by name with the
+      exported HTTP-Range one; `summarisePitch` runs twice per upload. A pure
+      `src/lib/server/validate.ts` with table tests, routes become adapters. Unlocks A06.
+- [ ] **D02 · The coverage number is a false signal.** `bunfig.toml:11-17`. Measured
+      files are 2,530 of 8,605 source lines; Bun only instruments what a test imports, so
+      routes, components, the store and the client audio path never trip the threshold.
+      Fix the bunfig comment and make the gap visible in CI.
+- [ ] **D03 · Nothing tests the HTTP layer end to end.** CI boots the binary for
+      `--version` only. A `server.test.ts` that spawns `build/index.js` with a temp
+      `DATA_DIR` and exercises multipart POST, Range 206/416, a bad `Host`, practice PATCH
+      and export, run after the build step.
+- [ ] **E06 / E16 · Pitch labels ignore the configured range, and "masculine" is shown
+      live.** `audio/utils.ts:43-48` and its four consumers. Derive the bands from the
+      saved range and label them below / in / above target. Also "Adam's apple" in
+      `exercises.ts:198`.
+- [ ] **C02 · YIN analyses the oldest two-thirds of each frame.** `yin.ts:67-75`. The
+      newest ~30 ms of every 4096-sample buffer is never read. Index from
+      `buffer.length - halfSize - (tauMax + 1)`; same cost.
+- [ ] **D05 · Error-handling strategy differs per route.** Four handlers wrap in
+      try/catch → 500, three propagate, settings writes `throw error()`, practice maps
+      `RangeError` by `instanceof`. Pick propagate-to-Kit with `handleError` (D04) as the
+      one logging point.
+- [ ] **D06 · Tested pure helpers are dead; the pages reimplement them.**
+      `nextStepIndex`, `isPracticed`, `getAudioDevices`, and a third hand-rolled
+      `PracticeDay` reviver. A client-safe `src/lib/practice.ts` next to `days.ts`.
+- [ ] **B03 · `GET /api/export` builds the whole library on disk for any cross-origin
+      request.** Make it a POST (so the origin check applies) or require a custom header;
+      cap concurrent exports to one.
+- [ ] **C05 · Pitch points are stored at 74 bytes each with a field nothing reads.**
+      Round `t` to 1 ms and `hz` to 0.1 Hz in `addPoint`, make `confidence` optional:
+      1.7 MB → 0.6 MB per ten-minute take, through upload, SQLite, page payload and export.
+- [ ] **C06 · Audio route parses the full pitch blob on every Range request.**
+      `sessions/[id]/audio/+server.ts:148`. A `getSessionAudio(id)` that selects only
+      `audio_key, audio_type`.
+- [ ] **C07 · Playback re-filters the whole point array on every `timeupdate`.**
+      `PitchVisualizer.svelte:527-528`. Cache `points` and `timeRange` in `staticFor`.
+- [ ] **C08 · Live mode repaints the full background every hop, off the animation
+      frame.** Cache the band, grid and axes offscreen; paint through `requestAnimationFrame`
+      with a dirty flag.
+- [ ] **C10 · "Average pitch" is an arithmetic mean in Hz.** `stats.ts:261-262`. A
+      cents-bin histogram in `PitchAccumulator` gives an O(1) median for the headline.
+- [ ] **D08 · Svelte 5 idiom slips.** `busy` derived in an `$effect`, the layout drawer
+      closed by an effect on `page.url` instead of `afterNavigate`, `$effect` as `onMount`
+      in settings, the range test pushing into a deep `$state` array at 40 Hz.
+- [ ] **D09 · `db.ts` carries pure logic and imports client presentation modules.**
+      `calculateStreak` into `days.ts`; `CATEGORY_ORDER` and `DEFAULT_TARGET_RANGE` into a
+      dependency-free `constants.ts`.
+- [ ] **D10 / E14 · Client-side duplication.** Four date formatters (three hard-wired to
+      `en-US`), two delete flows, six `fetch` decoders, and `scripts/import.ts`
+      re-implementing the CLI's import branch. `src/lib/format.ts`, a small
+      `src/lib/api.ts`, and `bun src/cli.ts import`.
+- [ ] **E10 · Discard has no confirmation; the two delete confirms disagree; no undo.**
+      `RecordingStudio.svelte:100-106`, `sessions/+page.svelte:30`.
+- [ ] **E11 · State changes are not announced.** `role="status"` on saved and recording
+      indicators, `role="alert"` on error boxes; the timer stays out of any live region.
+- [ ] **E12 · No reduced-motion handling; the exercise-card animation classes are dead.**
+      `motion-reduce:` variants on the pulsing dot and card lift; the `tailwindcss-animate`
+      classes in `exercises/+page.svelte:185` compile to nothing.
+- [ ] **E13 · Canvas text below AA; the trend chart has no fallback content.**
+      `PitchTrendChart.svelte:227,239,276`, `PitchVisualizer.svelte:177-185`.
+- [ ] **E15 · Small semantics.** `aria-expanded` on the instructions toggle, `aria-hidden`
+      on decorative emoji, readable disabled-but-informative labels.
+- [ ] **A12 · `revive()` and the practice wire shape are typed as if JSON carried
+      `Date`s.** Move `JsonDate<T>` from `import.ts` into `types.ts` and use it on both sides.
+- [ ] **A13 · Strictness gaps.** `noUncheckedIndexedAccess`, a discriminated `CliArgs`
+      union, validated search params on the exercises page, no `selected!` in NoteKeyboard.
+- [ ] **A14 · "Total Practice Time" excludes routine time while the streak includes it.**
+      `db.ts:843,845`. Sum step seconds from `practice_days`, or show both numbers.
+- [ ] **D12 · UTC dates in audio keys and the export file name.** `audio.ts:30`,
+      `exportLayout.ts:62`. Everything else is local-day; use `localDayKey`.
+- [ ] **B06 · Release supply chain.** Pin actions to SHAs, `permissions: contents: read`
+      on CI, an exact Bun patch instead of `1.4.x`, and build provenance attestation.
 - [ ] **History page.** The strip shows two weeks; a `/practice/history` page with
       per-step times and the takes of each day is the natural next step once there
       is a month of data to look at.
-- [ ] The step clock counts visible time whether or not you are actually practising.
-      Good enough for one user who knows that; if it ever matters, drop time while the
-      recorder is idle for more than a few minutes.
+- [ ] **Step clock counts visible time whether or not you are practising.** Good enough
+      for one user who knows that; if it ever matters, drop time while the recorder is idle
+      for more than a few minutes.
 
-## Portable edition (the next big one)
+## Docs & drift
 
-Planned 2026-09-09. One binary someone downloads and double-clicks: metadata in
-`bun:sqlite`, audio on local disk, no Mongo, MinIO or Docker. The same binary runs
-the hosted install under systemd behind Caddy with a data-directory flag.
-
-**Decision: replace Mongo and MinIO, do not add a second backend.** Only `db.ts`
-and `s3.ts` touch infrastructure and every route goes through them; a dual backend
-would double every storage change for nothing a single-user app needs. SQLite in
-WAL mode is plenty. The storage layer also becomes testable against an in-memory
-database, so the `coveragePathIgnorePatterns` list shrinks. Sharing Mongo/MinIO
-with mia-journal is co-location, not integration, so nothing else is affected.
-The hosted install migrates by export then import, which dogfoods the exact path a
-client uses to hand a therapist their data.
-
-What changes:
-
-- `db.ts` on SQLite. Tables: sessions, session_points (one JSON blob per session,
-  so lists never touch the points), exercises, range_tests, practice_days (steps as
-  JSON), settings. Ids become UUIDv7 strings; the id validator also accepts legacy
-  24-hex ids so imported data keeps its links. The optimistic lock on practice
-  steps becomes a plain transaction. Function names and return shapes stay, so the
-  routes do not change (except the `exerciseId` regex in the sessions POST).
-- `s3.ts` becomes `audio.ts`: the same five functions against `<data>/audio/`.
-  Range requests come from `Bun.file().slice().stream()`. Reject keys containing
-  `..` even though they are generated server-side.
-- Bootstrap: migrate + seed; no bucket check.
-- Import (new): reads manifest v1 and v2, inserts rows, copies audio. Export format
-  unchanged.
-- Config: `--data-dir`, `--port`, `--open/--no-open` (env equivalents for systemd).
-  Default data dir is the platform user-data folder. The binary sets `ORIGIN` to
-  `http://localhost:PORT` and `BODY_SIZE_LIMIT` itself, so the two production-only
-  footguns from the audit disappear.
-- README front door becomes download, run, browser opens. The Docker path goes.
-
-Risks, in the order to retire them:
-
-- ~~Static assets inside the compiled binary.~~ Retired by the spike below: the
-  adapter's `readdirSync` over `import.meta.dir` works on the embedded file system.
-- Binaries are ~100 MB each (they carry the Bun runtime). Say so in the README.
-- Unsigned binaries: macOS Gatekeeper and Windows SmartScreen both complain.
-  Document the right-click-open workaround; signing is not worth the money yet.
-- Export and import shell out to `tar`; Windows has shipped it since 2018, fine.
-- Mic access works because `localhost` is a secure context. That is the whole
-  reason a local binary beats a shared server for a client.
-
-Order of work (rough sizes):
-
-1. [x] Compile spike on the current build (2026-09-09). It works as is:
-
-   ```bash
-   bun run build
-   bun build --compile --target=bun ./build/index.js --asset ./build/client --outfile dist/voice-training
-   ```
-
-   67 MB binary. Run from a directory with no `build/` nearby and with the real
-   `build/client` renamed away, it served the SSR dashboard and practice page,
-   `/_app/immutable/*` with the immutable cache header, the precompressed brotli
-   variant, 206 on Range requests, and 404 for a missing asset. So the adapter's
-   `readdirSync` over `import.meta.dir` works on the embedded file system and no
-   custom entry is needed. Two notes: the ETag is `W/"<size>-0"` because embedded
-   files have no mtime (harmless, the names are hashed), and the binary autoloads a
-   `.env` from its working directory, which the CLI flags should override.
-
-2. [x] `audio.ts`, then the `db.ts` port with schema and in-memory tests (2026-09-12).
-       Landed as planned: six tables, `PRAGMA user_version` for the schema version,
-       UUIDv7 ids with the 24-hex form still accepted, function names and return
-       shapes unchanged so no route changed beyond the id regex. `s3.ts`, `sigv4.ts`,
-       the `mongodb` dependency and `docker-compose.yml` are gone; `DATA_DIR` (default
-       `./data`, `:memory:` in tests) is the only new setting. Both modules are at
-       100% coverage and the `coveragePathIgnorePatterns` list is down to
-       `export.ts`. Smoke-tested against the production build: every page, upload,
-       whole and ranged playback (206/416), settings, range tests, practice steps,
-       export and delete. Two Bun findings are under "Waiting on upstream".
-
-3. [x] Import, then migrate voice.mia by export/import (2026-09-12). `import.ts`
-       reads manifest v1 and v2: additive and idempotent (existing rows are skipped,
-       local settings win), exercises matched by title with every old id rewritten
-       to the local one, unknown titles added under their old id, recordings copied
-       under their original keys. `bun run import <archive>` is the CLI. The
-       export/import round trip is a test now, so `export.ts` is measured too and
-       the coverage ignore list is empty. The hosted library (9 sessions, 3 practice
-       days, settings) was exported from the Mongo build and imported into
-       `~/.local/share/voice-training`; the archive is kept in its `backups/`.
-4. [x] CLI flags, data directory, browser auto-open (2026-09-12). `src/cli.ts` is
-       the entry, `src/lib/server/cli.ts` the pure part (parsing, platform data dir,
-       option > env > default resolution, opener command) at 100% coverage.
-       `--data-dir`, `--port`, `--host`, `--open/--no-open`, `--help`, `--version`,
-       and `voice-training import <archive>`. The binary sets ORIGIN to
-       `http://localhost:PORT` and BODY_SIZE_LIMIT to 64M unless the environment
-       says otherwise, binds 127.0.0.1, and opens the browser only when standalone.
-       `bun run build:binary [targets]` builds it in two stages: the CLI is bundled
-       into `build/cli-core.js` and a generated `build/cli.js` wrapper imports it and
-       `./index.js`, so the compiled bundle's `import.meta.dir` is where the handler
-       looks for `client/`. The wrapper exists because a static import of
-       `../build/index.js` from src/ made svelte-check type-check the whole build
-       output (checkJs is on). Smoke-tested from a bare directory: flags beat a
-       `.env` beside the binary, embedded assets serve immutable, a 3 MB upload
-       passes on the defaults, `import` restores the archive.
-5. [x] Cross-compile CI and a GitHub release on tag (2026-09-12).
-       `.github/workflows/release.yml` runs on `v*` tags: checks the tag against
-       package.json, runs lint/check/test/build, cross-compiles the five targets in
-       one job (Bun fetches each runtime on first use, about 40 MB apiece), packs
-       Linux and macOS as tar.gz (keeps the executable bit) and Windows as zip,
-       writes SHA256SUMS.txt, and publishes with `gh release create` using
-       `.github/release-notes.md` plus generated notes. All five targets were
-       cross-compiled locally first (62 to 86 MB each). ci.yml now also builds the
-       host binary and runs `--version`, so the wrapper cannot rot unnoticed.
-       v1.0.0 ran it for the first time: green in 61 s, five assets plus checksums,
-       and the downloaded Linux build verified and served.
-6. [x] README rewrite (2026-09-12): the front door is download, run, browser opens;
-       source, systemd and proxy setups moved below it; a configuration table that
-       shows the binary's defaults next to the source ones. `package.json` is 1.0.0.
-       Tagging `v1.0.0` runs the release job for the first time.
-
-**Hosted switch-over done 2026-09-12:** voice.mia runs on SQLite from
-`~/.local/share/voice-training`. Mongo and MinIO keep the old copy untouched until this
-has been running happily for a while; `.env.mongo-backup` swaps back if it ever has to.
+- [ ] **C03 · The store's confidence gate can never fire.** `recorder.svelte.ts:106-113`.
+      YIN only reports lags below the 0.2 threshold, so confidence is always > 0.8 and the
+      0.55 check (and its comment) is dead. Delete it or make it real.
+- [ ] **C09 · The background-tab comment in the detector is wrong.**
+      `pitchDetector.ts:159-161`. Browsers throttle `setInterval` to 1 Hz when hidden, so
+      the pitch track thins to one point a second. Correct the comment, or capture frames
+      in an `AudioWorkletNode`.
+- [ ] **C11 · YIN tests assert ±0.5 %, not cents, and the noise test is vacuous.**
+      `yin.test.ts:35-39,73-76`. Assert cents, `hz === 0` on noise, add vibrato and
+      weak-fundamental cases.
+- [ ] **A11 · The `?day=&step=` record flow is dead code.** Nothing links to it; the
+      practice page attaches takes through `onSaved`. Remove the prop, the form fields and
+      the server attach block, or link it and test it.
+- [ ] **D11 / E20 · Stale comments.** `config.ts:8-9` (the flag landed in `cli.ts`),
+      `range-test/+page.svelte:21-22` (the hop is 40 Hz, not 60 fps), `bunfig.toml:15`.
+- [ ] **B07 · README recommends `HOST_HEADER`, which turns the host check off.**
+      `README.md:106-108`. With Caddy, `ORIGIN` alone is enough; say what the header costs.
+- [ ] **B08 · No engine pin, no dependency bot, from-source runtime needs devDependencies.**
+      `engines` and `packageManager` in `package.json`, a `dependabot.yml`, and one README
+      sentence that from-source needs a full `bun install`.
+- [ ] **E18 · LICENSE has no copyright holder.** `LICENSE:3`, plus `author` in `package.json`.
+- [ ] **E21 · `--help` and README drift.** `ORIGIN` and `BODY_SIZE_LIMIT` on the `--help`
+      env line; "60–90 MB depending on platform"; mention `$XDG_DATA_HOME`.
+- [ ] **E22 · No changelog, no contributing guidance.** A `CHANGELOG.md` the release job
+      reads the top section of; a five-line `CONTRIBUTING.md`.
 
 ## Ideas
 
