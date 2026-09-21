@@ -38,34 +38,54 @@ export function percentile(values: number[], p: number): number {
 /** The feminine preset; what every range falls back to when nothing is configured. */
 export const DEFAULT_TARGET_RANGE: PitchRange = { low: 180, high: 300 };
 
-export function getPitchCategory(hz: number): 'feminine' | 'androgynous' | 'masculine' | 'silent' {
-	if (hz === 0) return 'silent';
-	if (hz >= 180) return 'feminine';
-	if (hz >= 150) return 'androgynous';
-	return 'masculine';
+/**
+ * Where a pitch sits relative to the user's own target range. This is the
+ * only way the app grades a voice: against what the user asked for, never
+ * against a fixed idea of what a feminine or masculine voice is.
+ */
+export type PitchBand = 'below' | 'in' | 'above' | 'silent';
+
+export function pitchBand(hz: number, range: PitchRange): PitchBand {
+	if (hz <= 0) return 'silent';
+	if (hz < range.low) return 'below';
+	if (hz > range.high) return 'above';
+	return 'in';
 }
 
-/** Tailwind text colour class for a pitch, matching getPitchCategoryColor. */
-export function getPitchCategoryClass(hz: number): string {
-	switch (getPitchCategory(hz)) {
-		case 'feminine':
+export function pitchBandLabel(band: PitchBand): string {
+	switch (band) {
+		case 'in':
+			return 'in target';
+		case 'below':
+			return 'below target';
+		case 'above':
+			return 'above target';
+		default:
+			return 'silent';
+	}
+}
+
+/** Tailwind text colour class for a pitch, matching pitchBandColor. */
+export function pitchBandClass(hz: number, range: PitchRange): string {
+	switch (pitchBand(hz, range)) {
+		case 'in':
 			return 'text-primary-400';
-		case 'androgynous':
+		case 'above':
 			return 'text-accent-400';
-		case 'masculine':
+		case 'below':
 			return 'text-indigo-400';
 		default:
 			return 'text-surface-400';
 	}
 }
 
-export function getPitchCategoryColor(category: string): string {
-	switch (category) {
-		case 'feminine':
+export function pitchBandColor(band: PitchBand): string {
+	switch (band) {
+		case 'in':
 			return '#ec4899'; // pink-500
-		case 'androgynous':
+		case 'above':
 			return '#a855f7'; // purple-500
-		case 'masculine':
+		case 'below':
 			return '#6366f1'; // indigo-500
 		default:
 			return '#737373'; // neutral-500

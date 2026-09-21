@@ -17,7 +17,10 @@ plain-language microphone errors (E04, E07), the practice page's step rail, fail
 handling, history window and review-after-completion (E03, A07, A09, A10), the quiet
 cents announcer (E05), live regions on state and error messages (E11), the YIN octave
 check (C04) and row-before-file ordering on delete (A08) are already closed. Every bug
-from the round is closed; what is left is glow-ups and docs.
+from the round is closed; what is left is glow-ups and docs. Of those, pitch labels tied
+to the user's own range (E06, E16), YIN reading the newest part of the frame (C02),
+routine time in the practice total (A14) and local dates in audio keys and export names
+(D12) are done.
 
 ## Glow-ups
 
@@ -29,13 +32,6 @@ from the round is closed; what is left is glow-ups and docs.
       `--version` only. A `server.test.ts` that spawns `build/index.js` with a temp
       `DATA_DIR` and exercises multipart POST, Range 206/416, a bad `Host`, practice PATCH
       and export, run after the build step.
-- [ ] **E06 / E16 · Pitch labels ignore the configured range, and "masculine" is shown
-      live.** `audio/utils.ts:43-48` and its four consumers. Derive the bands from the
-      saved range and label them below / in / above target. Also "Adam's apple" in
-      `exercises.ts:198`.
-- [ ] **C02 · YIN analyses the oldest two-thirds of each frame.** `yin.ts:67-75`. The
-      newest ~30 ms of every 4096-sample buffer is never read. Index from
-      `buffer.length - halfSize - (tauMax + 1)`; same cost.
 - [ ] **D06 · Tested pure helpers are dead; the pages reimplement them.**
       `nextStepIndex`, `isPracticed`, `getAudioDevices`, and a third hand-rolled
       `PracticeDay` reviver. A client-safe `src/lib/practice.ts` next to `days.ts`.
@@ -78,10 +74,6 @@ from the round is closed; what is left is glow-ups and docs.
       `Date`s.** Move `JsonDate<T>` from `import.ts` into `types.ts` and use it on both sides.
 - [ ] **A13 · Strictness gaps.** `noUncheckedIndexedAccess`, a discriminated `CliArgs`
       union, validated search params on the exercises page, no `selected!` in NoteKeyboard.
-- [ ] **A14 · "Total Practice Time" excludes routine time while the streak includes it.**
-      `db.ts:843,845`. Sum step seconds from `practice_days`, or show both numbers.
-- [ ] **D12 · UTC dates in audio keys and the export file name.** `audio.ts:30`,
-      `exportLayout.ts:62`. Everything else is local-day; use `localDayKey`.
 - [ ] **B06 · Release supply chain.** Pin actions to SHAs, `permissions: contents: read`
       on CI, an exact Bun patch instead of `1.4.x`, and build provenance attestation.
 - [ ] **History page.** The strip shows two weeks; a `/practice/history` page with

@@ -3,9 +3,10 @@ import {
 	DEFAULT_TARGET_RANGE,
 	formatDuration,
 	formatHz,
-	getPitchCategory,
-	getPitchCategoryClass,
-	getPitchCategoryColor,
+	pitchBand,
+	pitchBandClass,
+	pitchBandColor,
+	pitchBandLabel,
 	noteFromHz,
 	percentile,
 	semitonesBetween
@@ -87,29 +88,37 @@ describe('formatting', () => {
 	});
 
 	test('pitch categories have the documented boundaries', () => {
-		expect(getPitchCategory(0)).toBe('silent');
-		expect(getPitchCategory(149.9)).toBe('masculine');
-		expect(getPitchCategory(150)).toBe('androgynous');
-		expect(getPitchCategory(180)).toBe('feminine');
+		const range = { low: 150, high: 220 };
+		expect(pitchBand(0, range)).toBe('silent');
+		expect(pitchBand(149.9, range)).toBe('below');
+		expect(pitchBand(150, range)).toBe('in');
+		expect(pitchBand(220, range)).toBe('in');
+		expect(pitchBand(220.1, range)).toBe('above');
+		// The same 160 Hz is in target on the androgynous preset and below it on the feminine one.
+		expect(pitchBand(160, DEFAULT_TARGET_RANGE)).toBe('below');
+	});
+
+	test('labels say where the voice is relative to the target, nothing else', () => {
+		expect(pitchBandLabel('in')).toBe('in target');
+		expect(pitchBandLabel('below')).toBe('below target');
+		expect(pitchBandLabel('above')).toBe('above target');
+		expect(pitchBandLabel('silent')).toBe('silent');
 	});
 });
 
 describe('pitch category styling', () => {
 	test('class and colour agree with the category for every band', () => {
+		const range = { low: 150, high: 200 };
 		const cases: [number, string, string][] = [
 			[0, 'text-surface-400', '#737373'],
 			[120, 'text-indigo-400', '#6366f1'],
-			[160, 'text-accent-400', '#a855f7'],
-			[220, 'text-primary-400', '#ec4899']
+			[220, 'text-accent-400', '#a855f7'],
+			[160, 'text-primary-400', '#ec4899']
 		];
 		for (const [hz, cls, colour] of cases) {
-			expect(getPitchCategoryClass(hz)).toBe(cls);
-			expect(getPitchCategoryColor(getPitchCategory(hz))).toBe(colour);
+			expect(pitchBandClass(hz, range)).toBe(cls);
+			expect(pitchBandColor(pitchBand(hz, range))).toBe(colour);
 		}
-	});
-
-	test('an unknown category falls back to the neutral colour', () => {
-		expect(getPitchCategoryColor('nope')).toBe('#737373');
 	});
 
 	test('the default target range is the feminine preset', () => {

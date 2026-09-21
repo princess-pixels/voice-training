@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { invalidate } from '$app/navigation';
-	import { formatDuration, getPitchCategoryClass } from '$lib/audio/utils';
+	import { formatDuration, pitchBandClass } from '$lib/audio/utils';
 	import type { PageData } from './$types';
 
 	interface Props {
@@ -100,7 +100,10 @@
 							</div>
 						</div>
 						<span
-							class="font-semibold shrink-0 {getPitchCategoryClass(session.pitchData.avgPitch)}"
+							class="font-semibold shrink-0 {pitchBandClass(
+								session.pitchData.avgPitch,
+								session.targetRange
+							)}"
 						>
 							{Math.round(session.pitchData.avgPitch)} Hz
 						</span>
@@ -178,7 +181,12 @@
 								<span class="text-surface-300">{formatDuration(session.duration)}</span>
 							</td>
 							<td class="py-4 px-6">
-								<span class="font-semibold {getPitchCategoryClass(session.pitchData.avgPitch)}">
+								<span
+									class="font-semibold {pitchBandClass(
+										session.pitchData.avgPitch,
+										session.targetRange
+									)}"
+								>
 									{Math.round(session.pitchData.avgPitch)} Hz
 								</span>
 							</td>

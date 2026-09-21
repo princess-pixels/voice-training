@@ -142,6 +142,7 @@
 			<div class="bg-surface-900 rounded-xl p-6 border border-surface-800">
 				<h2 class="text-lg font-semibold text-surface-200 mb-4">Session Stats</h2>
 				<PitchStats
+					targetRange={session.targetRange}
 					avgHz={pitchData.avgPitch}
 					minHz={pitchData.minPitch}
 					maxHz={pitchData.maxPitch}

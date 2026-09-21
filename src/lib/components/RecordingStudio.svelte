@@ -294,6 +294,7 @@
 
 	<!-- Stats -->
 	<PitchStats
+		targetRange={recorderStore.targetRange}
 		currentHz={!showSummary ? recorderStore.currentPitch : undefined}
 		avgHz={recorderStore.avgPitch}
 		minHz={recorderStore.minPitch}

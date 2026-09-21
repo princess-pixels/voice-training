@@ -195,7 +195,7 @@ Hold for 5 seconds, rest, and repeat 10 times. Try to make each repetition sound
 		category: 'resonance' as const,
 		title: 'Larynx Elevation Awareness',
 		description: 'Learn to feel and control your larynx position.',
-		instructions: `Place your finger gently on your Adam's apple (thyroid cartilage). Swallow - feel how your larynx rises? That's the motion we want.
+		instructions: `Place your finger gently on the bump of your larynx (the thyroid cartilage, at the front of your throat). Swallow - feel how your larynx rises? That's the motion we want.
 
 Now try to hold that "beginning of a swallow" position without actually swallowing. Breathe normally while keeping the larynx slightly elevated. This opens up the vocal tract for a brighter resonance.
 

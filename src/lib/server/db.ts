@@ -840,6 +840,14 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 			'SELECT COUNT(*) AS total, SUM(duration) AS seconds FROM sessions'
 		)
 		.get()!;
+	// Time on the routine's steps counts too, recorded or not, the same way the
+	// streak counts a routine done without a take.
+	const routine = database
+		.query<{ seconds: number | null }, []>(
+			`SELECT SUM(json_extract(step.value, '$.seconds')) AS seconds
+			 FROM practice_days, json_each(practice_days.steps) AS step`
+		)
+		.get()!;
 	const sessionDays = database
 		.query<{ created_at: number }, []>('SELECT created_at FROM sessions')
 		.all()
@@ -863,7 +871,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 	return {
 		recentSessions: await getRecentSessions(5),
 		totalSessions: totals.total,
-		totalPracticeTime: totals.seconds ?? 0,
+		totalPracticeTime: (totals.seconds ?? 0) + (routine.seconds ?? 0),
 		// A routine done without recording counts as practice just as much as a take.
 		practiceStreak: calculateStreak([...sessionDays, ...practicedDayKeys()]),
 		pitchTrend,

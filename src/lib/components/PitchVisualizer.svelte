@@ -1,11 +1,6 @@
 <script lang="ts">
 	import type { PitchPoint, PitchRange } from '$lib/types';
-	import {
-		DEFAULT_TARGET_RANGE,
-		getPitchCategory,
-		getPitchCategoryColor,
-		noteFromHz
-	} from '$lib/audio/utils';
+	import { DEFAULT_TARGET_RANGE, noteFromHz, pitchBand, pitchBandColor } from '$lib/audio/utils';
 
 	interface Props {
 		mode: 'live' | 'playback';
@@ -154,7 +149,8 @@
 		ctx.lineTo(MARGIN.left + layout.graphWidth, MARGIN.top + layout.graphHeight);
 		ctx.stroke();
 
-		// Pitch line, coloured by category. Consecutive segments of the same
+		// Pitch line, coloured by where it sits against the target range.
+		// Consecutive segments of the same
 		// colour go into one path; stroking each segment on its own cost one
 		// draw call per point.
 		ctx.lineWidth = 2;
@@ -172,10 +168,10 @@
 				runCategory = null;
 				continue;
 			}
-			const category = getPitchCategory((p1.hz + p2.hz) / 2);
+			const category = pitchBand((p1.hz + p2.hz) / 2, targetRange);
 			if (category !== runCategory) {
 				if (runCategory !== null) ctx.stroke();
-				ctx.strokeStyle = getPitchCategoryColor(category);
+				ctx.strokeStyle = pitchBandColor(category);
 				ctx.beginPath();
 				ctx.moveTo(timeToX(layout, p1.t), freqToY(layout, p1.hz));
 				runCategory = category;
@@ -221,7 +217,7 @@
 	function drawLiveDot(ctx: CanvasRenderingContext2D, layout: Layout) {
 		const x = MARGIN.left + layout.graphWidth; // Right edge
 		const y = freqToY(layout, currentPitch);
-		const color = getPitchCategoryColor(getPitchCategory(currentPitch));
+		const color = pitchBandColor(pitchBand(currentPitch, targetRange));
 
 		// Glow effect
 		const gradient = ctx.createRadialGradient(x, y, 0, x, y, 12);

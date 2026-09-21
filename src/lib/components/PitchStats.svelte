@@ -1,12 +1,10 @@
 <script lang="ts">
-	import {
-		formatHz,
-		formatDuration,
-		getPitchCategory,
-		getPitchCategoryClass
-	} from '$lib/audio/utils';
+	import { formatHz, formatDuration, pitchBand, pitchBandClass } from '$lib/audio/utils';
+	import type { PitchRange } from '$lib/types';
 
 	interface Props {
+		/** The range the numbers are judged against: the take's own, or the live one. */
+		targetRange: PitchRange;
 		currentHz?: number;
 		avgHz: number;
 		minHz: number;
@@ -15,16 +13,15 @@
 		duration?: number;
 	}
 
-	let { currentHz, avgHz, minHz, maxHz, timeInTargetPct, duration }: Props = $props();
+	let { targetRange, currentHz, avgHz, minHz, maxHz, timeInTargetPct, duration }: Props = $props();
 
 	function getCategoryBg(hz: number): string {
-		const category = getPitchCategory(hz);
-		switch (category) {
-			case 'feminine':
+		switch (pitchBand(hz, targetRange)) {
+			case 'in':
 				return 'bg-primary-500/20 border-primary-500/30';
-			case 'androgynous':
+			case 'above':
 				return 'bg-accent-500/20 border-accent-500/30';
-			case 'masculine':
+			case 'below':
 				return 'bg-indigo-500/20 border-indigo-500/30';
 			default:
 				return 'bg-surface-700/50 border-surface-600/50';
@@ -40,7 +37,7 @@
 			)}"
 		>
 			<div class="text-xs text-surface-400 uppercase tracking-wider mb-1">Current</div>
-			<div class="text-2xl font-bold {getPitchCategoryClass(currentHz)}">
+			<div class="text-2xl font-bold {pitchBandClass(currentHz, targetRange)}">
 				{formatHz(currentHz)}
 			</div>
 		</div>

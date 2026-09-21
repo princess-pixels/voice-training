@@ -68,6 +68,20 @@ describe('yin', () => {
 		expect(result.confidence).toBeGreaterThan(0.9);
 	});
 
+	test('analyses the newest part of the frame, not the oldest', () => {
+		// The oldest third of the buffer is 200 Hz, the rest 300 Hz: what the
+		// analyser holds a beat after the voice moved. Reading from index 0
+		// mixed the two; reading the tail gives the current pitch.
+		const sampleRate = 48000;
+		const old = tone(200, sampleRate);
+		const now = tone(300, sampleRate);
+		const buffer = new Float32Array(BUFFER_SIZE);
+		const split = 1360;
+		for (let i = 0; i < BUFFER_SIZE; i++) buffer[i] = i < split ? old[i] : now[i];
+		const result = yin(buffer, sampleRate);
+		expect(Math.abs(result.hz - 300) / 300).toBeLessThan(0.005);
+	});
+
 	test('rejects a tone above maxHz instead of reporting its subharmonic', () => {
 		// 600 Hz at 48 kHz has a period of 80 samples, under the 96-sample band
 		// edge; without the half-lag check this read as a confident 300 Hz.

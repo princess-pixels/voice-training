@@ -51,8 +51,9 @@ describe('export layout', () => {
 		expect(manifestSession(session, false).audioFile).toBeNull();
 	});
 
-	test('archive name carries the date', () => {
-		expect(archiveFileName(new Date('2026-09-03T23:59:00Z'))).toBe(
+	test('archive name carries the local date', () => {
+		// 23:59 local on the 3rd, whatever UTC thinks the date is.
+		expect(archiveFileName(new Date(2026, 8, 3, 23, 59))).toBe(
 			'voice-training-export-2026-09-03.tar.gz'
 		);
 	});

@@ -406,13 +406,14 @@ describe('dashboard stats', () => {
 		const twoAgo = daysAgo(2);
 		const key = `${twoAgo.getFullYear()}-${String(twoAgo.getMonth() + 1).padStart(2, '0')}-${String(twoAgo.getDate()).padStart(2, '0')}`;
 		await getOrCreatePracticeDay(practiceDay(key, twoAgo));
-		await updatePracticeStep(key, 0, { status: 'done' });
+		await updatePracticeStep(key, 0, { status: 'done', addSeconds: 30 });
 		const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 		await getOrCreatePracticeDay(practiceDay(todayKey, now));
 
 		const stats = await getDashboardStats();
 		expect(stats.totalSessions).toBe(4);
-		expect(stats.totalPracticeTime).toBe(176);
+		// 176 s of takes plus the 30 s spent on the routine step without one.
+		expect(stats.totalPracticeTime).toBe(206);
 		expect(stats.recentSessions).toHaveLength(4);
 		expect(stats.practiceStreak).toBe(4);
 		expect(stats.pitchTrend).toHaveLength(4);

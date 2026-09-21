@@ -1,4 +1,5 @@
 import { $ } from 'bun';
+import { localDayKey } from '$lib/days';
 import type {
 	Exercise,
 	PracticeDay,
@@ -59,7 +60,7 @@ export function manifestSession(session: Session, hasAudio: boolean): ManifestSe
 }
 
 export function archiveFileName(now = new Date()): string {
-	return `voice-training-export-${now.toISOString().slice(0, 10)}.tar.gz`;
+	return `voice-training-export-${localDayKey(now)}.tar.gz`;
 }
 
 /** tar -czf, streaming from disk. Entries are named relative to `dir`, no leading "./". */
