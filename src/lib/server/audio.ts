@@ -1,5 +1,5 @@
 import { createReadStream } from 'node:fs';
-import { mkdir, rm, stat } from 'node:fs/promises';
+import { mkdir, rm, rmdir, stat } from 'node:fs/promises';
 import { Readable } from 'node:stream';
 import { dirname, join, resolve, sep } from 'node:path';
 import { dataDir } from './config';
@@ -86,7 +86,15 @@ export async function importAudio(key: string, fromPath: string): Promise<string
 /** Remove a recording. Missing files are not an error, matching S3 semantics. */
 export async function deleteAudio(key: string): Promise<void> {
 	if (!isSafeAudioKey(key)) return;
-	await rm(pathFor(key), { force: true });
+	const path = pathFor(key);
+	await rm(path, { force: true });
+	// Keys are sessions/<date>/<session>/<file>: the per-session directory is
+	// this recording's alone, so it goes too. The date directory is shared and
+	// stays; rmdir refuses anything that still has contents.
+	const dir = dirname(path);
+	if (dir !== audioRoot() && dirname(dir) !== audioRoot()) {
+		await rmdir(dir).catch(() => {});
+	}
 }
 
 /**

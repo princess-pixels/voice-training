@@ -51,6 +51,14 @@ export function lagBounds(
  * but lags above tauMax (pitches below minHz) are skipped entirely. At the
  * defaults and 44.1 kHz that is ~630 lags per frame instead of 2048.
  */
+/**
+ * How much deeper the dip at double the lag has to be before it is taken as
+ * the true period. On a clean tone the two dips are within a few hundredths
+ * of each other; with the fundamental 10 dB under the second harmonic the
+ * octave dip is deeper by 0.1 or more.
+ */
+const OCTAVE_MARGIN = 0.05;
+
 export function yin(
 	buffer: Float32Array,
 	sampleRate: number,
@@ -84,6 +92,19 @@ export function yin(
 		}
 	}
 	if (tau === 0) return { hz: 0, confidence: 0 };
+
+	// A weak fundamental (breathy voice, a high-passed mic) leaves the first
+	// dip at half the true period, where the second harmonic repeats. The scan
+	// stops at the first dip below threshold, so the frame would read an octave
+	// high. If the dip at double the lag is clearly deeper, that is the period.
+	const double = 2 * tau;
+	if (double <= tauMax) {
+		let t2 = double;
+		for (let t = Math.max(tauMin, double - 2); t <= Math.min(tauMax, double + 2); t++) {
+			if (cmnd[t] < cmnd[t2]) t2 = t;
+		}
+		if (cmnd[t2] < cmnd[tau] - OCTAVE_MARGIN) tau = t2;
+	}
 
 	// A pitch above maxHz has its period below tauMin, outside the search band,
 	// but its double period sits inside it and dips just as deeply, so a 600 Hz
