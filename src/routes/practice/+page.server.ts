@@ -19,10 +19,19 @@ export const load: PageServerLoad = async () => {
 		listPracticeDays(HISTORY_DAYS)
 	]);
 	const routine = buildDailyRoutine(exercises);
+	// The day is keyed on this machine's calendar. The page needs it to tell
+	// when midnight has passed here, not in the browser's time zone.
+	const serverOffsetMinutes = new Date().getTimezoneOffset();
 
 	// Nothing to practise, nothing to record. The page shows the empty-library notice.
 	if (routine.steps.length === 0) {
-		return { day: null, exercises: {} as Record<string, Exercise>, settings, history };
+		return {
+			day: null,
+			exercises: {} as Record<string, Exercise>,
+			settings,
+			history,
+			serverOffsetMinutes
+		};
 	}
 
 	// Opening the page is what starts the day: the stored document is the truth
@@ -33,5 +42,5 @@ export const load: PageServerLoad = async () => {
 	for (const exercise of exercises) {
 		if (wanted.has(exercise._id)) byId[exercise._id] = exercise;
 	}
-	return { day, exercises: byId, settings, history };
+	return { day, exercises: byId, settings, history, serverOffsetMinutes };
 };
