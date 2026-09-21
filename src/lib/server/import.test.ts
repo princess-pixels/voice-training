@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readdir, rm, stat, symlink, utimes } from 'node:fs/prom
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Exercise, PracticeDay, Session } from '$lib/types';
+import { semitonesBetween } from '$lib/audio/utils';
 
 let root: string;
 
@@ -183,15 +184,15 @@ describe('importDirectory', () => {
 		expect(report).toEqual({
 			manifestVersion: 2,
 			exportedAt: '2026-09-12T07:44:04.081Z',
-			exercises: { matched: 1, added: 1 },
+			exercises: { matched: 1, added: 1, failed: [] },
 			sessions: {
 				added: 2,
 				skipped: 0,
 				failed: [`${SESSION_3}: session file missing from archive`, `bad id: invalid id`]
 			},
 			audio: { copied: 1, missing: 1 },
-			rangeTests: { added: 1, skipped: 0 },
-			practiceDays: { added: 1, skipped: 0 },
+			rangeTests: { added: 1, skipped: 0, failed: [] },
+			practiceDays: { added: 1, skipped: 0, failed: [] },
 			settings: 'imported'
 		});
 
@@ -226,15 +227,15 @@ describe('importDirectory', () => {
 		// Second run: everything is already there, local settings win.
 		await (await db()).updateSettings({ targetRange: { low: 1, high: 2 } });
 		const again = await importDirectory(fixture);
-		expect(again.exercises).toEqual({ matched: 2, added: 0 });
+		expect(again.exercises).toEqual({ matched: 2, added: 0, failed: [] });
 		expect(again.sessions).toEqual({
 			added: 0,
 			skipped: 2,
 			failed: [`${SESSION_3}: session file missing from archive`, `bad id: invalid id`]
 		});
 		expect(again.audio).toEqual({ copied: 0, missing: 0 });
-		expect(again.rangeTests).toEqual({ added: 0, skipped: 1 });
-		expect(again.practiceDays).toEqual({ added: 0, skipped: 1 });
+		expect(again.rangeTests).toEqual({ added: 0, skipped: 1, failed: [] });
+		expect(again.practiceDays).toEqual({ added: 0, skipped: 1, failed: [] });
 		expect(again.settings).toBe('kept');
 		expect((await getSettings()).targetRange).toEqual({ low: 1, high: 2 });
 	});
@@ -247,7 +248,7 @@ describe('importDirectory', () => {
 		const report = await importDirectory(fixture);
 		expect(report.manifestVersion).toBe(1);
 		expect(report.sessions.added).toBe(2);
-		expect(report.practiceDays).toEqual({ added: 0, skipped: 0 });
+		expect(report.practiceDays).toEqual({ added: 0, skipped: 0, failed: [] });
 	});
 
 	test('replaces an unsafe or placeholder audio key when a recording is present', async () => {
@@ -368,22 +369,90 @@ describe('importDirectory', () => {
 	test('a session that fails to insert leaves no recording behind', async () => {
 		const dataDir = await freshDataDir();
 		const { importDirectory } = await imp();
-		const { sessionExists } = await db();
+		const database = await db();
 		const { dir } = await singleSessionFixture('fixture-insertfail');
-		const s = session(SESSION_1, null, 'placeholder-audio-key', '2026-09-03T20:20:44.701Z');
-		// Pitch points present, so it reads as a session, but no summary: NOT NULL in the schema.
-		await Bun.write(
-			join(dir, 'sessions', `${SESSION_1}.json`),
-			JSON.stringify({ ...s, pitchData: { points: s.pitchData.points } })
-		);
+		const boom = spyOn(database, 'createSession').mockRejectedValue(new Error('disk full'));
+		try {
+			const report = await importDirectory(dir);
+			expect(report.sessions.added).toBe(0);
+			expect(report.audio.copied).toBe(0);
+			expect(report.sessions.failed).toEqual([`${SESSION_1}: disk full`]);
+			expect(await database.sessionExists(SESSION_1)).toBe(false);
+			expect(await storedRecordings(dataDir)).toEqual([]);
+		} finally {
+			boom.mockRestore();
+		}
+	});
+
+	test('records are held to the same rules as the API routes', async () => {
+		await freshDataDir();
+		const { importDirectory } = await imp();
+		const { getSessionById, listAllPracticeDays, listAllRangeTests, listExercises } = await db();
+		const dir = join(root, 'fixture-rules');
+		await writeFixture(dir);
+
+		// A session past the point cap, and one whose summary lies about its points.
+		const big = session(SESSION_1, null, 'placeholder-audio-key', '2026-09-03T20:20:44.701Z');
+		big.pitchData.points = Array.from({ length: 200_001 }, (_, i) => ({
+			t: i / 40,
+			hz: 200,
+			confidence: 0.9
+		}));
+		await Bun.write(join(dir, 'sessions', `${SESSION_1}.json`), JSON.stringify(big));
+		const liar = session(SESSION_2, null, 'placeholder-audio-key', '2026-09-04T10:00:00.000Z');
+		liar.pitchData.avgPitch = 999;
+		liar.title = ' '.repeat(5) + 'x'.repeat(300);
+		liar.duration = 10 ** 9;
+		await Bun.write(join(dir, 'sessions', `${SESSION_2}.json`), JSON.stringify(liar));
+
+		const manifest = await Bun.file(join(dir, 'manifest.json')).json();
+		manifest.exercises.push({ _id: 'whatever', title: 'No category', difficulty: 'beginner' });
+		manifest.rangeTests.push({
+			...manifest.rangeTests[0],
+			_id: RANGE_1.replace(/1$/, '2'),
+			highHz: 10
+		});
+		manifest.practiceDays.push({
+			...manifest.practiceDays[0],
+			_id: '2026-09-04',
+			steps: [{ ...manifest.practiceDays[0].steps[0], status: 'maybe' }]
+		});
+		manifest.practiceDays.push({ ...manifest.practiceDays[0], _id: 'yesterday' });
+		await Bun.write(join(dir, 'manifest.json'), JSON.stringify(manifest));
 
 		const report = await importDirectory(dir);
-		expect(report.sessions.added).toBe(0);
-		expect(report.audio.copied).toBe(0);
-		expect(report.sessions.failed).toHaveLength(1);
-		expect(report.sessions.failed[0]).toStartWith(`${SESSION_1}: `);
-		expect(await sessionExists(SESSION_1)).toBe(false);
-		expect(await storedRecordings(dataDir)).toEqual([]);
+		expect(report.sessions.failed).toContain(`${SESSION_1}: Too many pitch points (max 200000)`);
+		expect(report.exercises.failed).toEqual([
+			'whatever: category must be one of: warmup, sovt, pitch, resonance, intonation, reading'
+		]);
+		expect(report.rangeTests.failed).toEqual([
+			`${RANGE_1.replace(/1$/, '2')}: highHz must be greater than lowHz`
+		]);
+		expect(report.practiceDays.failed).toEqual([
+			'2026-09-04: status must be one of: pending, done, skipped',
+			'yesterday: day must look like 2026-09-03'
+		]);
+		// The good records still landed, and the liar was corrected, not trusted.
+		expect((await listExercises()).length).toBe(2);
+		expect((await listAllRangeTests()).length).toBe(1);
+		expect((await listAllPracticeDays()).length).toBe(1);
+		const s2 = await getSessionById(SESSION_2);
+		expect(s2!.pitchData.avgPitch).toBe(205);
+		expect(s2!.title).toHaveLength(200);
+		expect(s2!.duration).toBe(4 * 60 * 60);
+	});
+
+	test("settings outside the app's bounds fail the run before anything is written", async () => {
+		await freshDataDir();
+		const { importDirectory } = await imp();
+		const { listExercises } = await db();
+		const dir = join(root, 'fixture-settings');
+		await writeFixture(dir);
+		const manifest = await Bun.file(join(dir, 'manifest.json')).json();
+		manifest.settings.targetRange = { low: 300, high: 'high' };
+		await Bun.write(join(dir, 'manifest.json'), JSON.stringify(manifest));
+		await expect(importDirectory(dir)).rejects.toThrow(/finite low and high/);
+		expect(await listExercises()).toEqual([]);
 	});
 
 	test('rejects things that are not an export', async () => {
@@ -463,6 +532,7 @@ describe('export → import round trip', () => {
 		const { _id: _s, ...sIn } = session('', ex._id, key, '2026-09-10T12:00:00.000Z');
 		const saved = await createSession({
 			...sIn,
+			title: 'Round trip',
 			audioType: 'audio/mp4',
 			createdAt: new Date(sIn.createdAt)
 		} as Omit<Session, '_id'>);
@@ -470,7 +540,7 @@ describe('export → import round trip', () => {
 			mode: 'modal',
 			lowHz: 100,
 			highHz: 300,
-			semitones: 19,
+			semitones: semitonesBetween(100, 300),
 			notes: 'n',
 			createdAt: new Date(2026, 8, 9)
 		});
@@ -514,7 +584,7 @@ describe('export → import round trip', () => {
 		const report = await importArchive(archivePath);
 		await rm(dir, { recursive: true, force: true });
 		expect(formatReport(report)).toContain('sessions       1 added, 0 already present');
-		expect(report.exercises).toEqual({ matched: 0, added: 1 });
+		expect(report.exercises).toEqual({ matched: 0, added: 1, failed: [] });
 		expect(report.audio).toEqual({ copied: 1, missing: 0 });
 
 		const sessions = [];

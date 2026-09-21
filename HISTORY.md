@@ -27,6 +27,21 @@ type, and a session that fails to insert no longer aborts the run or leaves its
 recording behind. Four tests cover the traversal, the symlinked file and directory,
 the bad type and the orphan.
 
+The rest of that trust boundary followed the same afternoon. Every rule about what
+the app accepts from outside now lives in one pure module, `src/lib/server/validate.ts`:
+titles, notes and durations and their caps, pitch points and the 200k ceiling, the
+target range and the settings bounds, practice-step updates, range-test bodies, and
+the full session, practice-day, range-test, exercise and settings records an export
+archive carries. The four API routes are adapters over it (`validated()` in `http.ts`
+turns a `ValidationError` into the 400 or 413 it names), and the importer reads
+archive records through the same functions, so a session's summary is recomputed from
+its points rather than trusted and a bad record of any kind is reported in the run's
+report instead of aborting it. A `null` or non-JSON body is a 400 everywhere now, not
+a 500 from a bare `request.json()`, and the blanket try/catch → 500 wrappers are gone:
+unexpected errors propagate to `handleError`, the one place they are logged. 30 table
+tests cover the module; the import tests gained the over-cap, lying-summary, bad-step
+and out-of-bounds-settings cases. Closes D01, A05, A06 and D05.
+
 Two other things the round made plain. The 99.7 % coverage figure measures 29 % of
 the source, because Bun only instruments files a test imports: every route, every
 component and the recorder store are invisible to CI. And `getPitchCategory`

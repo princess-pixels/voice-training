@@ -9,20 +9,12 @@ and types, B = security and deps, C = DSP and performance, D = architecture and 
 E = UX and docs) are kept below so a fix can name what it closes. The import trust
 boundary (B01, B02, B04), the midnight rollover (A01, A02), dangling take ids after a
 delete (A04), the missing error page (D04, E08), the pitch line drawn across silences
-(C01), page titles (E09), the README's first-run sentence (E17) and the sessions table on
-phones (E01) are already closed.
+(C01), page titles (E09), the README's first-run sentence (E17), the sessions table on
+phones (E01), the shared validation module (D01, A05, A06) and the one error-handling
+strategy per route (D05) are already closed.
 
 ## Bugs
 
-- [ ] **A06 · Importer trusts nested archive shapes.** `import.ts` `readManifest` /
-      `readSession`. Sessions and practice days are cast, not checked, and skip every cap
-      the HTTP route enforces (200k points, title and notes length, duration, the settings
-      range). Share the route's validation with `readSession` (see D01) and validate step
-      status and seconds.
-- [ ] **A05 · `request.json()` as implicit `any`; malformed bodies become 500s.**
-      `api/settings/+server.ts:18-27`, `api/range-tests/+server.ts:19-25`. A null body
-      throws a TypeError that the outer catch returns as 500. Copy the practice route's
-      `body: unknown` plus guard pattern, ideally as one shared `readJson`.
 - [ ] **D07 · Dashboard tests can flake across midnight; export sweep shares the system
       tmpdir.** `db.test.ts:217-261`, `export.ts:102-124`. Use `setSystemTime` in the
       dashboard tests; scope `sweepStaleExports` to a `voice-training` subdirectory of
@@ -58,11 +50,6 @@ phones (E01) are already closed.
 
 ## Glow-ups
 
-- [ ] **D01 · Validation rules live in `+server.ts`, untested and duplicated.** The
-      sessions POST alone carries ~110 lines of parsing closed over `RequestHandler`;
-      `MAX_NOTES_LENGTH` is declared twice; a local `parseRange` collides by name with the
-      exported HTTP-Range one; `summarisePitch` runs twice per upload. A pure
-      `src/lib/server/validate.ts` with table tests, routes become adapters. Unlocks A06.
 - [ ] **D02 · The coverage number is a false signal.** `bunfig.toml:11-17`. Measured
       files are 2,530 of 8,605 source lines; Bun only instruments what a test imports, so
       routes, components, the store and the client audio path never trip the threshold.
@@ -78,10 +65,6 @@ phones (E01) are already closed.
 - [ ] **C02 · YIN analyses the oldest two-thirds of each frame.** `yin.ts:67-75`. The
       newest ~30 ms of every 4096-sample buffer is never read. Index from
       `buffer.length - halfSize - (tauMax + 1)`; same cost.
-- [ ] **D05 · Error-handling strategy differs per route.** Four handlers wrap in
-      try/catch → 500, three propagate, settings writes `throw error()`, practice maps
-      `RangeError` by `instanceof`. Pick propagate-to-Kit with `handleError` (D04) as the
-      one logging point.
 - [ ] **D06 · Tested pure helpers are dead; the pages reimplement them.**
       `nextStepIndex`, `isPracticed`, `getAudioDevices`, and a third hand-rolled
       `PracticeDay` reviver. A client-safe `src/lib/practice.ts` next to `days.ts`.
