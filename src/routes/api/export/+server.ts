@@ -4,16 +4,29 @@ import type { RequestHandler } from './$types';
 import { archiveFileName, buildExport } from '$lib/server/export';
 
 /**
- * GET /api/export: every session, recording, range test, exercise and the
+ * POST /api/export: every session, recording, range test, exercise and the
  * settings, as one .tar.gz. See README "Backups" for the layout.
+ *
+ * A POST rather than a GET because building the archive copies every
+ * recording to disk: as a GET, any page could make this server do that
+ * (SvelteKit's cross-site check only covers form posts, and a hostile page
+ * addressing localhost directly bypasses the host allowlist). Settings sends
+ * a plain form, so the origin check applies, and only one export runs at a
+ * time.
  */
-export const GET: RequestHandler = async () => {
+let inFlight = false;
+
+export const POST: RequestHandler = async () => {
+	if (inFlight) error(429, 'An export is already being built; try again in a moment');
+	inFlight = true;
 	let result;
 	try {
 		result = await buildExport();
 	} catch (err) {
 		console.error('[export] failed:', err);
 		error(500, 'Export failed; see the server log');
+	} finally {
+		inFlight = false;
 	}
 
 	const { dir, archivePath } = result;

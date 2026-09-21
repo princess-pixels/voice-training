@@ -18,8 +18,12 @@ export interface PitchDetectorOptions {
  * YIN estimator in ./yin.ts.
  *
  * Frames are taken on a fixed timer rather than requestAnimationFrame, so the
- * point rate does not depend on the display's refresh rate and detection keeps
- * going in a background tab. The estimate itself runs in a Worker; the main
+ * point rate does not depend on the display's refresh rate. It does depend on
+ * the tab being visible: browsers throttle timers in a hidden tab to once a
+ * second (Chrome to once a minute after five minutes), so the recorder keeps
+ * recording but the pitch track thins to a point a second until the tab is
+ * shown again. An AudioWorkletNode would run regardless; not done yet.
+ * The estimate itself runs in a Worker; the main
  * thread only copies 16 KB out of the analyser per hop. If the Worker cannot be
  * created the estimator runs inline, which is what it used to do everywhere.
  */

@@ -13,7 +13,6 @@ import {
 	parsePitchDataField,
 	parsePitchPoints,
 	parsePracticeDayRecord,
-	parsePracticeRef,
 	parseRangeTestBody,
 	parseRangeTestRecord,
 	parseSessionForm,
@@ -231,28 +230,6 @@ describe('sessions', () => {
 		const f = form(GOOD_FORM);
 		f.set('notes', new File(['x'], 'notes.txt'));
 		expect(parseSessionForm(f).notes).toBe('');
-	});
-
-	test('practice reference: both fields or nothing', () => {
-		expect(parsePracticeRef(form({}))).toBeNull();
-		expect(parsePracticeRef(form({ practiceStep: '2' }))).toBeNull();
-		expect(parsePracticeRef(form({ practiceDay: '2026-09-03', practiceStep: '2' }))).toEqual({
-			day: '2026-09-03',
-			step: 2
-		});
-		rejects(() => parsePracticeRef(form({ practiceDay: 'today' })), 'Invalid practiceDay');
-		rejects(
-			() => parsePracticeRef(form({ practiceDay: '2026-09-03' })),
-			'practiceStep must be a step index'
-		);
-		rejects(
-			() => parsePracticeRef(form({ practiceDay: '2026-09-03', practiceStep: '-1' })),
-			'practiceStep must be a step index'
-		);
-		rejects(
-			() => parsePracticeRef(form({ practiceDay: '2026-09-03', practiceStep: '1.5' })),
-			'practiceStep must be a step index'
-		);
 	});
 
 	test('audio size is a 413, not a 400', () => {

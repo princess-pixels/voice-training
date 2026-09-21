@@ -42,6 +42,23 @@ unexpected errors propagate to `handleError`, the one place they are logged. 30 
 tests cover the module; the import tests gained the over-cap, lying-summary, bad-step
 and out-of-bounds-settings cases. Closes D01, A05, A06 and D05.
 
+The rest of the round went the same evening, while dinner was on. Every bug is closed
+(the practice page's step rail, failed-save handling, history window and review mode;
+plain-language microphone errors shared by the studio, the range test and Settings; one
+Start/Stop button that keeps keyboard focus; the YIN octave check; row-before-file on
+delete; the midnight-safe dashboard tests and a per-install export staging directory),
+and most of the glow-ups: pitch is graded against the user's own range instead of fixed
+gendered thresholds, YIN reads the newest part of each frame, Total Practice Time
+counts routine time, audio keys and export names use the local day, the audio route
+reads only the key and type, `db.ts` no longer imports presentation modules, screen
+readers hear state changes and a quiet cents announcer, reduced motion and canvas
+contrast are handled, export is a same-origin POST built one at a time, and the dead
+`?day=&step=` record flow is gone. `src/server.test.ts` drives the built server over
+HTTP in CI (host allowlist, CSP, body limit, multipart upload, ranged playback,
+practice PATCH, export), `bun run coverage:gap` names the 42 files no test imports,
+and a CHANGELOG.md feeds the release notes. Left for another day: C05, C07, C08, C10,
+D06, D08, D10 / E14, E10, A12, A13 and B06, all in TODO.md.
+
 Two other things the round made plain. The 99.7 % coverage figure measures 29 % of
 the source, because Bun only instruments files a test imports: every route, every
 component and the recorder store are invisible to CI. And `getPitchCategory`
@@ -222,8 +239,8 @@ a `practiceDays` document per local day (`src/lib/server/practice.ts` is the pur
 tested part; `db.ts` does the upsert-on-open and an optimistic-lock step update). The
 practice page reads and writes that document, the timer is wall-clock anchored and
 banks its seconds on every step change and on navigation, and a take recorded via
-`?day=&step=` on the record route attaches itself to the step and returns to the
-routine. The streak counts a routine with at least one done step, not only recordings.
+`?day=&step=` on the record route attached itself to the step and returned to the
+routine (superseded that same night by the embedded studio, and removed on Sept 21). The streak counts a routine with at least one done step, not only recordings.
 Export manifest is version 2 with `practiceDays`.
 
 Then, the same night: the recorder is embedded in the practice page

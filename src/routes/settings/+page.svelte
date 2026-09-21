@@ -396,21 +396,30 @@
 			should not live only in this app's database; keep a copy somewhere else now and then. Large
 			libraries take a moment to pack before the download starts.
 		</p>
-		<a
-			href="/api/export"
-			download
-			class="inline-flex items-center gap-2 px-6 py-3 bg-surface-800 hover:bg-surface-700 text-surface-100 font-medium rounded-xl border border-surface-700 transition-colors"
-		>
-			<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-				<path
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2"
-					d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0 0l-4-4m4 4l4-4"
-				/>
-			</svg>
-			Download everything (.tar.gz)
-		</a>
+		<!-- A form post, not a link: the export is built on request and the
+		     server only accepts it from this origin. The reply is a download. -->
+		<form method="POST" action="/api/export" class="inline">
+			<button
+				type="submit"
+				class="inline-flex items-center gap-2 px-6 py-3 bg-surface-800 hover:bg-surface-700 text-surface-100 font-medium rounded-xl border border-surface-700 transition-colors"
+			>
+				<svg
+					class="w-5 h-5"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+					aria-hidden="true"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0 0l-4-4m4 4l4-4"
+					/>
+				</svg>
+				Download everything (.tar.gz)
+			</button>
+		</form>
 	</div>
 
 	<!-- Save Section -->

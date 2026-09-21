@@ -1,14 +1,15 @@
 import type { RequestHandler } from './$types';
-import { createSession, updatePracticeStep } from '$lib/server/db';
+import { createSession } from '$lib/server/db';
 import { deleteAudio, generateAudioKey, isAudioType, uploadAudio } from '$lib/server/audio';
 import { validated } from '$lib/server/http';
-import { checkAudioSize, parsePracticeRef, parseSessionForm } from '$lib/server/validate';
+import { checkAudioSize, parseSessionForm } from '$lib/server/validate';
 import { json } from '@sveltejs/kit';
 import type { Session } from '$lib/types';
 
 /**
- * Save a take: multipart with the pitch track and range as JSON strings, the
- * recording as a file part, and optionally which practice step it belongs to.
+ * Save a take: multipart with the pitch track and range as JSON strings and
+ * the recording as a file part. Attaching a take to a practice step is the
+ * practice page's job, through PATCH /api/practice/[day] once this returns.
  * The rules are in validate.ts; this is the adapter.
  */
 export const POST: RequestHandler = async ({ request }) => {
@@ -16,7 +17,6 @@ export const POST: RequestHandler = async ({ request }) => {
 	// Everything is checked before the audio is written, so a bad reference never
 	// leaves a recording on disk.
 	const fields = validated(() => parseSessionForm(formData));
-	const practice = validated(() => parsePracticeRef(formData));
 	const audioFile = formData.get('audio');
 
 	let audioKey = 'placeholder-audio-key';
@@ -44,20 +44,6 @@ export const POST: RequestHandler = async ({ request }) => {
 		// No row, no recording: an upload that failed to save must not orphan a file.
 		if (audioKey !== 'placeholder-audio-key') await deleteAudio(audioKey).catch(() => {});
 		throw err;
-	}
-
-	// Attach the take to its practice step. The session is already saved, so a
-	// missing day or step must not turn into a failed save: log and carry on.
-	if (practice) {
-		try {
-			const day = await updatePracticeStep(practice.day, practice.step, {
-				sessionId: session._id,
-				addSeconds: fields.duration
-			});
-			if (!day) console.warn(`Session ${session._id}: practice day ${practice.day} not found`);
-		} catch (err) {
-			console.warn(`Session ${session._id}: could not attach to practice step`, err);
-		}
 	}
 
 	return json({ success: true, id: session._id, session });
