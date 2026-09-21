@@ -9,6 +9,7 @@ import {
 	listExercises
 } from './db';
 import { downloadAudio } from './audio';
+import { dataDir } from './config';
 import {
 	EXPORT_FORMAT,
 	EXPORT_VERSION,
@@ -23,9 +24,19 @@ import {
 /** The layout module is re-exported so the route needs a single import. */
 export * from './exportLayout';
 
-const TMP_PREFIX = 'voice-training-export-';
 // A directory older than this belongs to a crashed export; sweep it on the next run.
 const STALE_MS = 60 * 60 * 1000;
+
+/**
+ * Where exports are staged: a directory of this install's own under the system
+ * tmpdir, keyed on the data directory. The sweep below only ever looks in
+ * here, so two installs on one machine (or a test run next to a live server)
+ * cannot sweep each other's in-flight exports.
+ */
+export function exportStagingRoot(): string {
+	const key = Bun.hash(dataDir()).toString(16);
+	return join(tmpdir(), 'voice-training', `export-${key}`);
+}
 
 export interface ExportResult {
 	/** Directory holding the archive and its inputs; remove it when done. */
@@ -52,9 +63,11 @@ export async function buildExport(): Promise<ExportResult> {
 	if (!Bun.which('tar')) {
 		throw new Error('Export needs the `tar` command on the server');
 	}
-	await sweepStaleExports();
+	const root = exportStagingRoot();
+	await mkdir(root, { recursive: true });
+	await sweepStaleExports(root);
 
-	const dir = await mkdtemp(join(tmpdir(), TMP_PREFIX));
+	const dir = await mkdtemp(join(root, 'export-'));
 	const stage = join(dir, 'stage');
 	await mkdir(join(stage, 'sessions'), { recursive: true });
 	await mkdir(join(stage, 'audio'), { recursive: true });
@@ -99,8 +112,7 @@ export async function buildExport(): Promise<ExportResult> {
 	return { dir, archivePath, manifest };
 }
 
-async function sweepStaleExports(): Promise<void> {
-	const root = tmpdir();
+async function sweepStaleExports(root: string): Promise<void> {
 	let names: string[];
 	try {
 		names = await readdir(root);
@@ -110,7 +122,7 @@ async function sweepStaleExports(): Promise<void> {
 	const cutoff = Date.now() - STALE_MS;
 	await Promise.all(
 		names
-			.filter((n) => n.startsWith(TMP_PREFIX))
+			.filter((n) => n.startsWith('export-'))
 			.map(async (n) => {
 				const path = join(root, n);
 				try {

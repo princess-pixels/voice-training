@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
 import type { Exercise, PracticeDay, Session } from '$lib/types';
 
 process.env.DATA_DIR = ':memory:';
@@ -369,6 +369,11 @@ describe('practice days', () => {
 });
 
 describe('dashboard stats', () => {
+	// The fixtures and getDashboardStats both read the clock; pin it so a run
+	// that straddles midnight cannot put "today" on two different days.
+	beforeEach(() => setSystemTime(new Date(2026, 8, 15, 23, 59, 59)));
+	afterEach(() => setSystemTime());
+
 	test('is empty on a fresh database', async () => {
 		const stats = await getDashboardStats();
 		expect(stats).toEqual({
