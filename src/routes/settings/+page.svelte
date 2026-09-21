@@ -2,6 +2,8 @@
 	import type { PageData } from './$types';
 	import type { PitchRange } from '$lib/types';
 	import { DEFAULT_TARGET_RANGE } from '$lib/audio/utils';
+	import { getAudioDevices, getMicrophoneStream } from '$lib/audio/mic';
+	import { describeMicError } from '$lib/audio/micErrors';
 
 	let { data }: { data: PageData } = $props();
 
@@ -18,6 +20,8 @@
 	let micLevel = $state(0);
 	let micError = $state<string | null>(null);
 	let micPermissionGranted = $state(false);
+	/** enumerateDevices has answered at least once; an empty list after that is real. */
+	let devicesChecked = $state(false);
 
 	// Save state
 	let saveStatus = $state<'idle' | 'saving' | 'success' | 'error'>('idle');
@@ -52,12 +56,11 @@
 	async function enumerateDevices(requestPermission = false) {
 		try {
 			if (requestPermission) {
-				const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+				const stream = await getMicrophoneStream();
 				stream.getTracks().forEach((track) => track.stop());
 			}
 
-			const devices = await navigator.mediaDevices.enumerateDevices();
-			audioDevices = devices.filter((d) => d.kind === 'audioinput');
+			audioDevices = await getAudioDevices();
 			// Labels are only populated once permission exists.
 			micPermissionGranted = audioDevices.some((d) => d.label !== '');
 			micError = null;
@@ -67,7 +70,9 @@
 			}
 		} catch (err) {
 			micPermissionGranted = false;
-			micError = 'Microphone permission denied. Please allow access to select devices.';
+			micError = describeMicError(err);
+		} finally {
+			devicesChecked = true;
 		}
 	}
 
@@ -97,11 +102,7 @@
 		micError = null;
 
 		try {
-			const constraints: MediaStreamConstraints = {
-				audio: selectedDeviceId ? { deviceId: { exact: selectedDeviceId } } : true
-			};
-
-			const stream = await navigator.mediaDevices.getUserMedia(constraints);
+			const stream = await getMicrophoneStream(selectedDeviceId || undefined);
 			if (!micPermissionGranted) {
 				// First grant: refresh the list so the device names fill in.
 				await enumerateDevices();
@@ -136,7 +137,7 @@
 			updateLevel();
 		} catch (err) {
 			isTestingMic = false;
-			micError = err instanceof Error ? err.message : 'Failed to test microphone';
+			micError = describeMicError(err);
 		}
 	}
 
@@ -304,9 +305,21 @@
 						Try Again
 					</button>
 				</div>
+			{:else if devicesChecked}
+				<!-- enumerateDevices resolves with an empty list both when there is no input
+				     and, in some browsers, before permission has been granted. -->
+				<div class="p-4 bg-surface-950 border border-surface-800 rounded-xl">
+					<p class="text-surface-400 text-sm">No microphone found, or access not granted yet.</p>
+					<button
+						onclick={() => enumerateDevices(true)}
+						class="mt-2 text-sm text-primary-400 hover:text-primary-300 underline"
+					>
+						Ask for microphone access
+					</button>
+				</div>
 			{:else}
 				<div class="p-4 bg-surface-950 border border-surface-800 rounded-xl">
-					<p class="text-surface-500 text-sm">Loading devices...</p>
+					<p class="text-surface-500 text-sm">Looking for microphones...</p>
 				</div>
 			{/if}
 		</div>

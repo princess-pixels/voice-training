@@ -1,6 +1,7 @@
 import { PitchDetector } from '$lib/audio/pitchDetector';
 import { AudioRecorder } from '$lib/audio/recorder';
 import { getMicrophoneStream } from '$lib/audio/mic';
+import { describeMicError } from '$lib/audio/micErrors';
 import type { PitchPoint, PitchData, PitchRange } from '$lib/types';
 import { PitchAccumulator } from '$lib/audio/stats';
 import { DEFAULT_TARGET_RANGE } from '$lib/audio/utils';
@@ -136,7 +137,7 @@ class RecorderStore {
 			this.isRecording = true;
 			this.error = null;
 		} catch (err) {
-			this.error = err instanceof Error ? err.message : 'Failed to start recording';
+			this.error = describeMicError(err);
 			this.cleanup();
 		} finally {
 			this.starting = false;

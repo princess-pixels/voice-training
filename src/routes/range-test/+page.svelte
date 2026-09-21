@@ -4,6 +4,7 @@
 	import { PitchDetector } from '$lib/audio/pitchDetector';
 	import { formatHz, noteFromHz, semitonesBetween, percentile } from '$lib/audio/utils';
 	import { getMicrophoneStream } from '$lib/audio/mic';
+	import { describeMicError } from '$lib/audio/micErrors';
 	import type { RangeTest, RangeTestMode } from '$lib/types';
 	import type { PageData } from './$types';
 
@@ -99,9 +100,8 @@
 
 		try {
 			stream = await getMicrophoneStream();
-		} catch {
-			micError =
-				'Could not access the microphone. Check that permission is granted in your browser address bar.';
+		} catch (err) {
+			micError = describeMicError(err);
 			return;
 		}
 
