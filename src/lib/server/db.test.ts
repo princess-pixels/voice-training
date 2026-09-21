@@ -1,4 +1,8 @@
 import { afterEach, beforeEach, describe, expect, setSystemTime, test } from 'bun:test';
+import { Database } from 'bun:sqlite';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import type { Exercise, PracticeDay, Session } from '$lib/types';
 
 process.env.DATA_DIR = ':memory:';
@@ -130,6 +134,56 @@ describe('database lifecycle', () => {
 		closeDatabase();
 		closeDatabase();
 		expect(getDatabase()).not.toBe(db);
+	});
+
+	test('a schema-1 database gets median_pitch, backfilled from the stored points', async () => {
+		// A file database written the way 1.1.0 wrote it: no median_pitch column,
+		// one session whose mean is pulled up by a brief excursion.
+		const dir = await mkdtemp(join(tmpdir(), 'voice-training-schema1-'));
+		const path = join(dir, 'voice-training.db');
+		const old = new Database(path, { create: true, strict: true });
+		old.run(`CREATE TABLE sessions (
+			id TEXT PRIMARY KEY, exercise_id TEXT, title TEXT NOT NULL, audio_key TEXT NOT NULL,
+			audio_type TEXT, duration INTEGER NOT NULL, avg_pitch REAL NOT NULL, min_pitch REAL NOT NULL,
+			max_pitch REAL NOT NULL, time_in_target_pct REAL NOT NULL, target_low REAL NOT NULL,
+			target_high REAL NOT NULL, notes TEXT NOT NULL DEFAULT '', created_at INTEGER NOT NULL)`);
+		old.run(`CREATE TABLE session_points (
+			session_id TEXT PRIMARY KEY REFERENCES sessions (id) ON DELETE CASCADE, points TEXT NOT NULL)`);
+		const points = Array.from({ length: 100 }, (_, i) => ({
+			t: i / 40,
+			hz: i < 90 ? 200 : 400,
+			confidence: 0.9
+		}));
+		// Positional bindings: the typed `run` overload takes an array.
+		old.run(
+			`INSERT INTO sessions VALUES (?, NULL, 'Old take', 'placeholder-audio-key', NULL, 30, 220, 200, 400, 100, 180, 300, '', ?)`,
+			[LEGACY_ID, Date.now()]
+		);
+		old.run('INSERT INTO session_points VALUES (?, ?)', [LEGACY_ID, JSON.stringify(points)]);
+		old.run('PRAGMA user_version = 1');
+		old.close();
+
+		process.env.DATA_DIR = dir;
+		try {
+			await migrateDatabase();
+			const db = getDatabase();
+			expect(
+				db.query<{ user_version: number }, []>('PRAGMA user_version').get()!.user_version
+			).toBe(2);
+			const session = await getSessionById(LEGACY_ID);
+			expect(session!.pitchData.avgPitch).toBe(220);
+			expect(session!.pitchData.medianPitch).toBe(200);
+			const stats = await getDashboardStats();
+			expect(stats.pitchTrend).toEqual([{ date: session!.createdAt, hz: 200 }]);
+			// Opening again is a no-op: the version is already current.
+			closeDatabase();
+			await migrateDatabase();
+			expect((await getSessionById(LEGACY_ID))!.pitchData.medianPitch).toBe(200);
+		} finally {
+			closeDatabase();
+			process.env.DATA_DIR = ':memory:';
+			await rm(dir, { recursive: true, force: true });
+		}
 	});
 
 	test('isValidId accepts UUIDs and legacy 24-hex ids only', () => {
