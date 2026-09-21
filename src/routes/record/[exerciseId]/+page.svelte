@@ -5,6 +5,10 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
+<svelte:head>
+	<title>Record: {data.exercise.title} — Voice Training</title>
+</svelte:head>
+
 <RecordingStudio
 	exercise={data.exercise}
 	targetRange={data.settings.targetRange}

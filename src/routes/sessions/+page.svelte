@@ -49,6 +49,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Sessions — Voice Training</title>
+</svelte:head>
+
 <div class="max-w-6xl mx-auto px-4 py-8">
 	<header class="mb-8">
 		<h1 class="text-3xl font-bold text-surface-100">Session History</h1>
