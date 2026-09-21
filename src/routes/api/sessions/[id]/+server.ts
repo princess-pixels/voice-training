@@ -13,17 +13,14 @@ export const DELETE: RequestHandler = async ({ params }) => {
 	const session = await getSessionById(params.id);
 	if (!session) error(404, { message: 'Session not found' });
 
-	// Delete the recording first
-	if (session.audioKey) {
-		try {
-			await deleteAudio(session.audioKey);
-		} catch (audioErr) {
-			console.error('Error deleting audio file:', audioErr);
-			// Continue with session deletion even if audio deletion fails
-		}
-	}
-
+	// Row first, then the file: a row whose recording is gone would 404 on
+	// playback, while a file whose row is gone is merely disk to reclaim.
 	const deleted = await deleteSession(params.id);
-	if (!deleted) error(500, { message: 'Failed to delete session' });
+	if (!deleted) error(404, { message: 'Session not found' });
+	try {
+		await deleteAudio(session.audioKey);
+	} catch (audioErr) {
+		console.error(`Session ${params.id} deleted; its recording could not be removed:`, audioErr);
+	}
 	return json({ success: true });
 };

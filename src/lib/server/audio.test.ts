@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { mkdtemp, readdir, rm } from 'node:fs/promises';
+import { mkdtemp, readdir, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 let dir: string;
 
@@ -111,11 +111,16 @@ describe('upload, open, download, delete', () => {
 	});
 
 	test('delete removes the file and tolerates absent or unsafe keys', async () => {
-		const { deleteAudio, generateAudioKey, openAudio, uploadAudio } = await audio();
+		const { audioRoot, deleteAudio, generateAudioKey, openAudio, uploadAudio } = await audio();
 		const key = generateAudioKey('s3', 'audio/ogg');
 		await uploadAudio(key, payload, 'audio/ogg');
+		const sessionDir = join(audioRoot(), dirname(key));
+		expect((await stat(sessionDir)).isDirectory()).toBe(true);
 		await deleteAudio(key);
 		expect(await openAudio(key)).toBeNull();
+		// The per-session directory is gone with it; the date directory stays.
+		await expect(stat(sessionDir)).rejects.toThrow();
+		expect((await stat(dirname(sessionDir))).isDirectory()).toBe(true);
 		await deleteAudio(key);
 		await deleteAudio('placeholder-audio-key');
 		await deleteAudio('../x');

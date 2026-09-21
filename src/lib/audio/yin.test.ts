@@ -13,6 +13,16 @@ function tone(hz: number, sampleRate: number, amplitude = 0.3): Float32Array {
 	return buffer;
 }
 
+/** A breathy or high-passed voice: the fundamental 10 dB below the second harmonic. */
+function weakFundamental(hz: number, sampleRate: number): Float32Array {
+	const buffer = new Float32Array(BUFFER_SIZE);
+	for (let i = 0; i < buffer.length; i++) {
+		const phase = (2 * Math.PI * hz * i) / sampleRate;
+		buffer[i] = 0.1 * Math.sin(phase) + 0.3 * Math.sin(2 * phase) + 0.1 * Math.sin(3 * phase);
+	}
+	return buffer;
+}
+
 /** Deterministic pseudo-random noise so the test never flakes. */
 function noise(): Float32Array {
 	const buffer = new Float32Array(BUFFER_SIZE);
@@ -44,6 +54,18 @@ describe('yin', () => {
 		const at44 = yin(buffer, 44100).hz;
 		expect(at48).toBeCloseTo(200, 0);
 		expect(at44).toBeCloseTo(200 * (44100 / 48000), 0);
+	});
+
+	test.each([
+		[48000, 200],
+		[48000, 250],
+		[44100, 160]
+	])('at %d Hz sample rate reads a weak %d Hz fundamental at its true octave', (sampleRate, hz) => {
+		// Without the octave check the first dip is at half the period: 250 Hz
+		// read as 503 Hz (then rejected as out of band) and 200 Hz as 401 Hz.
+		const result = yin(weakFundamental(hz, sampleRate), sampleRate);
+		expect(Math.abs(result.hz - hz) / hz).toBeLessThan(0.005);
+		expect(result.confidence).toBeGreaterThan(0.9);
 	});
 
 	test('rejects a tone above maxHz instead of reporting its subharmonic', () => {
