@@ -8,17 +8,22 @@ on:
 
 permissions:
   contents: write
+  # For the build-provenance attestation on the packaged binaries.
+  id-token: write
+  attestations: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: 1.4.x
+          # An exact patch, so the compiler behind a build (and a tagged binary's
+          # checksums) is reproducible from the tag; bump it with packageManager.
+          bun-version: 1.4.2
 
       - name: Tag matches package.json
         run: |
@@ -48,6 +53,12 @@ jobs:
           done
           sha256sum * > SHA256SUMS.txt
           ls -la
+
+      # Signed provenance linking each archive to this workflow run and commit;
+      # verify a download with `gh attestation verify <file> -R princess-pixels/voice-training`.
+      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: dist/*.tar.gz, dist/*.zip
 
       - name: Publish
         env:
