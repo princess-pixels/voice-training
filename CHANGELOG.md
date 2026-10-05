@@ -9,6 +9,20 @@ top section as the GitHub release notes. The longer story behind each release is
 
 Nothing yet.
 
+## [1.2.1] - 2026-10-05
+
+### Fixed
+
+- The macOS first-start instructions: right-click → Open no longer bypasses Gatekeeper
+  since macOS 15, so the README and release notes now describe Open Anyway in
+  Privacy & Security and the `xattr` alternative.
+
+### Changed
+
+- The Mac downloads are named for people instead of toolchains:
+  `voice-training-macos-apple-silicon` and `voice-training-macos-intel` replace
+  `darwin-arm64` and `darwin-x64`, and the README says how to tell which Mac you have.
+
 ## [1.2.0] - 2026-09-21
 
 ### Fixed
@@ -82,7 +96,8 @@ Nothing yet.
 - The recording studio with live pitch detection (YIN in a Worker), the range test,
   the exercise library, the dashboard.
 
-[Unreleased]: https://github.com/princess-pixels/voice-training/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/princess-pixels/voice-training/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/princess-pixels/voice-training/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/princess-pixels/voice-training/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/princess-pixels/voice-training/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/princess-pixels/voice-training/compare/v1.0.0...v1.0.1

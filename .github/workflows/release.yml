@@ -45,7 +45,7 @@ jobs:
       - name: Package
         run: |
           cd dist
-          for f in voice-training-linux-* voice-training-darwin-*; do
+          for f in voice-training-linux-* voice-training-macos-*; do
             tar -czf "$f.tar.gz" "$f" && rm "$f"
           done
           for f in voice-training-windows-*.exe; do

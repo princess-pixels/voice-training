@@ -15,13 +15,17 @@ download, nothing to install, and every recording stays on your disk.
 1. Download the build for your machine from the
    [releases page](https://github.com/princess-pixels/voice-training/releases) and unpack it.
 
-   | Platform                                   | File                                 |
-   | ------------------------------------------ | ------------------------------------ |
-   | Linux x64                                  | `voice-training-linux-x64.tar.gz`    |
-   | Linux arm64 (Raspberry Pi 4/5 and similar) | `voice-training-linux-arm64.tar.gz`  |
-   | macOS Apple silicon                        | `voice-training-darwin-arm64.tar.gz` |
-   | macOS Intel                                | `voice-training-darwin-x64.tar.gz`   |
-   | Windows x64                                | `voice-training-windows-x64.zip`     |
+   | Platform                                   | File                                        |
+   | ------------------------------------------ | ------------------------------------------- |
+   | Linux x64                                  | `voice-training-linux-x64.tar.gz`           |
+   | Linux arm64 (Raspberry Pi 4/5 and similar) | `voice-training-linux-arm64.tar.gz`         |
+   | macOS Apple silicon (M1, M2, M3, …)        | `voice-training-macos-apple-silicon.tar.gz` |
+   | macOS Intel                                | `voice-training-macos-intel.tar.gz`         |
+   | Windows x64                                | `voice-training-windows-x64.zip`            |
+
+   Not sure which Mac you have? Open the Apple menu → **About This Mac**: a **Chip** line
+   naming Apple M1, M2, M3 or later means Apple silicon; a **Processor** line naming Intel
+   means Intel.
 
 2. Run it: double-click, or from a terminal:
 
@@ -32,11 +36,33 @@ download, nothing to install, and every recording stays on your disk.
 3. Your browser opens on the Dashboard at http://localhost:3000. Open Today's Practice
    and press the red record button; the browser asks for the microphone the first time.
 
-The binaries are not code-signed, so the first start needs a confirmation: on macOS
-right-click the file, choose **Open**, and confirm; on Windows choose **More info**, then
-**Run anyway** on the SmartScreen prompt. The file is 60–90 MB depending on the platform
-because it carries its own runtime; `SHA256SUMS.txt` on the release lets you verify a
-download.
+The binaries are not code-signed, so the first start needs a confirmation. On Windows
+choose **More info**, then **Run anyway** on the SmartScreen prompt. On macOS see
+[First start on macOS](#first-start-on-macos) below. The file is 60–90 MB depending on
+the platform because it carries its own runtime; `SHA256SUMS.txt` on the release lets
+you verify a download.
+
+### First start on macOS
+
+macOS blocks apps downloaded from the internet that are not notarized by Apple, and
+since macOS 15 (Sequoia) the old right-click → **Open** shortcut no longer gets past
+it. Either of these works, once:
+
+- **System Settings:** double-click the file and let macOS block it. Open
+  **System Settings → Privacy & Security**, scroll down to the Security section, and
+  click **Open Anyway** next to the voice-training message. Enter your password, then
+  double-click the file again and confirm **Open Anyway**.
+- **Terminal:** clear the download flag on the unpacked file, then start it as usual:
+
+  ```bash
+  xattr -d com.apple.quarantine ~/Downloads/voice-training-macos-apple-silicon
+  ```
+
+  (On an Intel Mac the file is `voice-training-macos-intel`; adjust the path if you
+  unpacked it somewhere other than Downloads.)
+
+Double-clicking starts it in a Terminal window: that window is the app, so leave it open
+while you practice and close it when you are done.
 
 Your data (a SQLite database and the recordings) lives in your user data folder:
 `~/.local/share/voice-training` on Linux (or `$XDG_DATA_HOME/voice-training` when that
@@ -205,6 +231,7 @@ bun run build            # production bundle into ./build; run it with `bun ./bu
 bun run start -- --help  # the CLI entry, in development
 bun run build:binary     # dist/voice-training for this machine
 bun run build:binary bun-linux-x64 bun-darwin-arm64 bun-windows-x64   # or any Bun target
+                         # (the Mac builds come out as -macos-apple-silicon / -macos-intel)
 bun run import <archive> # the importer against ./data (or DATA_DIR)
 ```
 

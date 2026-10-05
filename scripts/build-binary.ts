@@ -29,9 +29,17 @@ await Bun.write(
 const assets = ['--asset', 'build/client'];
 if (existsSync('build/prerendered')) assets.push('--asset', 'build/prerendered');
 
+// Download names are read by people, not toolchains: "darwin" and "arm64" mean
+// nothing to most Mac owners, so the Mac builds say macOS and name the chip.
+const friendly: Record<string, string> = {
+	'darwin-arm64': 'macos-apple-silicon',
+	'darwin-x64': 'macos-intel'
+};
+
 const builds = targets.length ? targets : [null];
 for (const target of builds) {
-	const suffix = target ? `-${target.replace(/^bun-/, '')}` : '';
+	const platform = target?.replace(/^bun-/, '');
+	const suffix = platform ? `-${friendly[platform] ?? platform}` : '';
 	const exe = target?.includes('windows') ? '.exe' : '';
 	const outfile = `dist/voice-training${suffix}${exe}`;
 	const targetFlag = target ? [`--target=${target}`] : [];
