@@ -2,12 +2,12 @@
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "exercises_title": "Øvelser",
   "exercises_heading": "Øvelsesbibliotek",
-  "exercises_subtitle": "Bla gjennom og øv på stemmeøvelsene",
+  "exercises_subtitle": "Bla gjennom og øv på stemmeøvelser",
   "exercises_filter_all": "Alle",
   "exercises_filter_difficulty": "Vanskelighetsgrad:",
-  "exercises_instructions": "Instruksjoner",
-  "exercises_start": "Start øving",
+  "exercises_instructions": "Slik gjør du",
+  "exercises_start": "Start øvelsen",
   "exercises_empty_title": "Fant ingen øvelser",
-  "exercises_empty_hint": "Ingen øvelser passer til valgte filtre. Prøv å endre kategori- eller vanskelighetsfilteret over.",
+  "exercises_empty_hint": "Ingen øvelser passer til filtrene du har valgt. Prøv å endre kategori eller vanskelighetsgrad over.",
   "exercises_clear_filters": "Fjern filtre"
 }

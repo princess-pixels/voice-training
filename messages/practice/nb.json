@@ -2,27 +2,27 @@
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "practice_title": "Dagens øvelser",
   "practice_save_failed": "Kunne ikke lagre fremgangen",
-  "practice_reset_failed": "Kunne ikke tilbakestille øvelsene",
+  "practice_reset_failed": "Kunne ikke tilbakestille dagens øvelser",
   "practice_intro": [
     {
       "declarations": ["input count", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "{count} steg · ca. {minutes} minutter. Bare følg med.",
-        "countPlural=other": "{count} steg · ca. {minutes} minutter. Bare følg med."
+        "countPlural=one": "{count} steg · ca. {minutes} minutter. Bare følg stegene.",
+        "countPlural=other": "{count} steg · ca. {minutes} minutter. Bare følg stegene."
       }
     }
   ],
   "practice_intro_empty": "Ingen øvelser er tilgjengelige ennå.",
-  "practice_library_empty": "Øvelsesbiblioteket er tomt, så det er ingen øvelser å sette sammen. Sjekk oppstartsloggen for en feil under fyllingen, og start appen på nytt for å fylle biblioteket.",
-  "practice_complete_title": "Dagens øvelser er fullført",
+  "practice_library_empty": "Øvelsesbiblioteket er tomt, så dagens øvelser kan ikke settes sammen. Se etter en feil i oppstartsloggen, og start appen på nytt for å laste inn øvelsene.",
+  "practice_complete_title": "Ferdig for i dag",
   "practice_complete_summary": [
     {
       "declarations": ["input total", "local totalPlural = total: plural"],
       "selectors": ["totalPlural"],
       "match": {
-        "totalPlural=one": "{done} av {total} steg ferdig. Å møte opp en trøtt dag teller like mye som en god dag.",
-        "totalPlural=other": "{done} av {total} steg ferdig. Å møte opp en trøtt dag teller like mye som en god dag."
+        "totalPlural=one": "{done} av {total} steg gjort. Å møte opp på en sliten dag teller akkurat like mye som å møte opp på en god dag.",
+        "totalPlural=other": "{done} av {total} steg gjort. Å møte opp på en sliten dag teller akkurat like mye som å møte opp på en god dag."
       }
     }
   ],
@@ -31,14 +31,14 @@
       "declarations": ["input total", "local totalPlural = total: plural"],
       "selectors": ["totalPlural"],
       "match": {
-        "totalPlural=one": "{done} av {total} steg ferdig, {duration} på klokken. Å møte opp en trøtt dag teller like mye som en god dag.",
-        "totalPlural=other": "{done} av {total} steg ferdig, {duration} på klokken. Å møte opp en trøtt dag teller like mye som en god dag."
+        "totalPlural=one": "{done} av {total} steg gjort, {duration} på klokka. Å møte opp på en sliten dag teller akkurat like mye som å møte opp på en god dag.",
+        "totalPlural=other": "{done} av {total} steg gjort, {duration} på klokka. Å møte opp på en sliten dag teller akkurat like mye som å møte opp på en god dag."
       }
     }
   ],
   "practice_take_link": "opptak",
   "practice_take_range_test": "Ta en test av stemmeomfang",
-  "practice_run_again": "Gjør den igjen",
+  "practice_run_again": "Ta en runde til",
   "practice_step_rail_label": "Gå til steg {number}: {title}",
   "practice_step_tooltip_done": "{title} (ferdig)",
   "practice_step_tooltip_skipped": "{title} (hoppet over)",
@@ -46,7 +46,7 @@
   "practice_back_to_summary": "Tilbake til oppsummeringen",
   "practice_badge_done": "Ferdig",
   "practice_badge_skipped": "Hoppet over",
-  "practice_exercise_missing": "Denne øvelsen finnes ikke lenger i biblioteket. Morgendagens øvelser velger en annen.",
+  "practice_exercise_missing": "Denne øvelsen finnes ikke lenger i biblioteket. I morgen får du en annen.",
   "practice_suggested_minutes": "foreslått {minutes} min",
   "practice_earlier_today": "{duration} tidligere i dag",
   "practice_take_saved": "Opptak lagret ✓",
@@ -65,20 +65,20 @@
   ],
   "practice_latest_take": "siste opptak",
   "practice_finish_take_first": "Fullfør eller forkast opptaket først",
-  "practice_finish_routine": "Fullfør øvelsene",
+  "practice_finish_routine": "Fullfør dagens øvelser",
   "practice_done_next_step": "Ferdig — neste steg",
   "practice_skip": "Hopp over",
   "practice_next_step": "Neste steg",
-  "practice_back_to_unfinished": "Tilbake til et steg som ikke er ferdig",
-  "practice_mark_not_done": "Merk som ikke ferdig",
+  "practice_back_to_unfinished": "Tilbake til et uferdig steg",
+  "practice_mark_not_done": "Merk som uferdig",
   "practice_history_title": "De siste to ukene",
   "practice_history_days": [
     {
       "declarations": ["input count", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "{count} dag med øving",
-        "countPlural=other": "{count} dager med øving"
+        "countPlural=one": "{count} øvingsdag",
+        "countPlural=other": "{count} øvingsdager"
       }
     }
   ],
@@ -87,8 +87,8 @@
       "declarations": ["input count", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "{count} dag med øving · {minutes} min",
-        "countPlural=other": "{count} dager med øving · {minutes} min"
+        "countPlural=one": "{count} øvingsdag · {minutes} min",
+        "countPlural=other": "{count} øvingsdager · {minutes} min"
       }
     }
   ],

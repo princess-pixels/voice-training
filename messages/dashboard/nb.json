@@ -2,7 +2,7 @@
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "dashboard_tagline": "Veien til stemmen din",
   "dashboard_today_not_started": "Dagens øvelser er ikke startet ennå",
-  "dashboard_today_done": "Dagens øvelser er ferdig",
+  "dashboard_today_done": "Dagens øvelser er gjort",
   "dashboard_today_under_way": "Dagens øvelser er i gang",
   "dashboard_today_intro": "Fire korte steg, omtrent femten minutter. Appen husker hvor du var.",
   "dashboard_today_progress": "{doneSteps} av {totalSteps} steg fullført",
@@ -11,11 +11,11 @@
   "dashboard_today_action_look": "Ta en titt",
   "dashboard_today_action_continue": "Fortsett",
   "dashboard_welcome_title": "Velkommen til Stemmetrening",
-  "dashboard_welcome_body": "Kom i gang ved å ta opp ditt første opptak! Følg tonehøyden din, se fremgangen din og finn øvelser tilpasset målene dine.",
+  "dashboard_welcome_body": "Kom i gang med ditt første opptak! Følg med på tonehøyden din, se fremgangen og finn øvelser tilpasset målene dine.",
   "dashboard_welcome_start_practice": "Start dagens øvelser",
   "dashboard_welcome_browse": "Bla gjennom øvelser",
   "dashboard_stat_sessions": "Totalt antall opptak",
-  "dashboard_stat_streak": "Øvingsrekke",
+  "dashboard_stat_streak": "Dager på rad",
   "dashboard_stat_streak_unit": [
     {
       "declarations": ["input count", "local countPlural = count: plural"],

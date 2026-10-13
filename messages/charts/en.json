@@ -11,7 +11,7 @@
       "declarations": ["input count", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "Average pitch over the last {count} session: from {from} Hz to {to} Hz, target {low} to {high} Hz.",
+        "countPlural=one": "Average pitch over the last session: from {from} Hz to {to} Hz, target {low} to {high} Hz.",
         "countPlural=other": "Average pitch over the last {count} sessions: from {from} Hz to {to} Hz, target {low} to {high} Hz."
       }
     }
