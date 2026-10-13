@@ -3,6 +3,44 @@
 The dev log, newest first: audit scores, the decisions behind the bigger changes,
 and what each push of work landed. Open items live in [TODO.md](TODO.md).
 
+## 2026-10-13 — 1.3.0: Norsk
+
+The voice being trained is a Norwegian everyday voice, and the app only spoke
+English: the reading exercises split attention away from the pitch graph. 1.3.0
+speaks Norwegian Bokmål.
+
+Paraglide, SvelteKit's official i18n integration, over svelte-i18n (no release since
+2024, and its one shared store leaks across concurrent SSR requests) and wuchale
+(still 0.x). There is no URL strategy, because a local single-user app has nothing to
+index: a cookie from the Settings picker, then Accept-Language, then English. The
+inlang format plugin comes from npm instead of the jsDelivr URL inlang defaults to,
+so the lockfile and `minimumReleaseAge` cover it, and `scripts/i18n.ts` fails loudly,
+because Paraglide only warns when that plugin is missing and then compiles zero
+messages. Strings that were module-level constants (mic errors, confirms, category
+labels) became message functions, since on the server a constant is evaluated once
+in whatever locale happens to be active.
+
+The interface (321 messages in `messages/<area>/`, one pair per part of the app) was
+converted by eight agents in parallel against a shared brief and glossary, then
+reviewed as a whole. What that caught was consistency, not syntax: three separate
+difficulty-label helpers that disagreed in Norwegian, and an English "1 days".
+
+The exercise library stays English in the database, because the English title is an
+exercise's identity (seeding upserts on it, import matches on it, practice days store
+it). Translations are laid over it when shown. What you read aloud was written for
+Norwegian rather than translated: a nasal-free passage with no m, n or ng (a test
+checks), Norwegian tongue twisters, «i» and «o» for "ee" and "oo", and intonation
+exercises that keep the tonal accents (bønder / bønner) under the question rise.
+
+A code review before the merge found two real bugs: SvelteKit's own 404 went through
+`handleError` and came out as "something went wrong on the server", and the Paraglide
+middleware's cloned request teed every upload body, so audio was buffered twice.
+
+The same release moves to Bun 1.4.3. The binaries carry its HTTP/TLS fixes and refuse
+`eval` and `new Function` (`--disallow-code-generation-from-strings=strict`, which
+1.4.3 is the first Bun to honour), and `bun check` type-checks `scripts/`, which
+nothing checked before.
+
 ## 2026-09-21 — Round 3 audit: 7.0
 
 A five-agent pass (correctness + types, security + deps, DSP + performance,

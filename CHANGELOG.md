@@ -7,6 +7,10 @@ top section as the GitHub release notes. The longer story behind each release is
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [1.3.0] - 2026-10-13
+
 ### Added
 
 - Norwegian Bokmål. The app follows your browser's language, and Settings has a
@@ -33,7 +37,6 @@ top section as the GitHub release notes. The longer story behind each release is
 - Translations: `messages/<area>/<locale>.json` for the interface (Paraglide),
   `src/lib/exerciseText.ts` and `src/lib/server/exerciseContent.ts` for the exercise
   library, which stays English in the database and is translated when shown.
-
 - `bun run check` is now `bun run typecheck`. It runs svelte-check as before, then
   `bun check` over `scripts/`, which nothing type-checked until now. The rename matters
   because a `check` script would shadow Bun's own `bun check`.
@@ -125,7 +128,8 @@ top section as the GitHub release notes. The longer story behind each release is
 - The recording studio with live pitch detection (YIN in a Worker), the range test,
   the exercise library, the dashboard.
 
-[Unreleased]: https://github.com/princess-pixels/voice-training/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/princess-pixels/voice-training/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/princess-pixels/voice-training/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/princess-pixels/voice-training/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/princess-pixels/voice-training/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/princess-pixels/voice-training/compare/v1.0.1...v1.1.0

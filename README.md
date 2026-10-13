@@ -3,8 +3,8 @@
 [![CI](https://github.com/princess-pixels/voice-training/actions/workflows/ci.yml/badge.svg)](https://github.com/princess-pixels/voice-training/actions/workflows/ci.yml)
 
 A feminization voice practice app that runs on your own machine: a guided daily routine,
-a recording studio with live pitch, a range test, and progress over time. One file to
-download, nothing to install, and every recording stays on your disk.
+a recording studio with live pitch, a range test, and progress over time, in English or
+Norwegian. One file to download, nothing to install, and every recording stays on your disk.
 
 > 💜 This is a personal project, published for anyone who finds it useful. **No support is
 > guaranteed.** I built it for myself and share it in case it helps others. Issues and PRs
@@ -88,6 +88,10 @@ options, all of which are in [Configuration](#configuration) below.
 - **25 exercises** across 6 categories (warmup, straw/SOVT, pitch, resonance, intonation,
   reading), including semi-occluded vocal tract work and oral-vs-nasal resonance training.
 - **Dashboard** with pitch trends, practice streaks, and a category breakdown.
+- **English and Norsk bokmål**, following your browser's language or the picker in
+  Settings. The Norwegian exercise library is written for Norwegian, not translated
+  word for word: a nasal-free passage with no nasals in Norwegian, Norwegian tongue
+  twisters, and intonation work that keeps the tonal accents.
 - **Your target range** is configurable with presets and applies everywhere.
 - **Everything local.** Recordings are files on your disk; nothing leaves your machine.
 - Dark theme with a pink/purple aesthetic.
@@ -222,6 +226,8 @@ bun run dev              # Vite dev server on :5173, data in ./data
 
 ```bash
 bun run typecheck        # svelte-check (types and template errors), bun check for scripts/
+bun run i18n             # compile messages/ (dev and build do it themselves); fails on a
+                         # key that a translation has but English does not
 bun test                 # YIN, pitch stats, routine, validation, the storage layer (in-memory
                          # SQLite, temp audio dir), export/import round trip; coverage thresholds on
 bun run coverage:gap     # what the coverage number leaves out: Bun only measures files a test
