@@ -1,3 +1,4 @@
+import { m } from '$lib/paraglide/messages';
 import type { RequestHandler } from './$types';
 import { getSessionAudio } from '$lib/server/db';
 import { isAudioType, openAudio } from '$lib/server/audio';
@@ -11,12 +12,12 @@ import { error } from '@sveltejs/kit';
 export const GET: RequestHandler = async ({ params, request }) => {
 	const session = await getSessionAudio(params.id);
 	if (!session) {
-		error(404, { message: 'Session not found' });
+		error(404, { message: m.sessions_not_found() });
 	}
 
 	const audio = await openAudio(session.audioKey);
 	if (!audio) {
-		error(404, { message: 'No audio file for this session' });
+		error(404, { message: m.api_session_no_audio() });
 	}
 
 	// Older sessions predate the stored type, and a stored type is only trusted

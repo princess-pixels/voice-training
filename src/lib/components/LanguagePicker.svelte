@@ -10,12 +10,20 @@
 		nb: 'Norsk bokmål'
 	};
 
+	let { unsaved = false }: { unsaved?: boolean } = $props();
+
 	const current = getLocale();
 
 	function choose(event: Event & { currentTarget: HTMLSelectElement }) {
 		const next = event.currentTarget.value as Locale;
+		if (next === current) return;
+		// Switching reloads the page, which would drop the rest of the form.
+		if (unsaved && !confirm(m.settings_language_unsaved_confirm())) {
+			event.currentTarget.value = current;
+			return;
+		}
 		// Sets the cookie and reloads, so the server renders the next page in it.
-		if (next !== current) setLocale(next);
+		setLocale(next);
 	}
 </script>
 

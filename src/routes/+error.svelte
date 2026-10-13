@@ -4,11 +4,9 @@
 
 	const notFound = $derived(page.status === 404);
 	const title = $derived(notFound ? m.common_error_not_found() : m.common_error_generic());
-	// SvelteKit's own 404 for an unknown path says "Not Found" in English; our
-	// error() calls already arrive in the request's locale.
-	const message = $derived(
-		page.error?.message && page.error.message !== 'Not Found' ? page.error.message : title
-	);
+	// Every message arrives in the request's locale: error() calls write it so,
+	// and both handleError hooks translate the ones SvelteKit raises itself.
+	const message = $derived(page.error?.message || title);
 	// A stale link to a deleted take is the common 404; point back to the list it came from.
 	const toSessions = $derived(notFound && page.url.pathname.startsWith('/sessions/'));
 </script>

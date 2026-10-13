@@ -1,3 +1,4 @@
+import { m } from '$lib/paraglide/messages';
 import { json, error } from '@sveltejs/kit';
 import {
 	getPracticeDay,
@@ -11,7 +12,7 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ params }) => {
 	const day = await getPracticeDay(validated(() => parseDayKey(params.day)));
-	if (!day) error(404, 'No practice recorded for that day');
+	if (!day) error(404, m.api_practice_day_not_found());
 	return json(day);
 };
 
@@ -35,7 +36,7 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 		if (err instanceof RangeError) error(400, err.message);
 		throw err;
 	}
-	if (!day) error(404, 'No practice recorded for that day');
+	if (!day) error(404, m.api_practice_day_not_found());
 	return json(day);
 };
 
@@ -43,6 +44,6 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
 export const POST: RequestHandler = async ({ params, url }) => {
 	if (url.searchParams.get('action') !== 'reset') error(400, 'Unknown action');
 	const day = await resetPracticeDaySteps(validated(() => parseDayKey(params.day)));
-	if (!day) error(404, 'No practice recorded for that day');
+	if (!day) error(404, m.api_practice_day_not_found());
 	return json(day);
 };

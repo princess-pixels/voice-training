@@ -37,5 +37,7 @@
   "dashboard_recent_view": "Vis",
   "dashboard_quick_title": "Hurtigvalg",
   "dashboard_quick_record": "Fritt opptak",
-  "dashboard_quick_range_test": "Test av stemmeomfang"
+  "dashboard_quick_range_test": "Test av stemmeomfang",
+  "dashboard_total_time_hours": "{hours} t {minutes} min",
+  "dashboard_total_time_minutes": "{minutes} min"
 }

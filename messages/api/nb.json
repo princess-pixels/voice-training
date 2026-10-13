@@ -1,0 +1,13 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "api_session_no_audio": "Opptaket har ingen lydfil",
+  "api_practice_day_not_found": "Ingen øving er registrert den dagen",
+  "api_export_in_progress": "En eksport er allerede i gang; prøv igjen om litt",
+  "api_export_failed": "Eksporten feilet; se serverloggen",
+  "api_range_test_not_found": "Fant ikke testen av stemmeomfang",
+  "api_title_required": "Tittelen må fylles ut",
+  "api_audio_too_large": "Lydfilen er for stor",
+  "api_range_order": "Ugyldig område: den nedre grensen må være lavere enn den øvre",
+  "api_hz_positive": "Frekvensene må være større enn null",
+  "api_high_above_low": "Den høye frekvensen må være høyere enn den lave"
+}

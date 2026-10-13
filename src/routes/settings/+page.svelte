@@ -15,6 +15,9 @@
 	import { untrack } from 'svelte';
 	let lowHz = $state(untrack(() => data.settings.targetRange.low));
 	let highHz = $state(untrack(() => data.settings.targetRange.high));
+	// The range as last saved, so the language picker knows when a reload would lose edits.
+	let savedRange = $state(untrack(() => ({ ...data.settings.targetRange })));
+	const unsaved = $derived(lowHz !== savedRange.low || highHz !== savedRange.high);
 
 	// Microphone state
 	let audioDevices = $state<MediaDeviceInfo[]>([]);
@@ -155,6 +158,7 @@
 			};
 
 			await request<void>('/api/settings', { method: 'PUT', body: { targetRange } });
+			savedRange = { low: lowHz, high: highHz };
 
 			saveStatus = 'success';
 			setTimeout(() => {
@@ -178,7 +182,7 @@
 		{m.settings_title()}
 	</h1>
 
-	<LanguagePicker />
+	<LanguagePicker {unsaved} />
 
 	<!-- Target Pitch Range Section -->
 	<section class="bg-surface-900 rounded-2xl p-6 mb-6 border border-surface-800">

@@ -7,7 +7,7 @@
 	import { m } from '$lib/paraglide/messages';
 	import { difficultyLabel } from '$lib/difficulty';
 	import { categoryLabel } from '$lib/categories';
-	import type { Difficulty, Exercise, PitchRange, PitchData, Session } from '$lib/types';
+	import type { Exercise, PitchRange, PitchData, Session } from '$lib/types';
 	import PitchVisualizer from './PitchVisualizer.svelte';
 	import PitchStats from './PitchStats.svelte';
 	import NoteKeyboard from './NoteKeyboard.svelte';

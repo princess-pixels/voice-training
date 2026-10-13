@@ -30,10 +30,8 @@
 	const formattedTotalTime = $derived.by(() => {
 		const hours = Math.floor(stats.totalPracticeTime / 3600);
 		const minutes = Math.floor((stats.totalPracticeTime % 3600) / 60);
-		if (hours > 0) {
-			return `${hours}h ${minutes}m`;
-		}
-		return `${minutes} min`;
+		if (hours > 0) return m.dashboard_total_time_hours({ hours, minutes });
+		return m.dashboard_total_time_minutes({ minutes });
 	});
 
 	// Get total category count for percentage calculation

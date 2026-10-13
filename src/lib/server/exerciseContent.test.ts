@@ -2,18 +2,24 @@ import { describe, expect, test } from 'bun:test';
 import { EXERCISE_TITLES, PURPOSES, exerciseTitle, stepPurpose } from '$lib/exerciseText';
 import { EXERCISE_CONTENT, NB_NASAL_FREE_PASSAGE, localizeExercise } from './exerciseContent';
 import { exercises } from './exercises';
+import { baseLocale, locales } from '$lib/paraglide/runtime';
 
 const englishTitles = exercises.map((e) => e.title).sort();
 
 describe('exercise translations', () => {
-	test('every exercise in the library has a Norwegian title and text', () => {
-		expect(Object.keys(EXERCISE_TITLES.nb!).sort()).toEqual(englishTitles);
-		expect(Object.keys(EXERCISE_CONTENT.nb!).sort()).toEqual(englishTitles);
-		for (const text of Object.values(EXERCISE_CONTENT.nb!)) {
-			expect(text.description.trim()).not.toBe('');
-			expect(text.instructions.trim()).not.toBe('');
+	// These tables live outside Paraglide, so scripts/i18n.ts cannot see them: a
+	// locale added to project.inlang fails here until its library is written.
+	test.each(locales.filter((l) => l !== baseLocale))(
+		'every exercise in the library has a title and text in %s',
+		(locale) => {
+			expect(Object.keys(EXERCISE_TITLES[locale] ?? {}).sort()).toEqual(englishTitles);
+			expect(Object.keys(EXERCISE_CONTENT[locale] ?? {}).sort()).toEqual(englishTitles);
+			for (const text of Object.values(EXERCISE_CONTENT[locale] ?? {})) {
+				expect(text.description.trim()).not.toBe('');
+				expect(text.instructions.trim()).not.toBe('');
+			}
 		}
-	});
+	);
 
 	test('the nasal-free passage has no nasal consonants in Norwegian either', () => {
 		expect(NB_NASAL_FREE_PASSAGE).not.toMatch(/[mn]/i);

@@ -37,5 +37,7 @@
   "dashboard_recent_view": "View",
   "dashboard_quick_title": "Quick Actions",
   "dashboard_quick_record": "Free Recording",
-  "dashboard_quick_range_test": "Pitch Range Test"
+  "dashboard_quick_range_test": "Pitch Range Test",
+  "dashboard_total_time_hours": "{hours}h {minutes}m",
+  "dashboard_total_time_minutes": "{minutes} min"
 }

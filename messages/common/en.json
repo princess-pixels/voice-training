@@ -43,5 +43,9 @@
   "common_difficulty_beginner": "Beginner",
   "common_difficulty_intermediate": "Intermediate",
   "common_difficulty_advanced": "Advanced",
-  "common_request_failed": "Request failed (HTTP {status})"
+  "common_request_failed": "Request failed (HTTP {status})",
+  "common_pitch_band_in": "in target",
+  "common_pitch_band_below": "below target",
+  "common_pitch_band_above": "above target",
+  "common_pitch_band_silent": "silent"
 }

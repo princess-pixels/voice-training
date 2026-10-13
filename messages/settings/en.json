@@ -1,7 +1,7 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "settings_language_heading": "Language",
-  "settings_language_hint": "Changing it reloads the page, so save any other changes first.",
+  "settings_language_hint": "Changing it reloads the page.",
   "settings_title": "Settings",
   "settings_pitch_range_heading": "Target Pitch Range",
   "settings_preset_feminine": "Feminine",
@@ -30,5 +30,6 @@
   "settings_save_hint": "Update your voice training preferences",
   "settings_saving": "Saving...",
   "settings_saved": "Saved!",
-  "settings_save_button": "Save Settings"
+  "settings_save_button": "Save Settings",
+  "settings_language_unsaved_confirm": "Switch language? The page reloads, and your unsaved changes to the target range will be lost."
 }

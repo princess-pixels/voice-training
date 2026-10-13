@@ -43,5 +43,9 @@
   "common_difficulty_beginner": "Nybegynner",
   "common_difficulty_intermediate": "Middels",
   "common_difficulty_advanced": "Avansert",
-  "common_request_failed": "Forespørselen feilet (HTTP {status})"
+  "common_request_failed": "Forespørselen feilet (HTTP {status})",
+  "common_pitch_band_in": "i målområdet",
+  "common_pitch_band_below": "under målområdet",
+  "common_pitch_band_above": "over målområdet",
+  "common_pitch_band_silent": "stille"
 }

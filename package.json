@@ -16,7 +16,7 @@
     "preview": "bun --bun vite preview",
     "prepare": "svelte-kit sync && bun scripts/i18n.ts || echo ''",
     "typecheck": "svelte-kit sync && bun scripts/i18n.ts && svelte-check --tsconfig ./tsconfig.json && bun check scripts",
-    "test": "bun test",
+    "test": "bun scripts/i18n.ts && bun test",
     "coverage:gap": "bun scripts/coverage-gap.ts",
     "import": "bun scripts/import.ts",
     "i18n": "bun scripts/i18n.ts",

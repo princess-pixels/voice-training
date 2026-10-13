@@ -1,7 +1,7 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "settings_language_heading": "Språk",
-  "settings_language_hint": "Når du bytter språk, lastes siden inn på nytt, så lagre andre endringer først.",
+  "settings_language_hint": "Når du bytter språk, lastes siden inn på nytt.",
   "settings_title": "Innstillinger",
   "settings_pitch_range_heading": "Målområde for tonehøyde",
   "settings_preset_feminine": "Feminin",
@@ -30,5 +30,6 @@
   "settings_save_hint": "Oppdater innstillingene for stemmetreningen",
   "settings_saving": "Lagrer …",
   "settings_saved": "Lagret!",
-  "settings_save_button": "Lagre innstillinger"
+  "settings_save_button": "Lagre innstillinger",
+  "settings_language_unsaved_confirm": "Bytte språk? Siden lastes inn på nytt, og endringene i målområdet som ikke er lagret, går tapt."
 }

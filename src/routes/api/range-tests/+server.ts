@@ -1,3 +1,4 @@
+import { m } from '$lib/paraglide/messages';
 import { json, error } from '@sveltejs/kit';
 import { createRangeTest, deleteRangeTest, updateRangeTestMode } from '$lib/server/db';
 import { jsonBody, validated } from '$lib/server/http';
@@ -18,7 +19,7 @@ export const PATCH: RequestHandler = async ({ request, url }) => {
 	const body = await jsonBody(request);
 	const mode = validated(() => parseMode((body as { mode?: unknown } | null)?.mode));
 	const updated = await updateRangeTestMode(id, mode);
-	if (!updated) error(404, 'Range test not found');
+	if (!updated) error(404, m.api_range_test_not_found());
 	return json(updated);
 };
 
@@ -27,6 +28,6 @@ export const DELETE: RequestHandler = async ({ url }) => {
 	if (!id) error(400, 'id query parameter is required');
 
 	const deleted = await deleteRangeTest(id);
-	if (!deleted) error(404, 'Range test not found');
+	if (!deleted) error(404, m.api_range_test_not_found());
 	return json({ ok: true });
 };

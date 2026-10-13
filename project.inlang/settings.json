@@ -13,7 +13,8 @@
       "./messages/range_test/{locale}.json",
       "./messages/sessions/{locale}.json",
       "./messages/settings/{locale}.json",
-      "./messages/charts/{locale}.json"
+      "./messages/charts/{locale}.json",
+      "./messages/api/{locale}.json"
     ]
   }
 }

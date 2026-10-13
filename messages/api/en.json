@@ -1,0 +1,13 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "api_session_no_audio": "No audio file for this session",
+  "api_practice_day_not_found": "No practice recorded for that day",
+  "api_export_in_progress": "An export is already being built; try again in a moment",
+  "api_export_failed": "Export failed; see the server log",
+  "api_range_test_not_found": "Range test not found",
+  "api_title_required": "Title is required",
+  "api_audio_too_large": "Audio file too large",
+  "api_range_order": "Invalid range: low must be less than high",
+  "api_hz_positive": "lowHz and highHz must be positive",
+  "api_high_above_low": "highHz must be greater than lowHz"
+}

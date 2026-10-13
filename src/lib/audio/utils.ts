@@ -1,3 +1,4 @@
+import { m } from '$lib/paraglide/messages';
 import type { PitchRange } from '$lib/types';
 import { midiFromHz, noteName } from './notes';
 
@@ -54,13 +55,13 @@ export function pitchBand(hz: number, range: PitchRange): PitchBand {
 export function pitchBandLabel(band: PitchBand): string {
 	switch (band) {
 		case 'in':
-			return 'in target';
+			return m.common_pitch_band_in();
 		case 'below':
-			return 'below target';
+			return m.common_pitch_band_below();
 		case 'above':
-			return 'above target';
+			return m.common_pitch_band_above();
 		default:
-			return 'silent';
+			return m.common_pitch_band_silent();
 	}
 }
 

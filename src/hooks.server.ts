@@ -67,9 +67,11 @@ const hardening: Handle = async ({ event, resolve }) => {
 // The request's locale (cookie, then Accept-Language, then English), held in
 // AsyncLocalStorage for the whole request so every m.*() call on the server
 // renders in it. Runs after the host check: a refused host gets nothing.
+// The middleware hands back a clone of the request, which only matters when a
+// URL strategy rewrites the path. There is none here, and the clone would tee
+// every body, so an audio upload would sit in memory twice: keep the original.
 const i18n: Handle = ({ event, resolve }) =>
-	paraglideMiddleware(event.request, ({ request, locale }) => {
-		event.request = request;
+	paraglideMiddleware(event.request, ({ locale }) => {
 		return resolve(event, {
 			transformPageChunk: ({ html }) =>
 				html.replace('%lang%', locale).replace('%dir%', getTextDirection(locale))
@@ -79,9 +81,11 @@ const i18n: Handle = ({ event, resolve }) =>
 export const handle = sequence(hardening, i18n);
 
 // Unexpected errors only; error() calls from loads and routes never come here.
+// SvelteKit's own 404 for an unknown path does, so it is told apart by status.
 // The one place they are logged, with the path, and the one shape the error
 // page ever sees (App.Error in app.d.ts).
 export const handleError: HandleServerError = ({ error, event, status }) => {
+	if (status === 404) return { message: m.common_error_not_found() };
 	console.error(`[${status}] ${event.request.method} ${event.url.pathname}`, error);
 	return { message: m.common_error_server() };
 };

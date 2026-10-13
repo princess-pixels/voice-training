@@ -1,3 +1,4 @@
+import { m } from '$lib/paraglide/messages';
 import { rm } from 'node:fs/promises';
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
@@ -17,14 +18,14 @@ import { archiveFileName, buildExport } from '$lib/server/export';
 let inFlight = false;
 
 export const POST: RequestHandler = async () => {
-	if (inFlight) error(429, 'An export is already being built; try again in a moment');
+	if (inFlight) error(429, m.api_export_in_progress());
 	inFlight = true;
 	let result;
 	try {
 		result = await buildExport();
 	} catch (err) {
 		console.error('[export] failed:', err);
-		error(500, 'Export failed; see the server log');
+		error(500, m.api_export_failed());
 	} finally {
 		inFlight = false;
 	}

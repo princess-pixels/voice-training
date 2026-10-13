@@ -1,3 +1,4 @@
+import { m } from '$lib/paraglide/messages';
 import { DEFAULT_TARGET_RANGE, semitonesBetween } from '$lib/audio/utils';
 import { summarisePitch } from '$lib/audio/stats';
 import { CATEGORY_ORDER } from '$lib/categories';
@@ -111,7 +112,7 @@ export function parseNotes(value: unknown): string {
 /** A title: required, trimmed, bounded. */
 export function parseTitle(value: unknown): string {
 	const title = parseText(value, LIMITS.titleLength);
-	if (!title) fail('Title is required');
+	if (!title) fail(m.api_title_required());
 	return title;
 }
 
@@ -160,7 +161,7 @@ export function parseTargetRange(value: unknown): PitchRange {
 	if (!isFiniteNumber(r.low) || !isFiniteNumber(r.high)) {
 		fail('Invalid targetRange: must have finite low and high values');
 	}
-	if (r.low >= r.high) fail('Invalid range: low must be less than high');
+	if (r.low >= r.high) fail(m.api_range_order());
 	return { low: r.low, high: r.high };
 }
 
@@ -177,7 +178,7 @@ export function parseSettingsRange(value: unknown): PitchRange {
 	const { low: min, high: max } = LIMITS.targetRange;
 	const clamp = (n: number) => Math.max(min, Math.min(max, n));
 	const range = { low: clamp(r.low), high: clamp(r.high) };
-	if (range.low >= range.high) fail('Invalid range: low must be less than high');
+	if (range.low >= range.high) fail(m.api_range_order());
 	return range;
 }
 
@@ -259,7 +260,7 @@ export function parseSessionForm(form: FormData): NewSession {
 
 /** An uploaded recording's size against the ceiling; 413, not 400. */
 export function checkAudioSize(bytes: number): void {
-	if (bytes > LIMITS.audioBytes) throw new ValidationError('Audio file too large', 413);
+	if (bytes > LIMITS.audioBytes) throw new ValidationError(m.api_audio_too_large(), 413);
 }
 
 /**
@@ -382,8 +383,8 @@ export function parseRangeTestBody(body: unknown): Omit<RangeTest, '_id' | 'crea
 	if (!isFiniteNumber(b.lowHz) || !isFiniteNumber(b.highHz)) {
 		fail('lowHz and highHz are required numbers');
 	}
-	if (b.lowHz <= 0 || b.highHz <= 0) fail('lowHz and highHz must be positive');
-	if (b.highHz <= b.lowHz) fail('highHz must be greater than lowHz');
+	if (b.lowHz <= 0 || b.highHz <= 0) fail(m.api_hz_positive());
+	if (b.highHz <= b.lowHz) fail(m.api_high_above_low());
 	return {
 		mode: parseMode(b.mode),
 		lowHz: b.lowHz,
