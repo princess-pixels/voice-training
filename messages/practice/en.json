@@ -102,5 +102,9 @@
         "totalPlural=other": "{day}: {done} of {total} steps, {duration}"
       }
     }
-  ]
+  ],
+  "practice_purpose_warmup": "Wake the voice up and release tension",
+  "practice_purpose_sovt": "Straw work — easy, low-strain resonance",
+  "practice_purpose_focus": "Today's technical focus",
+  "practice_purpose_speech": "Put it into real speech — worth recording"
 }

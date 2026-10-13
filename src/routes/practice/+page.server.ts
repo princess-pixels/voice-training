@@ -6,6 +6,7 @@ import {
 } from '$lib/server/db';
 import { newPracticeDay } from '$lib/server/practice';
 import { buildDailyRoutine } from '$lib/server/routine';
+import { localizeExercise } from '$lib/server/exerciseContent';
 import type { Exercise } from '$lib/types';
 import type { PageServerLoad } from './$types';
 
@@ -40,7 +41,7 @@ export const load: PageServerLoad = async () => {
 	const wanted = new Set(day.steps.map((s) => s.exerciseId));
 	const byId: Record<string, Exercise> = {};
 	for (const exercise of exercises) {
-		if (wanted.has(exercise._id)) byId[exercise._id] = exercise;
+		if (wanted.has(exercise._id)) byId[exercise._id] = localizeExercise(exercise);
 	}
 	return { day, exercises: byId, settings, history, serverOffsetMinutes };
 };

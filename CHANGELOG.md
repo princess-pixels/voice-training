@@ -7,6 +7,19 @@ top section as the GitHub release notes. The longer story behind each release is
 
 ## [Unreleased]
 
+### Added
+
+- Norwegian Bokmål. The app follows your browser's language, and Settings has a
+  language picker at the top. Everything is translated, including the exercise
+  library. What you read aloud was written for Norwegian rather than translated: a
+  nasal-free passage with no nasals in Norwegian, Norwegian tongue twisters, and
+  intonation work that keeps the tonal accents. Session names and exports stay as
+  they were written.
+
+### Fixed
+
+- A one-day practice streak said "1 days".
+
 ### Changed
 
 - Built with Bun 1.4.3. The downloads carry its server fixes: stricter HTTP/1.1 handling
@@ -16,6 +29,10 @@ top section as the GitHub release notes. The longer story behind each release is
   Nothing in it needs that, so this only removes room for an attack.
 
 ### Development
+
+- Translations: `messages/<area>/<locale>.json` for the interface (Paraglide),
+  `src/lib/exerciseText.ts` and `src/lib/server/exerciseContent.ts` for the exercise
+  library, which stays English in the database and is translated when shown.
 
 - `bun run check` is now `bun run typecheck`. It runs svelte-check as before, then
   `bun check` over `scripts/`, which nothing type-checked until now. The rename matters

@@ -7,6 +7,7 @@
 	import { nextStepIndex, revivePracticeDay } from '$lib/practiceDay';
 	import { errorMessage, request } from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
+	import { exerciseTitle, stepPurpose } from '$lib/exerciseText';
 	import type { JsonDate, PracticeDay, PracticeStepStatus, Session } from '$lib/types';
 	import type { PageData } from './$types';
 
@@ -334,12 +335,15 @@
 					onclick={() => goToStep(index)}
 					disabled={recording}
 					title={step.status === 'done'
-						? m.practice_step_tooltip_done({ title: step.title })
+						? m.practice_step_tooltip_done({ title: exerciseTitle(step.title) })
 						: step.status === 'skipped'
-							? m.practice_step_tooltip_skipped({ title: step.title })
-							: step.title}
+							? m.practice_step_tooltip_skipped({ title: exerciseTitle(step.title) })
+							: exerciseTitle(step.title)}
 					class="group flex-1 py-3 disabled:cursor-not-allowed focus-visible:outline-none"
-					aria-label={m.practice_step_rail_label({ number: index + 1, title: step.title })}
+					aria-label={m.practice_step_rail_label({
+						number: index + 1,
+						title: exerciseTitle(step.title)
+					})}
 					aria-current={index === currentIndex ? 'step' : undefined}
 				>
 					<span
@@ -387,7 +391,7 @@
 								class="flex-1 text-left hover:text-surface-100 transition-colors"
 								onclick={() => goToStep(index)}
 							>
-								{step.title}
+								{exerciseTitle(step.title)}
 							</button>
 							{#if step.sessionIds.length > 0}
 								<a
@@ -426,7 +430,7 @@
 						{m.practice_step_header({
 							number: currentIndex + 1,
 							total: steps.length,
-							purpose: currentStep.purpose
+							purpose: stepPurpose(currentStep.purpose)
 						})}
 						{#if reviewing}
 							·
@@ -440,7 +444,9 @@
 						{/if}
 					</p>
 					<div class="flex flex-wrap items-center gap-3 mb-3">
-						<h2 class="text-2xl font-semibold text-surface-100">{currentStep.title}</h2>
+						<h2 class="text-2xl font-semibold text-surface-100">
+							{exerciseTitle(currentStep.title)}
+						</h2>
 						<span
 							class="px-2.5 py-1 rounded-full text-xs font-medium border {categoryBadgeClass(
 								currentStep.category

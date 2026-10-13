@@ -1,5 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { getSessionById, getExerciseById } from '$lib/server/db';
+import { localizeExercise } from '$lib/server/exerciseContent';
 import { error } from '@sveltejs/kit';
 import { m } from '$lib/paraglide/messages';
 
@@ -12,5 +13,5 @@ export const load: PageServerLoad = async ({ params }) => {
 		exercise = await getExerciseById(session.exerciseId);
 	}
 
-	return { session, exercise };
+	return { session, exercise: exercise && localizeExercise(exercise) };
 };

@@ -102,5 +102,9 @@
         "totalPlural=other": "{day}: {done} av {total} steg, {duration}"
       }
     }
-  ]
+  ],
+  "practice_purpose_warmup": "Vekk stemmen og løs opp spenninger",
+  "practice_purpose_sovt": "Sugerørsarbeid — lett resonans med lite belastning",
+  "practice_purpose_focus": "Dagens tekniske fokus",
+  "practice_purpose_speech": "Bruk det i ekte tale — verdt å ta opp"
 }

@@ -1,5 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { listExercises } from '$lib/server/db';
+import { localizeExercise } from '$lib/server/exerciseContent';
 import type { ExerciseCategory, Difficulty } from '$lib/types';
 
 export const load: PageServerLoad = async ({ url }) => {
@@ -8,5 +9,9 @@ export const load: PageServerLoad = async ({ url }) => {
 
 	const exercises = await listExercises(category || undefined, difficulty || undefined);
 
-	return { exercises, activeCategory: category, activeDifficulty: difficulty };
+	return {
+		exercises: exercises.map((e) => localizeExercise(e)),
+		activeCategory: category,
+		activeDifficulty: difficulty
+	};
 };

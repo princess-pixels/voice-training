@@ -4,7 +4,7 @@ import { DEFAULT_TARGET_RANGE } from '$lib/audio/utils';
 // Default target range for pitch exercises
 const DEFAULT_PITCH_RANGE = DEFAULT_TARGET_RANGE;
 
-const exercises = [
+export const exercises = [
 	// Warmup exercises
 	{
 		category: 'warmup' as const,

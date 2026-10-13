@@ -1,4 +1,5 @@
 import type { Exercise, ExerciseCategory } from '$lib/types';
+import { PURPOSES } from '$lib/exerciseText';
 
 export interface RoutineStep {
 	exercise: Exercise;
@@ -14,23 +15,24 @@ export interface DailyRoutine {
 // The shape of a session: loosen up, find easy forward placement through the straw,
 // do the day's technical work, then apply it to connected speech.
 // Each slot alternates between two categories on odd/even days so the routine
-// doesn't become the same four exercises forever.
+// doesn't become the same four exercises forever. Purposes are stored in English
+// with each practice day and translated when shown ($lib/exerciseText).
 const SLOTS: { categories: [ExerciseCategory, ExerciseCategory]; purpose: string }[] = [
 	{
 		categories: ['warmup', 'warmup'],
-		purpose: 'Wake the voice up and release tension'
+		purpose: PURPOSES.warmup
 	},
 	{
 		categories: ['sovt', 'sovt'],
-		purpose: 'Straw work — easy, low-strain resonance'
+		purpose: PURPOSES.sovt
 	},
 	{
 		categories: ['resonance', 'pitch'],
-		purpose: "Today's technical focus"
+		purpose: PURPOSES.focus
 	},
 	{
 		categories: ['reading', 'intonation'],
-		purpose: 'Put it into real speech — worth recording'
+		purpose: PURPOSES.speech
 	}
 ];
 
