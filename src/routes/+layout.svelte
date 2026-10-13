@@ -1,17 +1,18 @@
 <script lang="ts">
 	import '../app.css';
 	import { page } from '$app/state';
+	import { m } from '$lib/paraglide/messages';
 
 	let { children } = $props();
 
 	const navItems = [
-		{ href: '/', label: 'Dashboard', icon: '📊' },
-		{ href: '/practice', label: "Today's Practice", icon: '🌸' },
-		{ href: '/exercises', label: 'Exercises', icon: '🎯' },
-		{ href: '/record', label: 'Record', icon: '🎙️' },
-		{ href: '/range-test', label: 'Range Test', icon: '📏' },
-		{ href: '/sessions', label: 'Sessions', icon: '📁' },
-		{ href: '/settings', label: 'Settings', icon: '⚙️' }
+		{ href: '/', label: m.common_nav_dashboard(), icon: '📊' },
+		{ href: '/practice', label: m.common_nav_practice(), icon: '🌸' },
+		{ href: '/exercises', label: m.common_nav_exercises(), icon: '🎯' },
+		{ href: '/record', label: m.common_nav_record(), icon: '🎙️' },
+		{ href: '/range-test', label: m.common_nav_range_test(), icon: '📏' },
+		{ href: '/sessions', label: m.common_nav_sessions(), icon: '📁' },
+		{ href: '/settings', label: m.common_nav_settings(), icon: '⚙️' }
 	];
 
 	// Below md the sidebar becomes a drawer under a top bar.
@@ -33,13 +34,13 @@
 	<header
 		class="md:hidden flex items-center justify-between px-4 py-3 bg-surface-900 border-b border-surface-800"
 	>
-		<span class="text-lg font-bold text-primary-400">Voice Training</span>
+		<span class="text-lg font-bold text-primary-400">{m.common_app_name()}</span>
 		<button
 			type="button"
 			onclick={() => (menuOpen = !menuOpen)}
 			aria-expanded={menuOpen}
 			aria-controls="site-nav"
-			aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+			aria-label={menuOpen ? m.common_menu_close() : m.common_menu_open()}
 			class="p-2 -mr-2 rounded-lg text-surface-300 hover:text-surface-100 hover:bg-surface-800 transition-colors"
 		>
 			{#if menuOpen}
@@ -79,14 +80,14 @@
 	<!-- Sidebar / drawer -->
 	<nav
 		id="site-nav"
-		aria-label="Main"
+		aria-label={m.common_nav_label()}
 		class="bg-surface-900 border-surface-800 flex-col md:flex md:w-64 md:border-r md:shrink-0 {menuOpen
 			? 'flex border-b'
 			: 'hidden'}"
 	>
 		<div class="p-6 hidden md:block">
-			<span class="block text-xl font-bold text-primary-400">Voice Training</span>
-			<p class="text-sm text-surface-400 mt-1">Feminization Practice</p>
+			<span class="block text-xl font-bold text-primary-400">{m.common_app_name()}</span>
+			<p class="text-sm text-surface-400 mt-1">{m.common_app_tagline()}</p>
 		</div>
 		<ul class="flex-1 p-3 md:px-3 md:py-0 space-y-1">
 			{#each navItems as item}

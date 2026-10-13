@@ -1,0 +1,5 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "settings_language_heading": "Språk",
+  "settings_language_hint": "Når du bytter, lastes siden inn på nytt, så lagre andre endringer først."
+}

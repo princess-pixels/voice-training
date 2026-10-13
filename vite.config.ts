@@ -1,10 +1,12 @@
+import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 import pkg from './package.json' with { type: 'json' };
+import { paraglideOptions } from './paraglide.config.js';
 
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit()],
+	plugins: [tailwindcss(), sveltekit(), paraglideVitePlugin(paraglideOptions)],
 	// Bun's built-in modules are provided by the runtime, never bundled.
 	ssr: { external: ['bun', 'bun:sqlite'] },
 	define: {

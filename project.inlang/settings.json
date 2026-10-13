@@ -1,0 +1,19 @@
+{
+  "$schema": "https://inlang.com/schema/project-settings",
+  "baseLocale": "en",
+  "locales": ["en", "nb"],
+  "modules": ["./node_modules/@inlang/plugin-message-format/dist/index.js"],
+  "plugin.inlang.messageFormat": {
+    "pathPattern": [
+      "./messages/common/{locale}.json",
+      "./messages/dashboard/{locale}.json",
+      "./messages/practice/{locale}.json",
+      "./messages/exercises/{locale}.json",
+      "./messages/recording/{locale}.json",
+      "./messages/range_test/{locale}.json",
+      "./messages/sessions/{locale}.json",
+      "./messages/settings/{locale}.json",
+      "./messages/charts/{locale}.json"
+    ]
+  }
+}

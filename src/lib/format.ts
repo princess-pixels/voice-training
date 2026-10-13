@@ -4,8 +4,11 @@
  * agree with each other and with the user's system settings (no hard-wired
  * 'en-US' and 12-hour clocks for everyone).
  *
- * `locale` is only for tests; callers leave it undefined.
+ * `locale` is only for tests; callers leave it undefined. Dates follow the
+ * system's locale, not the app language: someone on an English UI with a
+ * Norwegian system still gets 24-hour times and day.month dates.
  */
+import { m } from '$lib/paraglide/messages';
 
 export type DateStyle = 'short' | 'long';
 
@@ -45,8 +48,8 @@ export function formatRelativeDay(date: Date | string, now = new Date(), locale?
 	const diffDays = Math.round(
 		(startOfLocalDay(now).getTime() - startOfLocalDay(d).getTime()) / (1000 * 60 * 60 * 24)
 	);
-	if (diffDays === 0) return 'Today';
-	if (diffDays === 1) return 'Yesterday';
-	if (diffDays > 1 && diffDays < 7) return `${diffDays} days ago`;
+	if (diffDays === 0) return m.common_today();
+	if (diffDays === 1) return m.common_yesterday();
+	if (diffDays > 1 && diffDays < 7) return m.common_days_ago({ count: diffDays });
 	return d.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
 }

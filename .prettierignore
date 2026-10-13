@@ -5,6 +5,9 @@ build
 bun.lock
 
 # Generated / opaque
+src/lib/paraglide
+project.inlang/*
+!project.inlang/settings.json
 static
 LICENSE
 coverage

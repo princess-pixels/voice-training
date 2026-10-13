@@ -15,4 +15,5 @@ coverageThreshold = { lines = 0.85, functions = 0.9 }
 # Bun only instruments files a test imports, so this measures the server and
 # audio modules the tests reach, not the routes, components or stores (see
 # TODO.md D02). The export/import round trip runs through the system tar.
-coveragePathIgnorePatterns = []
+# Paraglide's compiled messages (src/lib/paraglide) are generated, not ours to cover.
+coveragePathIgnorePatterns = ["src/lib/paraglide/**"]

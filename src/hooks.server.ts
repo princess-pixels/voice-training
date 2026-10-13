@@ -1,4 +1,8 @@
 import type { Handle, HandleServerError } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
+import { paraglideMiddleware } from '$lib/paraglide/server';
+import { getTextDirection } from '$lib/paraglide/runtime';
+import { m } from '$lib/paraglide/messages';
 import { seedExercises } from '$lib/server/exercises';
 import { migrateDatabase } from '$lib/server/db';
 import { ensureAudioDir } from '$lib/server/audio';
@@ -40,7 +44,7 @@ const hosts = hostPolicy(process.env);
 
 // Request and response hardening. The Content-Security-Policy itself comes
 // from kit.csp in svelte.config.js, which adds the per-request script nonces.
-export const handle: Handle = async ({ event, resolve }) => {
+const hardening: Handle = async ({ event, resolve }) => {
 	// The adapter builds event.url from ORIGIN, so the raw header is the only
 	// place a DNS-rebinding request still shows its real name.
 	const host = event.request.headers.get('host');
@@ -60,10 +64,24 @@ export const handle: Handle = async ({ event, resolve }) => {
 	return response;
 };
 
+// The request's locale (cookie, then Accept-Language, then English), held in
+// AsyncLocalStorage for the whole request so every m.*() call on the server
+// renders in it. Runs after the host check: a refused host gets nothing.
+const i18n: Handle = ({ event, resolve }) =>
+	paraglideMiddleware(event.request, ({ request, locale }) => {
+		event.request = request;
+		return resolve(event, {
+			transformPageChunk: ({ html }) =>
+				html.replace('%lang%', locale).replace('%dir%', getTextDirection(locale))
+		});
+	});
+
+export const handle = sequence(hardening, i18n);
+
 // Unexpected errors only; error() calls from loads and routes never come here.
 // The one place they are logged, with the path, and the one shape the error
 // page ever sees (App.Error in app.d.ts).
 export const handleError: HandleServerError = ({ error, event, status }) => {
 	console.error(`[${status}] ${event.request.method} ${event.url.pathname}`, error);
-	return { message: 'Something went wrong on the server' };
+	return { message: m.common_error_server() };
 };

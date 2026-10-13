@@ -5,6 +5,7 @@
 	import { getAudioDevices, getMicrophoneStream } from '$lib/audio/mic';
 	import { describeMicError } from '$lib/audio/micErrors';
 	import { errorMessage, request } from '$lib/api';
+	import LanguagePicker from '$lib/components/LanguagePicker.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -175,6 +176,8 @@
 	>
 		Settings
 	</h1>
+
+	<LanguagePicker />
 
 	<!-- Target Pitch Range Section -->
 	<section class="bg-surface-900 rounded-2xl p-6 mb-6 border border-surface-800">
