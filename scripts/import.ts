@@ -9,3 +9,5 @@ process.env.DATA_DIR ??= 'data';
 process.argv.splice(2, 0, 'import');
 const { run } = await import('../src/cli');
 await run(() => Promise.reject(new Error('import does not start the server')));
+
+export {};

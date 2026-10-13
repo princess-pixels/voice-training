@@ -2,7 +2,7 @@
 
 Issues and pull requests are welcome. Before opening a PR:
 
-1. `bun install`, then `bun run lint`, `bun run check`, `bun run build` and `bun test` all
+1. `bun install`, then `bun run lint`, `bun run typecheck`, `bun run build` and `bun test` all
    pass (CI runs exactly these; with a build present, `bun test` also drives the built
    server end to end).
 2. New behaviour has a test next to it; a bug fix has a test that fails without it.

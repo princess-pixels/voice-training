@@ -5,7 +5,7 @@
   "engines": {
     "bun": ">=1.4.0"
   },
-  "packageManager": "bun@1.4.2",
+  "packageManager": "bun@1.4.3",
   "version": "1.2.1",
   "type": "module",
   "scripts": {
@@ -15,7 +15,7 @@
     "start": "bun src/cli.ts",
     "preview": "bun --bun vite preview",
     "prepare": "svelte-kit sync || echo ''",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && bun check scripts",
     "test": "bun test",
     "coverage:gap": "bun scripts/coverage-gap.ts",
     "import": "bun scripts/import.ts",

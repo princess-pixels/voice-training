@@ -24,7 +24,7 @@ jobs:
         with:
           # An exact patch, so the compiler behind a build (and a tagged binary's
           # checksums) is reproducible from the tag; bump it with packageManager.
-          bun-version: 1.4.2
+          bun-version: 1.4.3
 
       # Frozen lockfile: CI never resolves anything the lockfile doesn't already pin.
       - run: bun ci
@@ -32,8 +32,9 @@ jobs:
       # Formatting: prettier --check, so tabs-vs-spaces never drifts again.
       - run: bun run lint
 
-      # svelte-check: types and template errors across .ts and .svelte files.
-      - run: bun run check
+      # svelte-check: types and template errors across .ts and .svelte files; then
+      # bun check for scripts/, which sits outside the SvelteKit tsconfig.
+      - run: bun run typecheck
 
       # Production bundle via svelte-adapter-bun. Bootstrap (database, data dir)
       # runs at boot, not build. Built before the tests so src/server.test.ts

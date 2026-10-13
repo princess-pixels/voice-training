@@ -29,6 +29,12 @@ await Bun.write(
 const assets = ['--asset', 'build/client'];
 if (existsSync('build/prerendered')) assets.push('--asset', 'build/prerendered');
 
+// Nothing in the app turns strings into code, so the binary forbids it: eval,
+// new Function, node:vm and data: imports all throw. Embedded in the
+// executable, the flag always applies and BUN_OPTIONS cannot lower it.
+// Bun ignored this flag before 1.4.3.
+const hardening = ['--compile-exec-argv=--disallow-code-generation-from-strings=strict'];
+
 // Download names are read by people, not toolchains: "darwin" and "arm64" mean
 // nothing to most Mac owners, so the Mac builds say macOS and name the chip.
 const friendly: Record<string, string> = {
@@ -43,7 +49,7 @@ for (const target of builds) {
 	const exe = target?.includes('windows') ? '.exe' : '';
 	const outfile = `dist/voice-training${suffix}${exe}`;
 	const targetFlag = target ? [`--target=${target}`] : [];
-	await $`bun build --compile ${targetFlag} build/cli.js ${assets} --outfile ${outfile}`;
+	await $`bun build --compile ${targetFlag} build/cli.js ${assets} ${hardening} --outfile ${outfile}`;
 	const size = (Bun.file(outfile).size / 1024 / 1024).toFixed(0);
 	console.log(`${outfile}  (${size} MB, v${pkg.version})`);
 }

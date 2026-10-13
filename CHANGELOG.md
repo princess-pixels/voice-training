@@ -7,7 +7,19 @@ top section as the GitHub release notes. The longer story behind each release is
 
 ## [Unreleased]
 
-Nothing yet.
+### Changed
+
+- Built with Bun 1.4.3. The downloads carry its server fixes: stricter HTTP/1.1 handling
+  after `Connection: close`, malformed chunked bodies rejected, and the TLS host name
+  fix (CVE-2026-48618).
+- The downloaded app refuses to run code built from strings (`eval`, `new Function`).
+  Nothing in it needs that, so this only removes room for an attack.
+
+### Development
+
+- `bun run check` is now `bun run typecheck`. It runs svelte-check as before, then
+  `bun check` over `scripts/`, which nothing type-checked until now. The rename matters
+  because a `check` script would shadow Bun's own `bun check`.
 
 ## [1.2.1] - 2026-10-05
 

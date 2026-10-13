@@ -55,7 +55,7 @@ function appVersion(): string {
  *
  * Nothing large is held in memory: each session record and each recording is
  * written to disk, and the system tar streams them into the archive.
- * Bun.Archive would be the native choice, but as of Bun 1.4.0 it writes
+ * Bun.Archive would be the native choice, but in Bun 1.4.0 to 1.4.3 it writes
  * zero-byte entries for lazy Bun.file() values (only in-memory bytes work),
  * and reading a whole audio library into memory is not an option.
  */

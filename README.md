@@ -221,7 +221,7 @@ bun run dev              # Vite dev server on :5173, data in ./data
 ```
 
 ```bash
-bun run check            # svelte-check: types and template errors
+bun run typecheck        # svelte-check (types and template errors), bun check for scripts/
 bun test                 # YIN, pitch stats, routine, validation, the storage layer (in-memory
                          # SQLite, temp audio dir), export/import round trip; coverage thresholds on
 bun run coverage:gap     # what the coverage number leaves out: Bun only measures files a test
