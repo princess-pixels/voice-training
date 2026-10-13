@@ -24,5 +24,20 @@
   "common_page_title": "{page} — Stemmetrening",
   "common_today": "I dag",
   "common_yesterday": "I går",
-  "common_days_ago": "For {count} dager siden"
+  "common_days_ago": "For {count} dager siden",
+  "common_mic_unavailable": "Denne siden får ikke bruke mikrofonen. Nettlesere tillater det bare over HTTPS eller på localhost: åpne appen på adressen i ORIGIN (se README), eller på maskinen den kjører på.",
+  "common_mic_blocked": "Mikrofontilgang er blokkert. Tillat mikrofonen for denne siden via ikonet i adressefeltet, og prøv igjen.",
+  "common_mic_not_found": "Fant ingen mikrofon. Koble til en, eller sjekk inndataenheten i Innstillinger, og prøv igjen.",
+  "common_mic_busy": "Mikrofonen kunne ikke starte. En annen app (en samtale, et opptaksprogram) bruker den kanskje; lukk den og prøv igjen.",
+  "common_mic_gone": "Den valgte mikrofonen er ikke lenger tilgjengelig. Velg en annen inndataenhet i Innstillinger.",
+  "common_mic_failed_with": "Kunne ikke åpne mikrofonen: {message}",
+  "common_mic_failed": "Kunne ikke åpne mikrofonen.",
+  "common_confirm_delete_session": "Slette dette opptaket? Lydfilen og tonehøydedataene forsvinner. Dette kan ikke angres.",
+  "common_confirm_discard_take": "Forkaste dette opptaket? Opptaket går tapt.",
+  "common_category_warmup": "Oppvarming",
+  "common_category_sovt": "Sugerør / SOVT",
+  "common_category_pitch": "Tonehøyde",
+  "common_category_resonance": "Resonans",
+  "common_category_intonation": "Intonasjon",
+  "common_category_reading": "Lesing"
 }

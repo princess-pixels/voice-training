@@ -8,6 +8,7 @@
  * that is not localhost there is no getUserMedia at all, which surfaces as a
  * TypeError from reading `undefined.getUserMedia` unless caught first.
  */
+import { m } from '$lib/paraglide/messages';
 
 /** Thrown by mic.ts when the browser has no microphone API on this origin. */
 export class MicUnavailableError extends Error {
@@ -17,16 +18,25 @@ export class MicUnavailableError extends Error {
 	}
 }
 
+// Getters, not strings: the text is looked up in the current locale each
+// time it is read, never frozen at import.
 export const MIC_MESSAGES = {
-	unavailable:
-		'This page cannot use the microphone. Browsers only allow it on HTTPS or on localhost: open the app at the address in ORIGIN (see the README), or on the machine it runs on.',
-	blocked:
-		'Microphone access is blocked. Allow the microphone for this site from the icon in the address bar, then try again.',
-	notFound:
-		'No microphone found. Plug one in, or check the input device in Settings, then try again.',
-	busy: 'The microphone could not start. Another app (a call, a recorder) may be using it; close that and try again.',
-	gone: 'The chosen microphone is no longer available. Pick another input device in Settings.'
-} as const;
+	get unavailable() {
+		return m.common_mic_unavailable();
+	},
+	get blocked() {
+		return m.common_mic_blocked();
+	},
+	get notFound() {
+		return m.common_mic_not_found();
+	},
+	get busy() {
+		return m.common_mic_busy();
+	},
+	get gone() {
+		return m.common_mic_gone();
+	}
+};
 
 /** True when this page can ask for the microphone at all. */
 export function hasMicrophoneApi(): boolean {
@@ -58,5 +68,5 @@ export function describeMicError(err: unknown): string {
 			return MIC_MESSAGES.gone;
 	}
 	if (/getUserMedia|mediaDevices|enumerateDevices/.test(message)) return MIC_MESSAGES.unavailable;
-	return message ? `Could not open the microphone: ${message}` : 'Could not open the microphone.';
+	return message ? m.common_mic_failed_with({ message }) : m.common_mic_failed();
 }

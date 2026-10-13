@@ -4,7 +4,7 @@
 	import { recorderStore } from '$lib/stores/recorder.svelte';
 	import { formatDuration } from '$lib/audio/utils';
 	import { errorMessage, request } from '$lib/api';
-	import { DISCARD_TAKE_CONFIRM } from '$lib/copy';
+	import { m } from '$lib/paraglide/messages';
 	import type { Exercise, PitchRange, PitchData, Session } from '$lib/types';
 	import PitchVisualizer from './PitchVisualizer.svelte';
 	import PitchStats from './PitchStats.svelte';
@@ -117,7 +117,7 @@
 
 	/** Discard is one click from Save and throws away a take that may be minutes long. */
 	function confirmDiscard() {
-		if (confirm(DISCARD_TAKE_CONFIRM)) void handleDiscard();
+		if (confirm(m.common_confirm_discard_take())) void handleDiscard();
 	}
 
 	function handlePrimary() {

@@ -1,4 +1,5 @@
 import type { ExerciseCategory } from '$lib/types';
+import { m } from '$lib/paraglide/messages';
 
 // Single source of truth for how exercise categories are ordered, named and coloured.
 // Order is roughly the order you'd work through them in a session.
@@ -6,13 +7,14 @@ export { CATEGORY_ORDER } from '$lib/constants';
 import { CATEGORY_ORDER } from '$lib/constants';
 
 // 'sovt' would render as "Sovt" if we just capitalised, hence the explicit map.
-const LABELS: Record<ExerciseCategory, string> = {
-	warmup: 'Warmup',
-	sovt: 'Straw / SOVT',
-	pitch: 'Pitch',
-	resonance: 'Resonance',
-	intonation: 'Intonation',
-	reading: 'Reading'
+// Message functions, not strings, so each call renders in the current locale.
+const LABELS: Record<ExerciseCategory, () => string> = {
+	warmup: m.common_category_warmup,
+	sovt: m.common_category_sovt,
+	pitch: m.common_category_pitch,
+	resonance: m.common_category_resonance,
+	intonation: m.common_category_intonation,
+	reading: m.common_category_reading
 };
 
 // Badge styling for exercise cards.
@@ -39,7 +41,7 @@ const FALLBACK_BADGE = 'bg-surface-700 text-surface-300 border-surface-600';
 const FALLBACK_FILL = 'bg-surface-500';
 
 export function categoryLabel(category: string): string {
-	return LABELS[category as ExerciseCategory] ?? category;
+	return LABELS[category as ExerciseCategory]?.() ?? category;
 }
 
 export function categoryBadgeClass(category: string): string {

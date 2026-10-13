@@ -5,7 +5,7 @@
 	import { formatDuration, formatHz } from '$lib/audio/utils';
 	import { formatDate, formatTime } from '$lib/format';
 	import { deleteSession as apiDeleteSession, errorMessage } from '$lib/api';
-	import { DELETE_SESSION_CONFIRM } from '$lib/copy';
+	import { m } from '$lib/paraglide/messages';
 	import type { PageData } from './$types';
 
 	interface Props {
@@ -29,7 +29,7 @@
 	}
 
 	async function deleteSession() {
-		if (!confirm(DELETE_SESSION_CONFIRM)) return;
+		if (!confirm(m.common_confirm_delete_session())) return;
 
 		deleteError = null;
 		try {

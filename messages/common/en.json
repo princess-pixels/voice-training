@@ -24,5 +24,20 @@
   "common_page_title": "{page} — Voice Training",
   "common_today": "Today",
   "common_yesterday": "Yesterday",
-  "common_days_ago": "{count} days ago"
+  "common_days_ago": "{count} days ago",
+  "common_mic_unavailable": "This page cannot use the microphone. Browsers only allow it on HTTPS or on localhost: open the app at the address in ORIGIN (see the README), or on the machine it runs on.",
+  "common_mic_blocked": "Microphone access is blocked. Allow the microphone for this site from the icon in the address bar, then try again.",
+  "common_mic_not_found": "No microphone found. Plug one in, or check the input device in Settings, then try again.",
+  "common_mic_busy": "The microphone could not start. Another app (a call, a recorder) may be using it; close that and try again.",
+  "common_mic_gone": "The chosen microphone is no longer available. Pick another input device in Settings.",
+  "common_mic_failed_with": "Could not open the microphone: {message}",
+  "common_mic_failed": "Could not open the microphone.",
+  "common_confirm_delete_session": "Delete this session? The recording and its pitch data will be gone. This cannot be undone.",
+  "common_confirm_discard_take": "Discard this take? The recording will be lost.",
+  "common_category_warmup": "Warmup",
+  "common_category_sovt": "Straw / SOVT",
+  "common_category_pitch": "Pitch",
+  "common_category_resonance": "Resonance",
+  "common_category_intonation": "Intonation",
+  "common_category_reading": "Reading"
 }
