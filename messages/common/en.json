@@ -39,5 +39,9 @@
   "common_category_pitch": "Pitch",
   "common_category_resonance": "Resonance",
   "common_category_intonation": "Intonation",
-  "common_category_reading": "Reading"
+  "common_category_reading": "Reading",
+  "common_difficulty_beginner": "Beginner",
+  "common_difficulty_intermediate": "Intermediate",
+  "common_difficulty_advanced": "Advanced",
+  "common_request_failed": "Request failed (HTTP {status})"
 }

@@ -1,3 +1,106 @@
 {
-  "$schema": "https://inlang.com/schema/inlang-message-format"
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "practice_title": "Today's Practice",
+  "practice_save_failed": "Could not save progress",
+  "practice_reset_failed": "Could not reset the routine",
+  "practice_intro": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} step · about {minutes} minutes. Just follow along.",
+        "countPlural=other": "{count} steps · about {minutes} minutes. Just follow along."
+      }
+    }
+  ],
+  "practice_intro_empty": "No exercises available yet.",
+  "practice_library_empty": "The exercise library is empty, so there's no routine to build. Check the startup log for a seeding error and restart the app to seed it.",
+  "practice_complete_title": "Routine complete",
+  "practice_complete_summary": [
+    {
+      "declarations": ["input total", "local totalPlural = total: plural"],
+      "selectors": ["totalPlural"],
+      "match": {
+        "totalPlural=one": "{done} of {total} step done. Showing up on a tired day counts exactly as much as showing up on a good one.",
+        "totalPlural=other": "{done} of {total} steps done. Showing up on a tired day counts exactly as much as showing up on a good one."
+      }
+    }
+  ],
+  "practice_complete_summary_timed": [
+    {
+      "declarations": ["input total", "local totalPlural = total: plural"],
+      "selectors": ["totalPlural"],
+      "match": {
+        "totalPlural=one": "{done} of {total} step done, {duration} on the clock. Showing up on a tired day counts exactly as much as showing up on a good one.",
+        "totalPlural=other": "{done} of {total} steps done, {duration} on the clock. Showing up on a tired day counts exactly as much as showing up on a good one."
+      }
+    }
+  ],
+  "practice_take_link": "take",
+  "practice_take_range_test": "Take a range test",
+  "practice_run_again": "Run it again",
+  "practice_step_rail_label": "Go to step {number}: {title}",
+  "practice_step_tooltip_done": "{title} (done)",
+  "practice_step_tooltip_skipped": "{title} (skipped)",
+  "practice_step_header": "Step {number} of {total} · {purpose}",
+  "practice_back_to_summary": "Back to summary",
+  "practice_badge_done": "Done",
+  "practice_badge_skipped": "Skipped",
+  "practice_exercise_missing": "This exercise is no longer in the library. Tomorrow's routine will pick another.",
+  "practice_suggested_minutes": "suggested {minutes} min",
+  "practice_earlier_today": "{duration} earlier today",
+  "practice_take_saved": "Take saved ✓",
+  "practice_pitch_label": "pitch",
+  "practice_in_range": "in range",
+  "practice_open_take": "open take",
+  "practice_recorded_today": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Recorded once today",
+        "countPlural=other": "Recorded {count} times today"
+      }
+    }
+  ],
+  "practice_latest_take": "latest take",
+  "practice_finish_take_first": "Finish or discard the take first",
+  "practice_finish_routine": "Finish routine",
+  "practice_done_next_step": "Done — next step",
+  "practice_skip": "Skip",
+  "practice_next_step": "Next step",
+  "practice_back_to_unfinished": "Back to an unfinished step",
+  "practice_mark_not_done": "Mark as not done",
+  "practice_history_title": "Last two weeks",
+  "practice_history_days": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} day practised",
+        "countPlural=other": "{count} days practised"
+      }
+    }
+  ],
+  "practice_history_days_minutes": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} day practised · {minutes} min",
+        "countPlural=other": "{count} days practised · {minutes} min"
+      }
+    }
+  ],
+  "practice_history_empty": "{day}: no practice",
+  "practice_history_day": [
+    {
+      "declarations": ["input total", "local totalPlural = total: plural"],
+      "selectors": ["totalPlural"],
+      "match": {
+        "totalPlural=one": "{day}: {done} of {total} step, {duration}",
+        "totalPlural=other": "{day}: {done} of {total} steps, {duration}"
+      }
+    }
+  ]
 }

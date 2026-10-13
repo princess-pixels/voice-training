@@ -5,7 +5,9 @@
 	import { formatDuration, formatHz } from '$lib/audio/utils';
 	import { formatDate, formatTime } from '$lib/format';
 	import { deleteSession as apiDeleteSession, errorMessage } from '$lib/api';
+	import { categoryLabel } from '$lib/categories';
 	import { m } from '$lib/paraglide/messages';
+	import { difficultyLabel } from '$lib/difficulty';
 	import type { PageData } from './$types';
 
 	interface Props {
@@ -36,7 +38,7 @@
 			await apiDeleteSession(data.session._id);
 			await goto('/sessions');
 		} catch (err) {
-			deleteError = errorMessage(err, 'Failed to delete session');
+			deleteError = errorMessage(err, m.sessions_delete_failed());
 		}
 	}
 
@@ -46,7 +48,7 @@
 </script>
 
 <svelte:head>
-	<title>{session.title} — Voice Training</title>
+	<title>{m.common_page_title({ page: session.title })}</title>
 </svelte:head>
 
 <div class="max-w-6xl mx-auto px-4 py-8">
@@ -62,14 +64,17 @@
 				clip-rule="evenodd"
 			/>
 		</svg>
-		Back to Sessions
+		{m.common_error_back_to_sessions()}
 	</a>
 
 	<!-- Header -->
 	<header class="mb-8">
 		<h1 class="text-3xl font-bold text-surface-100">{session.title}</h1>
 		<p class="text-surface-400 mt-2">
-			{formatDate(session.createdAt, 'long')} at {formatTime(session.createdAt)}
+			{m.sessions_recorded_at({
+				date: formatDate(session.createdAt, 'long'),
+				time: formatTime(session.createdAt)
+			})}
 		</p>
 	</header>
 
@@ -78,7 +83,9 @@
 		<div class="lg:col-span-2 space-y-6">
 			<!-- Audio Player -->
 			<div class="bg-surface-900 rounded-xl p-6 border border-surface-800">
-				<h2 class="text-lg font-semibold text-surface-200 mb-4">Recording</h2>
+				<h2 class="text-lg font-semibold text-surface-200 mb-4">
+					{m.sessions_section_recording()}
+				</h2>
 				<audio
 					bind:this={audioElement}
 					src="/api/sessions/{session._id}/audio"
@@ -88,13 +95,13 @@
 					ontimeupdate={handleTimeUpdate}
 					onended={handleEnded}
 				>
-					Your browser does not support the audio element.
+					{m.sessions_audio_unsupported()}
 				</audio>
 			</div>
 
 			<!-- Pitch Visualizer -->
 			<div class="bg-surface-900 rounded-xl p-6 border border-surface-800">
-				<h2 class="text-lg font-semibold text-surface-200 mb-4">Pitch Timeline</h2>
+				<h2 class="text-lg font-semibold text-surface-200 mb-4">{m.sessions_section_pitch()}</h2>
 				<PitchVisualizer
 					mode="playback"
 					pitchData={pitchData.points}
@@ -107,7 +114,7 @@
 			<!-- Notes -->
 			{#if session.notes}
 				<div class="bg-surface-900 rounded-xl p-6 border border-surface-800">
-					<h2 class="text-lg font-semibold text-surface-200 mb-4">Notes</h2>
+					<h2 class="text-lg font-semibold text-surface-200 mb-4">{m.sessions_section_notes()}</h2>
 					<p class="text-surface-300 whitespace-pre-wrap">{session.notes}</p>
 				</div>
 			{/if}
@@ -117,7 +124,7 @@
 		<div class="space-y-6">
 			<!-- Stats -->
 			<div class="bg-surface-900 rounded-xl p-6 border border-surface-800">
-				<h2 class="text-lg font-semibold text-surface-200 mb-4">Session Stats</h2>
+				<h2 class="text-lg font-semibold text-surface-200 mb-4">{m.sessions_section_stats()}</h2>
 				<PitchStats
 					targetRange={session.targetRange}
 					medianHz={pitchData.medianPitch}
@@ -132,19 +139,31 @@
 			<!-- Exercise Info -->
 			{#if exercise}
 				<div class="bg-surface-900 rounded-xl p-6 border border-surface-800">
-					<h2 class="text-lg font-semibold text-surface-200 mb-4">Exercise</h2>
+					<h2 class="text-lg font-semibold text-surface-200 mb-4">
+						{m.sessions_section_exercise()}
+					</h2>
 					<div class="space-y-3">
 						<div>
-							<div class="text-sm text-surface-400 uppercase tracking-wider">Title</div>
+							<div class="text-sm text-surface-400 uppercase tracking-wider">
+								{m.sessions_label_title()}
+							</div>
 							<div class="text-surface-200 font-medium">{exercise.title}</div>
 						</div>
 						<div>
-							<div class="text-sm text-surface-400 uppercase tracking-wider">Category</div>
-							<div class="text-surface-200 font-medium capitalize">{exercise.category}</div>
+							<div class="text-sm text-surface-400 uppercase tracking-wider">
+								{m.sessions_label_category()}
+							</div>
+							<div class="text-surface-200 font-medium capitalize">
+								{categoryLabel(exercise.category)}
+							</div>
 						</div>
 						<div>
-							<div class="text-sm text-surface-400 uppercase tracking-wider">Difficulty</div>
-							<div class="text-surface-200 font-medium capitalize">{exercise.difficulty}</div>
+							<div class="text-sm text-surface-400 uppercase tracking-wider">
+								{m.sessions_label_difficulty()}
+							</div>
+							<div class="text-surface-200 font-medium capitalize">
+								{difficultyLabel(exercise.difficulty)}
+							</div>
 						</div>
 					</div>
 				</div>
@@ -152,27 +171,31 @@
 
 			<!-- Target Range -->
 			<div class="bg-surface-900 rounded-xl p-6 border border-surface-800">
-				<h2 class="text-lg font-semibold text-surface-200 mb-4">Target Range</h2>
+				<h2 class="text-lg font-semibold text-surface-200 mb-4">{m.sessions_section_target()}</h2>
 				<div class="flex items-center justify-between">
 					<div class="text-center">
 						<div class="text-2xl font-bold text-primary-400">
 							{formatHz(session.targetRange.low)}
 						</div>
-						<div class="text-xs text-surface-400 uppercase tracking-wider">Low</div>
+						<div class="text-xs text-surface-400 uppercase tracking-wider">
+							{m.sessions_range_low()}
+						</div>
 					</div>
 					<div class="text-surface-500">—</div>
 					<div class="text-center">
 						<div class="text-2xl font-bold text-primary-400">
 							{formatHz(session.targetRange.high)}
 						</div>
-						<div class="text-xs text-surface-400 uppercase tracking-wider">High</div>
+						<div class="text-xs text-surface-400 uppercase tracking-wider">
+							{m.sessions_range_high()}
+						</div>
 					</div>
 				</div>
 			</div>
 
 			<!-- Actions -->
 			<div class="bg-surface-900 rounded-xl p-6 border border-surface-800">
-				<h2 class="text-lg font-semibold text-surface-200 mb-4">Actions</h2>
+				<h2 class="text-lg font-semibold text-surface-200 mb-4">{m.sessions_section_actions()}</h2>
 				<button
 					onclick={deleteSession}
 					class="w-full inline-flex items-center justify-center gap-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-600/30 px-4 py-3 rounded-lg font-medium transition-colors"
@@ -189,7 +212,7 @@
 							clip-rule="evenodd"
 						/>
 					</svg>
-					Delete Session
+					{m.sessions_delete_session()}
 				</button>
 				{#if deleteError}
 					<p class="mt-3 text-sm text-red-400">{deleteError}</p>

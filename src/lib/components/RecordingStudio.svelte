@@ -5,7 +5,9 @@
 	import { formatDuration } from '$lib/audio/utils';
 	import { errorMessage, request } from '$lib/api';
 	import { m } from '$lib/paraglide/messages';
-	import type { Exercise, PitchRange, PitchData, Session } from '$lib/types';
+	import { difficultyLabel } from '$lib/difficulty';
+	import { categoryLabel } from '$lib/categories';
+	import type { Difficulty, Exercise, PitchRange, PitchData, Session } from '$lib/types';
 	import PitchVisualizer from './PitchVisualizer.svelte';
 	import PitchStats from './PitchStats.svelte';
 	import NoteKeyboard from './NoteKeyboard.svelte';
@@ -33,7 +35,8 @@
 	}: Props = $props();
 
 	function defaultTitle(ex: Exercise | null): string {
-		const name = ex ? ex.title : 'Practice Session';
+		// The default is written in the current language; it is stored, so it stays as written.
+		const name = ex ? ex.title : m.recording_default_title();
 		return `${name} - ${new Date().toLocaleDateString()}`;
 	}
 
@@ -91,7 +94,7 @@
 			// Release the mic and timers so the UI is not stuck in the recording
 			// state, then show why. reset() clears error, so set it afterwards.
 			recorderStore.reset();
-			recorderStore.error = err instanceof Error ? err.message : 'Failed to stop recording';
+			recorderStore.error = err instanceof Error ? err.message : m.recording_stop_failed();
 		}
 	}
 
@@ -128,7 +131,7 @@
 		// stopRecording hands over the complete history and summary; the store
 		// itself only keeps the live window after that.
 		if (!lastPitchData || lastPitchData.points.length === 0) {
-			saveError = 'No recording data to save';
+			saveError = m.recording_no_data();
 			return;
 		}
 
@@ -137,7 +140,7 @@
 
 		try {
 			const formData = new FormData();
-			formData.append('title', title || 'Untitled Session');
+			formData.append('title', title || m.recording_untitled());
 			formData.append('notes', notes);
 			formData.append('exerciseId', exercise?._id || '');
 			formData.append('duration', recorderStore.duration.toString());
@@ -167,7 +170,7 @@
 			// Takes made from the routine go through the embedded path above.
 			await goto(`/sessions/${result.id}`);
 		} catch (err) {
-			saveError = errorMessage(err, 'Failed to save session');
+			saveError = errorMessage(err, m.recording_save_failed());
 		} finally {
 			isSaving = false;
 		}
@@ -178,12 +181,12 @@
 	{#if !embedded}
 		<!-- Header -->
 		<div class="text-center">
-			<h1 class="text-3xl font-bold text-surface-100">Recording Studio</h1>
+			<h1 class="text-3xl font-bold text-surface-100">{m.recording_heading()}</h1>
 			<p class="text-surface-400 mt-2">
 				{#if exercise}
-					Exercise: <span class="text-primary-400">{exercise.title}</span>
+					{m.recording_exercise_label()} <span class="text-primary-400">{exercise.title}</span>
 				{:else}
-					Practice your voice with real-time pitch feedback
+					{m.recording_subtitle()}
 				{/if}
 			</p>
 		</div>
@@ -200,21 +203,24 @@
 						<span
 							class="px-2 py-1 bg-accent-500/20 text-accent-400 text-xs rounded-full capitalize"
 						>
-							{exercise.category}
+							{categoryLabel(exercise.category)}
 						</span>
 						<span class="px-2 py-1 bg-surface-700 text-surface-300 text-xs rounded-full capitalize">
-							{exercise.difficulty}
+							{difficultyLabel(exercise.difficulty)}
 						</span>
 						{#if exercise.targetRange}
 							<span class="px-2 py-1 bg-primary-500/20 text-primary-400 text-xs rounded-full">
-								Target: {exercise.targetRange.low}-{exercise.targetRange.high} Hz
+								{m.recording_target_range({
+									low: exercise.targetRange.low,
+									high: exercise.targetRange.high
+								})}
 							</span>
 						{/if}
 					</div>
 				</div>
 				{#if exercise.instructions}
 					<div class="mt-3 p-3 bg-surface-800/50 rounded text-sm text-surface-300">
-						<strong class="text-surface-200">Instructions:</strong>
+						<strong class="text-surface-200">{m.recording_instructions_label()}</strong>
 						{exercise.instructions}
 					</div>
 				{/if}
@@ -228,13 +234,13 @@
 			role="alert"
 			class="bg-red-500/20 border border-red-500/50 text-red-300 px-4 py-3 rounded-lg"
 		>
-			<p class="font-medium">Error</p>
+			<p class="font-medium">{m.recording_error_heading()}</p>
 			<p class="text-sm">{recorderStore.error}</p>
 			<button
 				onclick={() => (recorderStore.error = null)}
 				class="mt-2 text-sm underline hover:text-red-200"
 			>
-				Dismiss
+				{m.recording_dismiss()}
 			</button>
 		</div>
 	{/if}
@@ -261,7 +267,7 @@
 			class="text-sm text-surface-400 hover:text-surface-200 inline-flex items-center gap-1.5"
 		>
 			<span class="inline-block transition-transform {showNotes ? 'rotate-90' : ''}">▸</span>
-			Reference notes
+			{m.recording_reference_notes()}
 			{#if !showNotes && referenceHz}
 				<span class="text-accent-400">· {Math.round(referenceHz)} Hz</span>
 			{/if}
@@ -303,7 +309,7 @@
 				<button
 					onclick={recorderStore.isPaused ? handleResume : handlePause}
 					class="w-14 h-14 rounded-full bg-surface-700 hover:bg-surface-600 flex items-center justify-center transition-all border border-surface-600"
-					aria-label={recorderStore.isPaused ? 'Resume recording' : 'Pause recording'}
+					aria-label={recorderStore.isPaused ? m.recording_resume() : m.recording_pause()}
 				>
 					{#if recorderStore.isPaused}
 						<!-- Play icon -->
@@ -326,7 +332,7 @@
 				class="w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-lg disabled:bg-surface-700 disabled:shadow-none disabled:cursor-not-allowed {recorderStore.isRecording
 					? 'bg-surface-700 hover:bg-surface-600 border border-surface-600 shadow-surface-900/30'
 					: 'bg-red-500 hover:bg-red-400 shadow-red-500/30 hover:shadow-red-500/50'}"
-				aria-label={recorderStore.isRecording ? 'Stop recording' : 'Start recording'}
+				aria-label={recorderStore.isRecording ? m.recording_stop() : m.recording_start()}
 			>
 				{#if recorderStore.isRecording}
 					<div class="w-5 h-5 rounded bg-red-400"></div>
@@ -342,7 +348,7 @@
 				<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse motion-reduce:animate-none"
 				></span>
 				<span class="text-surface-400">
-					{recorderStore.isPaused ? 'Paused' : 'Recording...'}
+					{recorderStore.isPaused ? m.recording_status_paused() : m.recording_status_recording()}
 				</span>
 			</div>
 		{/if}
@@ -351,12 +357,12 @@
 	<!-- Post-Recording Summary -->
 	{#if showSummary}
 		<div class="bg-surface-900/50 border border-surface-800 rounded-lg p-6 space-y-4">
-			<h3 class="text-xl font-semibold text-surface-200">Session Summary</h3>
+			<h3 class="text-xl font-semibold text-surface-200">{m.recording_summary_heading()}</h3>
 
 			<!-- Title Input -->
 			<div class="space-y-2">
 				<label for="session-title" class="block text-sm font-medium text-surface-300">
-					Session Title
+					{m.recording_title_label()}
 				</label>
 				<input
 					id="session-title"
@@ -364,21 +370,21 @@
 					type="text"
 					bind:value={title}
 					class="w-full px-3 py-2 bg-surface-800 border border-surface-700 rounded-lg text-surface-200 placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-					placeholder="Enter session title..."
+					placeholder={m.recording_title_placeholder()}
 				/>
 			</div>
 
 			<!-- Notes Input -->
 			<div class="space-y-2">
 				<label for="session-notes" class="block text-sm font-medium text-surface-300">
-					Notes (optional)
+					{m.recording_notes_label()}
 				</label>
 				<textarea
 					id="session-notes"
 					bind:value={notes}
 					rows={3}
 					class="w-full px-3 py-2 bg-surface-800 border border-surface-700 rounded-lg text-surface-200 placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
-					placeholder="Add any notes about this practice session..."></textarea>
+					placeholder={m.recording_notes_placeholder()}></textarea>
 			</div>
 
 			<!-- Save Error -->
@@ -418,7 +424,7 @@
 								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
 							></path>
 						</svg>
-						Saving...
+						{m.recording_saving()}
 					{:else}
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
@@ -428,7 +434,7 @@
 								d="M5 13l4 4L19 7"
 							/>
 						</svg>
-						Save Session
+						{m.recording_save()}
 					{/if}
 				</button>
 				<button
@@ -436,7 +442,7 @@
 					disabled={isSaving}
 					class="px-4 py-2 bg-surface-700 hover:bg-surface-600 disabled:opacity-50 disabled:cursor-not-allowed text-surface-200 font-medium rounded-lg transition-colors"
 				>
-					Discard
+					{m.recording_discard()}
 				</button>
 			</div>
 		</div>

@@ -1,3 +1,39 @@
 {
-  "$schema": "https://inlang.com/schema/inlang-message-format"
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "charts_stats_current": "Current",
+  "charts_stats_median": "Pitch (median)",
+  "charts_stats_mean": "mean {hz}",
+  "charts_stats_range": "Range",
+  "charts_stats_time_in_target": "Time in Target",
+  "charts_stats_duration": "Duration",
+  "charts_trend_fallback": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Average pitch over the last {count} session: from {from} Hz to {to} Hz, target {low} to {high} Hz.",
+        "countPlural=other": "Average pitch over the last {count} sessions: from {from} Hz to {to} Hz, target {low} to {high} Hz."
+      }
+    }
+  ],
+  "charts_trend_empty": "No pitch data available yet",
+  "charts_visualizer_live_voiced": "Live pitch graph. Current pitch {hz} Hz, target {low} to {high} Hz.",
+  "charts_visualizer_live_silent": "Live pitch graph. Current pitch silent, target {low} to {high} Hz.",
+  "charts_visualizer_playback_fallback": "Pitch timeline for the whole session, target {low} to {high} Hz.",
+  "charts_visualizer_target_label": "Target: {low}-{high} Hz",
+  "charts_keyboard_group_label": "Reference notes",
+  "charts_keyboard_hint": "Tap a note, then hum it. Arrow keys step a semitone.",
+  "charts_keyboard_on_it": "On it ✨",
+  "charts_keyboard_hum_to_compare": "hum to compare",
+  "charts_keyboard_no_note": "no note chosen",
+  "charts_keyboard_sharp": "sharp",
+  "charts_keyboard_flat": "flat",
+  "charts_keyboard_announce_on_pitch": "On pitch",
+  "charts_keyboard_announce_sharp": "{cents} cents sharp",
+  "charts_keyboard_announce_flat": "{cents} cents flat",
+  "charts_keyboard_announce_silent": "{name}, {hz} hertz",
+  "charts_keyboard_outside_range": "outside target range",
+  "charts_keyboard_sustain": "Sustain until tapped again",
+  "charts_keyboard_headphones": "Headphones recommended, or the tone ends up in the take.",
+  "charts_keyboard_clear": "Clear note"
 }

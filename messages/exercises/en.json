@@ -1,3 +1,13 @@
 {
-  "$schema": "https://inlang.com/schema/inlang-message-format"
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "exercises_title": "Exercises",
+  "exercises_heading": "Exercise Library",
+  "exercises_subtitle": "Browse and practice voice training exercises",
+  "exercises_filter_all": "All",
+  "exercises_filter_difficulty": "Difficulty:",
+  "exercises_instructions": "Instructions",
+  "exercises_start": "Start Practice",
+  "exercises_empty_title": "No exercises found",
+  "exercises_empty_hint": "No exercises match your current filters. Try adjusting the category or difficulty filters above.",
+  "exercises_clear_filters": "Clear filters"
 }

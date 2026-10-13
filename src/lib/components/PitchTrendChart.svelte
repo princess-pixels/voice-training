@@ -2,6 +2,7 @@
 	import { DEFAULT_TARGET_RANGE } from '$lib/audio/utils';
 	import { pickDayLabelIndices } from '$lib/days';
 	import { formatDayMonth } from '$lib/format';
+	import { m } from '$lib/paraglide/messages';
 	interface TrendPoint {
 		date: Date;
 		/** The session's median pitch. */
@@ -186,15 +187,17 @@
 <div bind:this={container} class="w-full">
 	{#if trendData.length > 0}
 		<canvas bind:this={canvas} class="w-full" style="height: {chartHeight}px;">
-			Average pitch over the last {trendData.length}
-			{trendData.length === 1 ? 'session' : 'sessions'}: from {Math.round(trendData[0].hz)} Hz to {Math.round(
-				trendData[trendData.length - 1].hz
-			)} Hz, target {targetRange.low} to {targetRange.high}
-			Hz.
+			{m.charts_trend_fallback({
+				count: trendData.length,
+				from: Math.round(trendData[0].hz),
+				to: Math.round(trendData[trendData.length - 1].hz),
+				low: targetRange.low,
+				high: targetRange.high
+			})}
 		</canvas>
 	{:else}
 		<div class="flex items-center justify-center h-[250px] text-surface-500">
-			<p>No pitch data available yet</p>
+			<p>{m.charts_trend_empty()}</p>
 		</div>
 	{/if}
 </div>

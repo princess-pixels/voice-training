@@ -39,5 +39,9 @@
   "common_category_pitch": "Tonehøyde",
   "common_category_resonance": "Resonans",
   "common_category_intonation": "Intonasjon",
-  "common_category_reading": "Lesing"
+  "common_category_reading": "Lesing",
+  "common_difficulty_beginner": "Nybegynner",
+  "common_difficulty_intermediate": "Middels",
+  "common_difficulty_advanced": "Avansert",
+  "common_request_failed": "Forespørselen feilet (HTTP {status})"
 }

@@ -7,6 +7,7 @@
 	import { describeMicError } from '$lib/audio/micErrors';
 	import { formatDate } from '$lib/format';
 	import { errorMessage, request } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 	import type { RangeTest, RangeTestMode } from '$lib/types';
 	import type { PageData } from './$types';
 
@@ -27,27 +28,33 @@
 
 	const MODE_META: Record<
 		RangeTestMode,
-		{ label: string; short: string; blurb: string; bar: string; dot: string; highPrompt: string }
+		{
+			label: string;
+			short: string;
+			blurb: string;
+			bar: string;
+			dot: string;
+			highPrompt: string;
+			start: string;
+		}
 	> = {
 		modal: {
-			label: 'Speaking range',
-			short: 'Speaking',
-			blurb:
-				'Modal voice only — the register you actually talk in. This is the one that tracks usable progress.',
+			label: m.range_test_mode_modal_label(),
+			short: m.range_test_mode_modal_short(),
+			blurb: m.range_test_mode_modal_blurb(),
 			bar: 'bg-gradient-to-r from-accent-500 to-primary-500',
 			dot: 'bg-primary-500',
-			highPrompt:
-				'Glide upward, but stop before your voice flips or thins out into falsetto. Hold the highest note you can keep in your normal speaking register.'
+			highPrompt: m.range_test_mode_modal_high_prompt(),
+			start: m.range_test_start_modal()
 		},
 		full: {
-			label: 'Full range',
-			short: 'Full',
-			blurb:
-				'Everything your voice can produce, falsetto and head voice included. Interesting, but not where you speak.',
+			label: m.range_test_mode_full_label(),
+			short: m.range_test_mode_full_short(),
+			blurb: m.range_test_mode_full_blurb(),
 			bar: 'bg-gradient-to-r from-sky-500 to-accent-500',
 			dot: 'bg-sky-500',
-			highPrompt:
-				'Glide upward. Falsetto is fine — hold the highest note you can sustain without straining. Stop if it hurts.'
+			highPrompt: m.range_test_mode_full_high_prompt(),
+			start: m.range_test_start_full()
 		}
 	};
 
@@ -91,6 +98,12 @@
 	}
 
 	onDestroy(teardown);
+
+	// Signed delta for the comparison line: "+5", "-3", "+0.2".
+	function signed(value: number, digits = 0): string {
+		const text = digits ? value.toFixed(digits) : String(Math.round(value));
+		return value >= 0 ? `+${text}` : text;
+	}
 
 	async function start() {
 		micError = null;
@@ -165,7 +178,7 @@
 			await invalidateAll();
 			saved = true;
 		} catch (err) {
-			saveError = errorMessage(err, 'Failed to save range test');
+			saveError = errorMessage(err, m.range_test_save_failed());
 		} finally {
 			isSaving = false;
 		}
@@ -181,7 +194,7 @@
 			});
 			await invalidateAll();
 		} catch (err) {
-			relabelError = errorMessage(err, 'Failed to relabel test');
+			relabelError = errorMessage(err, m.range_test_relabel_failed());
 		}
 	}
 
@@ -205,14 +218,14 @@
 </script>
 
 <svelte:head>
-	<title>Pitch Range Test — Voice Training</title>
+	<title>{m.common_page_title({ page: m.range_test_title() })}</title>
 </svelte:head>
 
 <div class="max-w-4xl mx-auto px-4 py-8 space-y-8">
 	<div>
-		<h1 class="text-3xl font-bold text-surface-100">Pitch Range Test</h1>
+		<h1 class="text-3xl font-bold text-surface-100">{m.range_test_title()}</h1>
 		<p class="text-surface-400 mt-2">
-			Measure your lowest and highest comfortable pitch, and watch the range shift over time.
+			{m.range_test_intro()}
 		</p>
 	</div>
 
@@ -232,51 +245,51 @@
 				<!-- Mode selector -->
 				<div>
 					<p class="text-sm font-medium text-surface-300 mb-3 text-center">
-						What are you measuring?
+						{m.range_test_mode_question()}
 					</p>
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-						{#each ['modal', 'full'] as const as m}
+						{#each ['modal', 'full'] as const as m_ (m_)}
 							<button
 								type="button"
-								onclick={() => (mode = m)}
-								class="text-left p-4 rounded-xl border transition-all {mode === m
+								onclick={() => (mode = m_)}
+								class="text-left p-4 rounded-xl border transition-all {mode === m_
 									? 'bg-primary-500/10 border-primary-500/50'
 									: 'bg-surface-950/50 border-surface-800 hover:border-surface-700'}"
 							>
 								<span
-									class="block font-medium mb-1 {mode === m
+									class="block font-medium mb-1 {mode === m_
 										? 'text-primary-300'
 										: 'text-surface-200'}"
 								>
-									{MODE_META[m].label}
+									{MODE_META[m_].label}
 								</span>
 								<span class="block text-xs text-surface-400 leading-relaxed">
-									{MODE_META[m].blurb}
+									{MODE_META[m_].blurb}
 								</span>
 							</button>
 						{/each}
 					</div>
 					<p class="text-xs text-surface-500 mt-3 text-center">
-						These are tracked as separate series — falsetto reads far higher than modal voice, so
-						mixing them into one trend would be meaningless.
+						{m.range_test_mode_separate_note()}
 					</p>
 				</div>
 
 				<div class="text-center space-y-5 pt-2 border-t border-surface-800">
 					<p class="text-surface-300 max-w-lg mx-auto pt-4">
-						You'll be asked for your <strong class="text-surface-100">lowest</strong> comfortable
-						note, then your <strong class="text-surface-100">highest</strong>. Comfortable means no
-						straining, no pushing — if it hurts or feels forced, it doesn't count.
+						{m.range_test_steps_ask_a()}
+						<strong class="text-surface-100">{m.range_test_steps_lowest()}</strong>
+						{m.range_test_steps_ask_b()}
+						<strong class="text-surface-100">{m.range_test_steps_highest()}</strong
+						>{m.range_test_steps_ask_c()}
 					</p>
 					<p class="text-surface-500 text-sm max-w-lg mx-auto">
-						Warm up first if you haven't. A cold voice will read lower and narrower than your real
-						range, and you'll only be comparing against yourself later.
+						{m.range_test_warmup_note()}
 					</p>
 					<button
 						onclick={start}
 						class="px-8 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-xl transition-colors shadow-lg shadow-primary-500/25"
 					>
-						Start {MODE_META[mode].label} Test
+						{MODE_META[mode].start}
 					</button>
 				</div>
 			</div>
@@ -285,17 +298,13 @@
 			<div class="text-center space-y-6">
 				<div>
 					<p class="text-sm uppercase tracking-wide text-surface-500 mb-2">
-						{MODE_META[mode].label} · Step {isLow ? '1' : '2'} of 2
+						{m.range_test_step({ label: MODE_META[mode].label, step: isLow ? '1' : '2' })}
 					</p>
 					<h2 class="text-2xl font-semibold text-surface-100">
-						{isLow
-							? 'Slide down to your lowest comfortable note'
-							: 'Slide up to your highest comfortable note'}
+						{isLow ? m.range_test_slide_down() : m.range_test_slide_up()}
 					</h2>
 					<p class="text-surface-400 mt-2 max-w-lg mx-auto">
-						{isLow
-							? 'Hum or sing "ah", gliding downward. When you reach the lowest note you can hold steadily without it turning into a rattle, hold it there.'
-							: MODE_META[mode].highPrompt}
+						{isLow ? m.range_test_low_instructions() : MODE_META[mode].highPrompt}
 					</p>
 				</div>
 
@@ -320,9 +329,7 @@
 						></div>
 					</div>
 					<p class="text-xs text-surface-500">
-						{enoughSamples
-							? 'Got enough — keep going, or move on when ready'
-							: 'Keep sounding until the bar fills'}
+						{enoughSamples ? m.range_test_progress_enough() : m.range_test_progress_keep()}
 					</p>
 				</div>
 
@@ -331,14 +338,13 @@
 					disabled={!enoughSamples}
 					class="px-8 py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-surface-800 disabled:text-surface-400 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
 				>
-					{isLow ? 'Next: highest note' : 'Finish test'}
+					{isLow ? m.range_test_next_highest() : m.range_test_finish()}
 				</button>
 
 				{#if isLow === false && lowHz > 0}
 					<p class="text-sm text-surface-500">
-						Lowest recorded: <span class="text-surface-300">{formatHz(lowHz)}</span> ({noteFromHz(
-							lowHz
-						)})
+						{m.range_test_lowest_recorded()}
+						<span class="text-surface-300">{formatHz(lowHz)}</span> ({noteFromHz(lowHz)})
 					</p>
 				{/if}
 			</div>
@@ -346,65 +352,65 @@
 			<!-- Results -->
 			<div class="space-y-6">
 				<div class="text-center">
-					<h2 class="text-2xl font-semibold text-surface-100">Your range</h2>
+					<h2 class="text-2xl font-semibold text-surface-100">{m.range_test_result_heading()}</h2>
 					<p class="text-sm text-surface-500 mt-1">{MODE_META[mode].label}</p>
 				</div>
 
 				<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 					<div class="bg-surface-950/50 border border-surface-800 rounded-xl p-5 text-center">
-						<p class="text-surface-500 text-sm mb-1">Lowest</p>
+						<p class="text-surface-500 text-sm mb-1">{m.range_test_lowest()}</p>
 						<p class="text-3xl font-bold text-surface-100">{formatHz(lowHz)}</p>
 						<p class="text-sm text-surface-500 mt-1">{noteFromHz(lowHz)}</p>
 					</div>
 					<div class="bg-surface-950/50 border border-surface-800 rounded-xl p-5 text-center">
-						<p class="text-surface-500 text-sm mb-1">Highest</p>
+						<p class="text-surface-500 text-sm mb-1">{m.range_test_highest()}</p>
 						<p class="text-3xl font-bold text-surface-100">{formatHz(highHz)}</p>
 						<p class="text-sm text-surface-500 mt-1">{noteFromHz(highHz)}</p>
 					</div>
 					<div class="bg-surface-950/50 border border-primary-500/30 rounded-xl p-5 text-center">
-						<p class="text-surface-500 text-sm mb-1">Range</p>
+						<p class="text-surface-500 text-sm mb-1">{m.range_test_range()}</p>
 						<p class="text-3xl font-bold text-primary-400">{semitones.toFixed(1)}</p>
-						<p class="text-sm text-surface-500 mt-1">semitones</p>
+						<p class="text-sm text-surface-500 mt-1">{m.range_test_semitones()}</p>
 					</div>
 				</div>
 
 				{#if baseline}
 					{@const lowDelta = lowHz - baseline.lowHz}
 					{@const highDelta = highHz - baseline.highHz}
+					{@const rangeDelta = semitones - baseline.semitones}
 					<div
 						class="bg-surface-950/50 border border-surface-800 rounded-xl p-4 text-sm text-surface-400"
 					>
 						<p class="mb-1 text-surface-300 font-medium">
-							Compared with your last {MODE_META[mode].label.toLowerCase()} test ({formatDate(
-								baseline.createdAt
-							)})
+							{m.range_test_compared_with_last({
+								label: MODE_META[mode].label.toLowerCase(),
+								date: formatDate(baseline.createdAt)
+							})}
 						</p>
 						<p>
-							Low {lowDelta >= 0 ? '+' : ''}{Math.round(lowDelta)} Hz &middot; High
-							{highDelta >= 0 ? '+' : ''}{Math.round(highDelta)} Hz &middot; Range
-							{semitones - baseline.semitones >= 0 ? '+' : ''}{(
-								semitones - baseline.semitones
-							).toFixed(1)}
-							semitones
+							{m.range_test_delta({
+								low: signed(lowDelta),
+								high: signed(highDelta),
+								rangeDelta: signed(rangeDelta, 1)
+							})}
 						</p>
 					</div>
 				{:else}
 					<p class="text-sm text-surface-500 text-center">
-						This is your first {MODE_META[mode].label.toLowerCase()} test — it becomes the baseline everything
-						later compares against.
+						{m.range_test_first_test({ label: MODE_META[mode].label.toLowerCase() })}
 					</p>
 				{/if}
 
 				{#if !saved}
 					<div class="space-y-2">
 						<label for="range-notes" class="block text-sm font-medium text-surface-300">
-							Notes (optional)
+							{m.range_test_notes_label()}
 						</label>
 						<textarea
 							id="range-notes"
 							bind:value={notes}
 							rows={2}
-							placeholder="Warmed up first? Tired? Anything worth remembering when you compare later."
+							placeholder={m.range_test_notes_placeholder()}
 							class="w-full px-3 py-2 bg-surface-800 border border-surface-700 rounded-lg text-surface-200 placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
 						></textarea>
 					</div>
@@ -421,21 +427,23 @@
 
 				<div class="flex flex-wrap gap-3">
 					{#if saved}
-						<p role="status" class="flex-1 text-emerald-400 text-sm self-center">Saved ✨</p>
+						<p role="status" class="flex-1 text-emerald-400 text-sm self-center">
+							{m.range_test_saved()}
+						</p>
 					{:else}
 						<button
 							onclick={save}
 							disabled={isSaving}
 							class="flex-1 min-w-[140px] px-4 py-2.5 bg-primary-500 hover:bg-primary-600 disabled:bg-primary-800 text-white font-medium rounded-lg transition-colors"
 						>
-							{isSaving ? 'Saving…' : 'Save result'}
+							{isSaving ? m.range_test_saving() : m.range_test_save_result()}
 						</button>
 					{/if}
 					<button
 						onclick={restart}
 						class="px-4 py-2.5 bg-surface-800 hover:bg-surface-700 text-surface-200 font-medium rounded-lg border border-surface-700 transition-colors"
 					>
-						{saved ? 'Test again' : 'Discard and retry'}
+						{saved ? m.range_test_test_again() : m.range_test_discard_retry()}
 					</button>
 				</div>
 			</div>
@@ -445,7 +453,7 @@
 	<!-- History -->
 	<div class="bg-surface-900 border border-surface-800 rounded-2xl p-6">
 		<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-			<h2 class="text-lg font-semibold text-surface-100">History</h2>
+			<h2 class="text-lg font-semibold text-surface-100">{m.range_test_history()}</h2>
 			{#if data.history.length > 0}
 				<div class="flex gap-1.5">
 					{#each ['all', 'modal', 'full'] as const as filter}
@@ -457,7 +465,7 @@
 								? 'bg-primary-500 text-white'
 								: 'bg-surface-800 text-surface-400 hover:text-surface-200'}"
 						>
-							{filter === 'all' ? 'All' : MODE_META[filter].short}
+							{filter === 'all' ? m.range_test_filter_all() : MODE_META[filter].short}
 						</button>
 					{/each}
 				</div>
@@ -475,11 +483,13 @@
 
 		{#if data.history.length === 0}
 			<p class="text-surface-500 text-sm">
-				No range tests yet. Take one now and it becomes your baseline.
+				{m.range_test_history_empty()}
 			</p>
 		{:else if visibleHistory.length === 0}
 			<p class="text-surface-500 text-sm">
-				No {MODE_META[historyFilter as RangeTestMode].label.toLowerCase()} tests yet.
+				{m.range_test_history_none({
+					label: MODE_META[historyFilter as RangeTestMode].label.toLowerCase()
+				})}
 			</p>
 		{:else}
 			<div class="space-y-3">
@@ -489,7 +499,9 @@
 						<button
 							type="button"
 							onclick={() => relabel(test)}
-							title="Click to relabel as {test.mode === 'modal' ? 'Full range' : 'Speaking range'}"
+							title={test.mode === 'modal'
+								? m.range_test_relabel_as_full()
+								: m.range_test_relabel_as_modal()}
 							class="w-20 shrink-0 flex items-center gap-1.5 text-xs text-surface-400 hover:text-surface-200 transition-colors"
 						>
 							<span class="w-2 h-2 rounded-full shrink-0 {MODE_META[test.mode].dot}"></span>
@@ -510,8 +522,10 @@
 				{/each}
 			</div>
 			<p class="text-xs text-surface-500 mt-4">
-				Bars are drawn on a shared {Math.round(scale.min)}–{Math.round(scale.max)} Hz scale. Click a mode
-				label to relabel a test.
+				{m.range_test_scale_note({
+					min: String(Math.round(scale.min)),
+					max: String(Math.round(scale.max))
+				})}
 			</p>
 		{/if}
 	</div>

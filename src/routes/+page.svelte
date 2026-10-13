@@ -9,6 +9,7 @@
 	} from '$lib/audio/utils';
 	import { categoryLabel, categoryFillClass } from '$lib/categories';
 	import { formatRelativeDay } from '$lib/format';
+	import { m } from '$lib/paraglide/messages';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -50,14 +51,14 @@
 </script>
 
 <svelte:head>
-	<title>Dashboard — Voice Training</title>
+	<title>{m.common_page_title({ page: m.common_nav_dashboard() })}</title>
 </svelte:head>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<!-- Welcome Header -->
 	<div class="mb-8">
-		<h1 class="text-3xl font-bold text-surface-100">Voice Training</h1>
-		<p class="text-surface-400 mt-2">Your journey to finding your voice</p>
+		<h1 class="text-3xl font-bold text-surface-100">{m.common_app_name()}</h1>
+		<p class="text-surface-400 mt-2">{m.dashboard_tagline()}</p>
 	</div>
 
 	<!-- Today's practice -->
@@ -71,20 +72,24 @@
 		<div class="flex-1 min-w-[200px]">
 			<p class="font-semibold text-surface-100">
 				{#if !today}
-					Today's practice hasn't started
+					{m.dashboard_today_not_started()}
 				{:else if today.complete}
-					Today's practice is done
+					{m.dashboard_today_done()}
 				{:else}
-					Today's practice is under way
+					{m.dashboard_today_under_way()}
 				{/if}
 			</p>
 			<p class="text-sm text-surface-400 mt-0.5">
 				{#if !today}
-					Four short steps, about fifteen minutes. The app remembers where you were.
+					{m.dashboard_today_intro()}
+				{:else if todayMinutes > 0}
+					{m.dashboard_today_progress_minutes({
+						doneSteps: today.doneSteps,
+						totalSteps: today.totalSteps,
+						minutes: todayMinutes
+					})}
 				{:else}
-					{today.doneSteps} of {today.totalSteps} steps done{todayMinutes > 0
-						? ` · ${todayMinutes} min`
-						: ''}
+					{m.dashboard_today_progress({ doneSteps: today.doneSteps, totalSteps: today.totalSteps })}
 				{/if}
 			</p>
 		</div>
@@ -104,7 +109,11 @@
 				? 'bg-surface-800 text-surface-200'
 				: 'bg-primary-500 text-white'}"
 		>
-			{!today ? 'Start' : today.complete ? 'Have a look' : 'Continue'}
+			{!today
+				? m.dashboard_today_action_start()
+				: today.complete
+					? m.dashboard_today_action_look()
+					: m.dashboard_today_action_continue()}
 		</span>
 	</a>
 
@@ -128,18 +137,15 @@
 					/>
 				</svg>
 			</div>
-			<h2 class="text-2xl font-semibold text-surface-100 mb-3">Welcome to Voice Training</h2>
-			<p class="text-surface-400 max-w-md mx-auto mb-8">
-				Get started by recording your first session! Track your pitch, monitor your progress, and
-				discover exercises tailored to your goals.
-			</p>
+			<h2 class="text-2xl font-semibold text-surface-100 mb-3">{m.dashboard_welcome_title()}</h2>
+			<p class="text-surface-400 max-w-md mx-auto mb-8">{m.dashboard_welcome_body()}</p>
 			<div class="flex flex-col sm:flex-row gap-4 justify-center">
 				<a
 					href="/practice"
 					class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-xl transition-all duration-200 shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40"
 				>
 					<span class="text-lg" aria-hidden="true">🌸</span>
-					Start Today's Practice
+					{m.dashboard_welcome_start_practice()}
 				</a>
 				<a
 					href="/exercises"
@@ -153,7 +159,7 @@
 							d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
 						/>
 					</svg>
-					Browse Exercises
+					{m.dashboard_welcome_browse()}
 				</a>
 			</div>
 		</div>
@@ -165,7 +171,7 @@
 				<div class="absolute top-0 left-0 w-1 h-full bg-primary-500"></div>
 				<div class="flex items-start justify-between">
 					<div>
-						<p class="text-surface-500 text-sm font-medium mb-1">Total Sessions</p>
+						<p class="text-surface-500 text-sm font-medium mb-1">{m.dashboard_stat_sessions()}</p>
 						<p class="text-3xl font-bold text-surface-100">{stats.totalSessions}</p>
 					</div>
 					<div class="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center">
@@ -191,9 +197,12 @@
 				<div class="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>
 				<div class="flex items-start justify-between">
 					<div>
-						<p class="text-surface-500 text-sm font-medium mb-1">Practice Streak</p>
+						<p class="text-surface-500 text-sm font-medium mb-1">{m.dashboard_stat_streak()}</p>
 						<p class="text-3xl font-bold text-surface-100">
-							{stats.practiceStreak} <span class="text-lg font-normal text-surface-400">days</span>
+							{stats.practiceStreak}
+							<span class="text-lg font-normal text-surface-400"
+								>{m.dashboard_stat_streak_unit({ count: stats.practiceStreak })}</span
+							>
 						</p>
 					</div>
 					<div class="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
@@ -225,7 +234,7 @@
 				<div class="absolute top-0 left-0 w-1 h-full bg-accent-500"></div>
 				<div class="flex items-start justify-between">
 					<div>
-						<p class="text-surface-500 text-sm font-medium mb-1">Total Practice Time</p>
+						<p class="text-surface-500 text-sm font-medium mb-1">{m.dashboard_stat_time()}</p>
 						<p class="text-3xl font-bold text-surface-100">{formattedTotalTime}</p>
 					</div>
 					<div class="w-10 h-10 rounded-lg bg-accent-500/10 flex items-center justify-center">
@@ -260,7 +269,7 @@
 					></div>
 					<div class="flex items-start justify-between">
 						<div>
-							<p class="text-surface-500 text-sm font-medium mb-1">Pitch (recent)</p>
+							<p class="text-surface-500 text-sm font-medium mb-1">{m.dashboard_stat_pitch()}</p>
 							<p class="text-3xl font-bold text-surface-100">{formatHz(avgPitch)}</p>
 							<p class="text-xs mt-1" style="color: {pitchColor}">
 								{pitchBandLabel(pitchCategory)}
@@ -295,15 +304,17 @@
 			<!-- Pitch Trend Chart -->
 			<div class="lg:col-span-2 bg-surface-900 rounded-xl border border-surface-800 p-6">
 				<div class="flex items-center justify-between mb-4">
-					<h2 class="text-lg font-semibold text-surface-100">Pitch Trend</h2>
-					<span class="text-xs text-surface-500">Last 30 sessions</span>
+					<h2 class="text-lg font-semibold text-surface-100">{m.dashboard_pitch_trend_title()}</h2>
+					<span class="text-xs text-surface-500">{m.dashboard_pitch_trend_caption()}</span>
 				</div>
 				<PitchTrendChart trendData={stats.pitchTrend} targetRange={data.settings.targetRange} />
 			</div>
 
 			<!-- Category Breakdown -->
 			<div class="bg-surface-900 rounded-xl border border-surface-800 p-6">
-				<h2 class="text-lg font-semibold text-surface-100 mb-4">Category Breakdown</h2>
+				<h2 class="text-lg font-semibold text-surface-100 mb-4">
+					{m.dashboard_categories_title()}
+				</h2>
 				{#if stats.categoryBreakdown.length > 0}
 					{@const total = totalCategoryCount}
 					<div class="space-y-4">
@@ -331,7 +342,7 @@
 						</div>
 					</div>
 				{:else}
-					<p class="text-surface-500 text-sm">No category data yet</p>
+					<p class="text-surface-500 text-sm">{m.dashboard_categories_empty()}</p>
 				{/if}
 			</div>
 		</div>
@@ -341,10 +352,11 @@
 			<!-- Recent Sessions -->
 			<div class="lg:col-span-2 bg-surface-900 rounded-xl border border-surface-800 p-6">
 				<div class="flex items-center justify-between mb-4">
-					<h2 class="text-lg font-semibold text-surface-100">Recent Sessions</h2>
+					<h2 class="text-lg font-semibold text-surface-100">{m.dashboard_recent_title()}</h2>
 					<a
 						href="/sessions"
-						class="text-sm text-primary-400 hover:text-primary-300 transition-colors">View All</a
+						class="text-sm text-primary-400 hover:text-primary-300 transition-colors"
+						>{m.dashboard_recent_view_all()}</a
 					>
 				</div>
 				<div class="space-y-3">
@@ -391,7 +403,7 @@
 									href="/sessions/{session._id}"
 									class="text-sm text-primary-400 hover:text-primary-300 transition-colors px-3 py-1 rounded-lg hover:bg-primary-500/10"
 								>
-									View
+									{m.dashboard_recent_view()}
 								</a>
 							</div>
 						</div>
@@ -401,14 +413,14 @@
 
 			<!-- Quick Actions -->
 			<div class="bg-surface-900 rounded-xl border border-surface-800 p-6">
-				<h2 class="text-lg font-semibold text-surface-100 mb-4">Quick Actions</h2>
+				<h2 class="text-lg font-semibold text-surface-100 mb-4">{m.dashboard_quick_title()}</h2>
 				<div class="space-y-3">
 					<a
 						href="/practice"
 						class="flex items-center gap-3 w-full p-4 bg-primary-500 hover:bg-primary-600 text-white font-medium rounded-xl transition-all duration-200 shadow-lg shadow-primary-500/20 hover:shadow-primary-500/30"
 					>
 						<span class="text-lg" aria-hidden="true">🌸</span>
-						Today's Practice
+						{m.common_nav_practice()}
 					</a>
 					<a
 						href="/record"
@@ -422,14 +434,14 @@
 								d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
 							/>
 						</svg>
-						Free Recording
+						{m.dashboard_quick_record()}
 					</a>
 					<a
 						href="/range-test"
 						class="flex items-center gap-3 w-full p-4 bg-surface-800 hover:bg-surface-700 text-surface-200 font-medium rounded-xl border border-surface-700 transition-all duration-200"
 					>
 						<span class="text-lg">📏</span>
-						Pitch Range Test
+						{m.dashboard_quick_range_test()}
 					</a>
 				</div>
 			</div>

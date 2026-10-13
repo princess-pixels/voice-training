@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PitchPoint, PitchRange } from '$lib/types';
 	import { DEFAULT_TARGET_RANGE, noteFromHz, pitchBand, pitchBandColor } from '$lib/audio/utils';
+	import { m } from '$lib/paraglide/messages';
 
 	interface Props {
 		mode: 'live' | 'playback';
@@ -195,7 +196,7 @@
 		ctx.textAlign = 'left';
 		ctx.textBaseline = 'bottom';
 		ctx.fillText(
-			`Target: ${range.low}-${range.high} Hz`,
+			m.charts_visualizer_target_label({ low: range.low, high: range.high }),
 			MARGIN.left + 4,
 			freqToY(layout, range.low) - 2
 		);
@@ -472,12 +473,16 @@
 >
 	<!-- Fallback content is the canvas's accessible description. -->
 	<canvas bind:this={canvas} class="block">
-		{#if mode === 'live'}
-			Live pitch graph. Current pitch {currentPitch > 0
-				? `${Math.round(currentPitch)} Hz`
-				: 'silent'}, target {targetRange.low} to {targetRange.high} Hz.
+		{#if mode === 'live' && currentPitch > 0}
+			{m.charts_visualizer_live_voiced({
+				hz: Math.round(currentPitch),
+				low: targetRange.low,
+				high: targetRange.high
+			})}
+		{:else if mode === 'live'}
+			{m.charts_visualizer_live_silent({ low: targetRange.low, high: targetRange.high })}
 		{:else}
-			Pitch timeline for the whole session, target {targetRange.low} to {targetRange.high} Hz.
+			{m.charts_visualizer_playback_fallback({ low: targetRange.low, high: targetRange.high })}
 		{/if}
 	</canvas>
 </div>

@@ -3,6 +3,7 @@
  * reply into an ApiError carrying the server's message, so every call site
  * stops decoding error bodies by hand.
  */
+import { m } from '$lib/paraglide/messages';
 
 export class ApiError extends Error {
 	readonly status: number;
@@ -22,7 +23,7 @@ async function failureMessage(response: Response): Promise<string> {
 	} catch {
 		// not JSON
 	}
-	return text.trim() || `Request failed (HTTP ${response.status})`;
+	return text.trim() || m.common_request_failed({ status: response.status });
 }
 
 /**

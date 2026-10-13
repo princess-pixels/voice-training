@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { formatHz, formatDuration, pitchBand, pitchBandClass } from '$lib/audio/utils';
+	import { m } from '$lib/paraglide/messages';
 	import type { PitchRange } from '$lib/types';
 
 	interface Props {
@@ -40,7 +41,9 @@
 				currentHz
 			)}"
 		>
-			<div class="text-xs text-surface-400 uppercase tracking-wider mb-1">Current</div>
+			<div class="text-xs text-surface-400 uppercase tracking-wider mb-1">
+				{m.charts_stats_current()}
+			</div>
 			<div class="text-2xl font-bold {pitchBandClass(currentHz, targetRange)}">
 				{formatHz(currentHz)}
 			</div>
@@ -48,17 +51,23 @@
 	{/if}
 
 	<div class="flex-1 min-w-[100px] bg-surface-800/50 rounded-lg p-3 border border-surface-700/50">
-		<div class="text-xs text-surface-400 uppercase tracking-wider mb-1">Pitch (median)</div>
+		<div class="text-xs text-surface-400 uppercase tracking-wider mb-1">
+			{m.charts_stats_median()}
+		</div>
 		<div class="text-2xl font-bold text-surface-200">
 			{formatHz(medianHz)}
 		</div>
 		{#if avgHz > 0}
-			<div class="text-xs text-surface-500 mt-1">mean {formatHz(avgHz)}</div>
+			<div class="text-xs text-surface-500 mt-1">
+				{m.charts_stats_mean({ hz: formatHz(avgHz) })}
+			</div>
 		{/if}
 	</div>
 
 	<div class="flex-1 min-w-[100px] bg-surface-800/50 rounded-lg p-3 border border-surface-700/50">
-		<div class="text-xs text-surface-400 uppercase tracking-wider mb-1">Range</div>
+		<div class="text-xs text-surface-400 uppercase tracking-wider mb-1">
+			{m.charts_stats_range()}
+		</div>
 		<div class="text-xl font-bold text-surface-200">
 			{#if minHz > 0 && maxHz > 0}
 				{Math.round(minHz)} - {Math.round(maxHz)} <span class="text-sm text-surface-400">Hz</span>
@@ -69,7 +78,9 @@
 	</div>
 
 	<div class="flex-1 min-w-[100px] bg-surface-800/50 rounded-lg p-3 border border-surface-700/50">
-		<div class="text-xs text-surface-400 uppercase tracking-wider mb-1">Time in Target</div>
+		<div class="text-xs text-surface-400 uppercase tracking-wider mb-1">
+			{m.charts_stats_time_in_target()}
+		</div>
 		<div class="flex items-center gap-2">
 			<div class="text-2xl font-bold text-primary-400">
 				{Math.round(timeInTargetPct)}%
@@ -85,7 +96,9 @@
 
 	{#if duration !== undefined}
 		<div class="flex-1 min-w-[100px] bg-surface-800/50 rounded-lg p-3 border border-surface-700/50">
-			<div class="text-xs text-surface-400 uppercase tracking-wider mb-1">Duration</div>
+			<div class="text-xs text-surface-400 uppercase tracking-wider mb-1">
+				{m.charts_stats_duration()}
+			</div>
 			<div class="text-2xl font-bold text-surface-200">
 				{formatDuration(duration)}
 			</div>

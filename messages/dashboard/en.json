@@ -1,3 +1,41 @@
 {
-  "$schema": "https://inlang.com/schema/inlang-message-format"
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "dashboard_tagline": "Your journey to finding your voice",
+  "dashboard_today_not_started": "Today's practice hasn't started",
+  "dashboard_today_done": "Today's practice is done",
+  "dashboard_today_under_way": "Today's practice is under way",
+  "dashboard_today_intro": "Four short steps, about fifteen minutes. The app remembers where you were.",
+  "dashboard_today_progress": "{doneSteps} of {totalSteps} steps done",
+  "dashboard_today_progress_minutes": "{doneSteps} of {totalSteps} steps done · {minutes} min",
+  "dashboard_today_action_start": "Start",
+  "dashboard_today_action_look": "Have a look",
+  "dashboard_today_action_continue": "Continue",
+  "dashboard_welcome_title": "Welcome to Voice Training",
+  "dashboard_welcome_body": "Get started by recording your first session! Track your pitch, monitor your progress, and discover exercises tailored to your goals.",
+  "dashboard_welcome_start_practice": "Start Today's Practice",
+  "dashboard_welcome_browse": "Browse Exercises",
+  "dashboard_stat_sessions": "Total Sessions",
+  "dashboard_stat_streak": "Practice Streak",
+  "dashboard_stat_streak_unit": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "day",
+        "countPlural=other": "days"
+      }
+    }
+  ],
+  "dashboard_stat_time": "Total Practice Time",
+  "dashboard_stat_pitch": "Pitch (recent)",
+  "dashboard_pitch_trend_title": "Pitch Trend",
+  "dashboard_pitch_trend_caption": "Last 30 sessions",
+  "dashboard_categories_title": "Category Breakdown",
+  "dashboard_categories_empty": "No category data yet",
+  "dashboard_recent_title": "Recent Sessions",
+  "dashboard_recent_view_all": "View All",
+  "dashboard_recent_view": "View",
+  "dashboard_quick_title": "Quick Actions",
+  "dashboard_quick_record": "Free Recording",
+  "dashboard_quick_range_test": "Pitch Range Test"
 }

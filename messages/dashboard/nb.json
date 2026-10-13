@@ -1,3 +1,41 @@
 {
-  "$schema": "https://inlang.com/schema/inlang-message-format"
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "dashboard_tagline": "Veien til stemmen din",
+  "dashboard_today_not_started": "Dagens øvelser er ikke startet ennå",
+  "dashboard_today_done": "Dagens øvelser er ferdig",
+  "dashboard_today_under_way": "Dagens øvelser er i gang",
+  "dashboard_today_intro": "Fire korte steg, omtrent femten minutter. Appen husker hvor du var.",
+  "dashboard_today_progress": "{doneSteps} av {totalSteps} steg fullført",
+  "dashboard_today_progress_minutes": "{doneSteps} av {totalSteps} steg fullført · {minutes} min",
+  "dashboard_today_action_start": "Start",
+  "dashboard_today_action_look": "Ta en titt",
+  "dashboard_today_action_continue": "Fortsett",
+  "dashboard_welcome_title": "Velkommen til Stemmetrening",
+  "dashboard_welcome_body": "Kom i gang ved å ta opp ditt første opptak! Følg tonehøyden din, se fremgangen din og finn øvelser tilpasset målene dine.",
+  "dashboard_welcome_start_practice": "Start dagens øvelser",
+  "dashboard_welcome_browse": "Bla gjennom øvelser",
+  "dashboard_stat_sessions": "Totalt antall opptak",
+  "dashboard_stat_streak": "Øvingsrekke",
+  "dashboard_stat_streak_unit": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "dag",
+        "countPlural=other": "dager"
+      }
+    }
+  ],
+  "dashboard_stat_time": "Total øvingstid",
+  "dashboard_stat_pitch": "Tonehøyde (nylig)",
+  "dashboard_pitch_trend_title": "Utvikling i tonehøyde",
+  "dashboard_pitch_trend_caption": "Siste 30 opptak",
+  "dashboard_categories_title": "Fordeling etter kategori",
+  "dashboard_categories_empty": "Ingen kategoridata ennå",
+  "dashboard_recent_title": "Nylige opptak",
+  "dashboard_recent_view_all": "Vis alle",
+  "dashboard_recent_view": "Vis",
+  "dashboard_quick_title": "Hurtigvalg",
+  "dashboard_quick_record": "Fritt opptak",
+  "dashboard_quick_range_test": "Test av stemmeomfang"
 }

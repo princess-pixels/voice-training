@@ -6,6 +6,7 @@
 	import { dayKeysEndingAt, localDayKey } from '$lib/days';
 	import { nextStepIndex, revivePracticeDay } from '$lib/practiceDay';
 	import { errorMessage, request } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 	import type { JsonDate, PracticeDay, PracticeStepStatus, Session } from '$lib/types';
 	import type { PageData } from './$types';
 
@@ -163,7 +164,7 @@
 			if (day?._id === updated._id) day = updated;
 			return true;
 		} catch (err) {
-			saveError = errorMessage(err, 'Could not save progress');
+			saveError = errorMessage(err, m.practice_save_failed());
 			return false;
 		}
 	}
@@ -227,7 +228,7 @@
 			lastSaved = null;
 			reviewing = false;
 		} catch (err) {
-			saveError = errorMessage(err, 'Could not reset the routine');
+			saveError = errorMessage(err, m.practice_reset_failed());
 		}
 	}
 
@@ -282,23 +283,28 @@
 
 	function historyTitle(key: string): string {
 		const h = key === todaySummary?.day ? todaySummary : historyByDay.get(key);
-		if (!h || h.doneSteps === 0) return `${key}: no practice`;
-		return `${key}: ${h.doneSteps} of ${h.totalSteps} steps, ${formatDuration(h.seconds)}`;
+		if (!h || h.doneSteps === 0) return m.practice_history_empty({ day: key });
+		return m.practice_history_day({
+			day: key,
+			done: h.doneSteps,
+			total: h.totalSteps,
+			duration: formatDuration(h.seconds)
+		});
 	}
 </script>
 
 <svelte:head>
-	<title>Today's Practice — Voice Training</title>
+	<title>{m.common_page_title({ page: m.practice_title() })}</title>
 </svelte:head>
 
 <div class="max-w-4xl mx-auto px-4 py-8 space-y-6">
 	<div>
-		<h1 class="text-3xl font-bold text-surface-100">Today's Practice</h1>
+		<h1 class="text-3xl font-bold text-surface-100">{m.practice_title()}</h1>
 		<p class="text-surface-400 mt-2">
 			{#if steps.length > 0}
-				{steps.length} steps · about {totalMinutes} minutes. Just follow along.
+				{m.practice_intro({ count: steps.length, minutes: totalMinutes })}
 			{:else}
-				No exercises available yet.
+				{m.practice_intro_empty()}
 			{/if}
 		</p>
 	</div>
@@ -315,8 +321,7 @@
 	{#if !day || steps.length === 0}
 		<div class="bg-surface-900 border border-surface-800 rounded-2xl p-8 text-center">
 			<p class="text-surface-400">
-				The exercise library is empty, so there's no routine to build. Check the startup log for a
-				seeding error and restart the app to seed it.
+				{m.practice_library_empty()}
 			</p>
 		</div>
 	{:else}
@@ -328,13 +333,13 @@
 					type="button"
 					onclick={() => goToStep(index)}
 					disabled={recording}
-					title="{step.title}{step.status === 'done'
-						? ' (done)'
+					title={step.status === 'done'
+						? m.practice_step_tooltip_done({ title: step.title })
 						: step.status === 'skipped'
-							? ' (skipped)'
-							: ''}"
+							? m.practice_step_tooltip_skipped({ title: step.title })
+							: step.title}
 					class="group flex-1 py-3 disabled:cursor-not-allowed focus-visible:outline-none"
-					aria-label="Go to step {index + 1}: {step.title}"
+					aria-label={m.practice_step_rail_label({ number: index + 1, title: step.title })}
 					aria-current={index === currentIndex ? 'step' : undefined}
 				>
 					<span
@@ -355,11 +360,17 @@
 				class="bg-surface-900 border border-emerald-500/30 rounded-2xl p-10 text-center space-y-5"
 			>
 				<div class="text-5xl" aria-hidden="true">🌸</div>
-				<h2 class="text-2xl font-semibold text-surface-100">Routine complete</h2>
+				<h2 class="text-2xl font-semibold text-surface-100">{m.practice_complete_title()}</h2>
 				<p class="text-surface-400 max-w-md mx-auto">
-					{doneCount} of {steps.length} steps done{totalSeconds > 0
-						? `, ${formatDuration(totalSeconds)} on the clock`
-						: ''}. Showing up on a tired day counts exactly as much as showing up on a good one.
+					{#if totalSeconds > 0}
+						{m.practice_complete_summary_timed({
+							done: doneCount,
+							total: steps.length,
+							duration: formatDuration(totalSeconds)
+						})}
+					{:else}
+						{m.practice_complete_summary({ done: doneCount, total: steps.length })}
+					{/if}
 				</p>
 				<ul class="text-sm text-left max-w-sm mx-auto space-y-1.5">
 					{#each steps as step, index (step.exerciseId)}
@@ -383,7 +394,7 @@
 									href="/sessions/{step.sessionIds[step.sessionIds.length - 1]}"
 									class="text-xs text-primary-400 hover:text-primary-300"
 								>
-									take
+									{m.practice_take_link()}
 								</a>
 							{/if}
 							<span class="text-surface-500 tabular-nums">
@@ -397,13 +408,13 @@
 						href="/range-test"
 						class="px-5 py-2.5 bg-surface-800 hover:bg-surface-700 text-surface-200 font-medium rounded-lg border border-surface-700 transition-colors"
 					>
-						Take a range test
+						{m.practice_take_range_test()}
 					</a>
 					<button
 						onclick={restartRoutine}
 						class="px-5 py-2.5 bg-surface-800 hover:bg-surface-700 text-surface-200 font-medium rounded-lg border border-surface-700 transition-colors"
 					>
-						Run it again
+						{m.practice_run_again()}
 					</button>
 				</div>
 			</div>
@@ -412,7 +423,11 @@
 			<div class="bg-surface-900 border border-surface-800 rounded-2xl p-6 sm:p-8 space-y-6">
 				<div>
 					<p class="text-sm text-primary-400 font-medium mb-2">
-						Step {currentIndex + 1} of {steps.length} · {currentStep.purpose}
+						{m.practice_step_header({
+							number: currentIndex + 1,
+							total: steps.length,
+							purpose: currentStep.purpose
+						})}
 						{#if reviewing}
 							·
 							<button
@@ -420,7 +435,7 @@
 								onclick={() => (reviewing = false)}
 								class="text-surface-400 hover:text-surface-200 underline underline-offset-2"
 							>
-								Back to summary
+								{m.practice_back_to_summary()}
 							</button>
 						{/if}
 					</p>
@@ -437,13 +452,13 @@
 							<span
 								class="px-2.5 py-1 rounded-full text-xs font-medium border bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
 							>
-								Done
+								{m.practice_badge_done()}
 							</span>
 						{:else if currentStep.status === 'skipped'}
 							<span
 								class="px-2.5 py-1 rounded-full text-xs font-medium border bg-surface-700 text-surface-300 border-surface-600"
 							>
-								Skipped
+								{m.practice_badge_skipped()}
 							</span>
 						{/if}
 					</div>
@@ -462,7 +477,7 @@
 				{:else}
 					<div class="bg-surface-950/60 border border-surface-800 rounded-xl p-5">
 						<p class="text-surface-500 text-sm">
-							This exercise is no longer in the library. Tomorrow's routine will pick another.
+							{m.practice_exercise_missing()}
 						</p>
 					</div>
 				{/if}
@@ -475,10 +490,10 @@
 						</span>
 						<span class="text-sm text-surface-500">
 							{#if currentExercise}
-								suggested {currentExercise.estimatedMinutes} min
+								{m.practice_suggested_minutes({ minutes: currentExercise.estimatedMinutes })}
 							{/if}
 							{#if currentStep.seconds > 0}
-								· {formatDuration(currentStep.seconds)} earlier today
+								· {m.practice_earlier_today({ duration: formatDuration(currentStep.seconds) })}
 							{/if}
 						</span>
 					</div>
@@ -510,29 +525,28 @@
 						role="status"
 						class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm"
 					>
-						<span class="text-emerald-400 font-medium">Take saved ✓</span>
+						<span class="text-emerald-400 font-medium">{m.practice_take_saved()}</span>
 						<span class="text-surface-300">
-							pitch <span class="font-semibold">{formatHz(lastSaved.pitchData.medianPitch)}</span>
+							{m.practice_pitch_label()}
+							<span class="font-semibold">{formatHz(lastSaved.pitchData.medianPitch)}</span>
 						</span>
 						<span class="text-surface-300">
 							<span class="font-semibold">{Math.round(lastSaved.pitchData.timeInTargetPct)}%</span>
-							in range
+							{m.practice_in_range()}
 						</span>
 						<span class="text-surface-300">{formatDuration(lastSaved.duration)}</span>
 						<a href="/sessions/{lastSaved._id}" class="text-primary-400 hover:text-primary-300">
-							open take
+							{m.practice_open_take()}
 						</a>
 					</div>
 				{:else if currentStep.sessionIds.length > 0}
 					<p class="text-sm text-surface-400">
-						Recorded {currentStep.sessionIds.length === 1
-							? 'once'
-							: `${currentStep.sessionIds.length} times`} today ·
+						{m.practice_recorded_today({ count: currentStep.sessionIds.length })} ·
 						<a
 							href="/sessions/{currentStep.sessionIds[currentStep.sessionIds.length - 1]}"
 							class="text-primary-400 hover:text-primary-300"
 						>
-							latest take
+							{m.practice_latest_take()}
 						</a>
 					</p>
 				{/if}
@@ -543,10 +557,10 @@
 						<button
 							onclick={() => resolveStep('done')}
 							disabled={recording}
-							title={recording ? 'Finish or discard the take first' : undefined}
+							title={recording ? m.practice_finish_take_first() : undefined}
 							class="flex-1 min-w-[140px] px-4 py-2.5 bg-primary-500 hover:bg-primary-600 disabled:bg-surface-700 disabled:text-surface-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
 						>
-							{isLastStep ? 'Finish routine' : 'Done — next step'}
+							{isLastStep ? m.practice_finish_routine() : m.practice_done_next_step()}
 						</button>
 						{#if !isLastStep}
 							<button
@@ -554,7 +568,7 @@
 								disabled={recording}
 								class="px-4 py-2.5 text-surface-500 hover:text-surface-300 disabled:cursor-not-allowed font-medium transition-colors"
 							>
-								Skip
+								{m.practice_skip()}
 							</button>
 						{/if}
 					{:else}
@@ -564,7 +578,7 @@
 								disabled={recording}
 								class="flex-1 min-w-[140px] px-4 py-2.5 bg-primary-500 hover:bg-primary-600 disabled:bg-surface-700 disabled:text-surface-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
 							>
-								Next step
+								{m.practice_next_step()}
 							</button>
 						{:else}
 							<button
@@ -572,7 +586,7 @@
 								disabled={recording}
 								class="flex-1 min-w-[140px] px-4 py-2.5 bg-primary-500 hover:bg-primary-600 disabled:bg-surface-700 disabled:text-surface-400 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
 							>
-								Back to an unfinished step
+								{m.practice_back_to_unfinished()}
 							</button>
 						{/if}
 						<button
@@ -580,7 +594,7 @@
 							disabled={recording}
 							class="px-4 py-2.5 text-surface-500 hover:text-surface-300 disabled:cursor-not-allowed font-medium transition-colors"
 						>
-							Mark as not done
+							{m.practice_mark_not_done()}
 						</button>
 					{/if}
 				</div>
@@ -590,12 +604,13 @@
 		<!-- History strip -->
 		<div class="bg-surface-900/60 border border-surface-800 rounded-2xl p-5">
 			<div class="flex flex-wrap items-baseline justify-between gap-2 mb-3">
-				<h2 class="text-sm font-medium text-surface-300">Last two weeks</h2>
+				<h2 class="text-sm font-medium text-surface-300">{m.practice_history_title()}</h2>
 				<span class="text-xs text-surface-500">
-					{practicedDays}
-					{practicedDays === 1 ? 'day' : 'days'} practised{historyMinutes > 0
-						? ` · ${historyMinutes} min`
-						: ''}
+					{#if historyMinutes > 0}
+						{m.practice_history_days_minutes({ count: practicedDays, minutes: historyMinutes })}
+					{:else}
+						{m.practice_history_days({ count: practicedDays })}
+					{/if}
 				</span>
 			</div>
 			<div class="flex gap-1.5">

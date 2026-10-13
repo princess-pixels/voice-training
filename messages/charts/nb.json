@@ -1,3 +1,39 @@
 {
-  "$schema": "https://inlang.com/schema/inlang-message-format"
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "charts_stats_current": "Nå",
+  "charts_stats_median": "Tonehøyde (median)",
+  "charts_stats_mean": "gjennomsnitt {hz}",
+  "charts_stats_range": "Omfang",
+  "charts_stats_time_in_target": "Tid innenfor målområdet",
+  "charts_stats_duration": "Varighet",
+  "charts_trend_fallback": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Gjennomsnittlig tonehøyde for de siste {count} opptaket: fra {from} Hz til {to} Hz, målområde {low} til {high} Hz.",
+        "countPlural=other": "Gjennomsnittlig tonehøyde for de siste {count} opptakene: fra {from} Hz til {to} Hz, målområde {low} til {high} Hz."
+      }
+    }
+  ],
+  "charts_trend_empty": "Ingen tonehøydedata ennå",
+  "charts_visualizer_live_voiced": "Sanntids tonehøydegraf. Nåværende tonehøyde {hz} Hz, målområde {low} til {high} Hz.",
+  "charts_visualizer_live_silent": "Sanntids tonehøydegraf. Ingen stemme akkurat nå, målområde {low} til {high} Hz.",
+  "charts_visualizer_playback_fallback": "Tonehøydeforløp for hele opptaket, målområde {low} til {high} Hz.",
+  "charts_visualizer_target_label": "Målområde: {low}-{high} Hz",
+  "charts_keyboard_group_label": "Referansetoner",
+  "charts_keyboard_hint": "Trykk på en tone, og nynn den etter. Piltastene går en halvtone om gangen.",
+  "charts_keyboard_on_it": "Treffer ✨",
+  "charts_keyboard_hum_to_compare": "nynn for å sammenligne",
+  "charts_keyboard_no_note": "ingen tone valgt",
+  "charts_keyboard_sharp": "for høy",
+  "charts_keyboard_flat": "for lav",
+  "charts_keyboard_announce_on_pitch": "På tone",
+  "charts_keyboard_announce_sharp": "{cents} cent for høy",
+  "charts_keyboard_announce_flat": "{cents} cent for lav",
+  "charts_keyboard_announce_silent": "{name}, {hz} hertz",
+  "charts_keyboard_outside_range": "utenfor målområdet",
+  "charts_keyboard_sustain": "Hold til du trykker igjen",
+  "charts_keyboard_headphones": "Hodetelefoner anbefales, ellers havner tonen i opptaket.",
+  "charts_keyboard_clear": "Fjern tonen"
 }

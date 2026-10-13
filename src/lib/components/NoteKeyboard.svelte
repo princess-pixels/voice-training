@@ -2,6 +2,7 @@
 	import { TonePlayer } from '$lib/audio/tone';
 	import { PitchSmoother } from '$lib/audio/smoothing';
 	import { centsOff, keysForRange, ON_PITCH_CENTS, type NoteKey } from '$lib/audio/notes';
+	import { m } from '$lib/paraglide/messages';
 	import type { PitchRange } from '$lib/types';
 
 	interface Props {
@@ -80,9 +81,14 @@
 		lastSpokenAt = now;
 		if (state === 'none') announcement = '';
 		else if (state.startsWith('silent'))
-			announcement = `${selected!.name}, ${Math.round(selected!.hz)} hertz`;
-		else if (state === 'on') announcement = 'On pitch';
-		else announcement = `${Math.abs(Math.round(cents!))} cents ${state}`;
+			announcement = m.charts_keyboard_announce_silent({
+				name: selected!.name,
+				hz: Math.round(selected!.hz)
+			});
+		else if (state === 'on') announcement = m.charts_keyboard_announce_on_pitch();
+		else if (state === 'sharp')
+			announcement = m.charts_keyboard_announce_sharp({ cents: Math.abs(Math.round(cents!)) });
+		else announcement = m.charts_keyboard_announce_flat({ cents: Math.abs(Math.round(cents!)) });
 	});
 
 	// One player for the component's life; closing the context releases the
@@ -145,8 +151,8 @@
 <div class="bg-surface-900/50 border border-surface-800 rounded-lg p-4 space-y-3">
 	<div class="flex flex-wrap items-center gap-x-4 gap-y-2">
 		<div class="flex-1 min-w-40">
-			<h3 class="text-sm font-semibold text-surface-200">Reference notes</h3>
-			<p class="text-xs text-surface-500">Tap a note, then hum it. Arrow keys step a semitone.</p>
+			<h3 class="text-sm font-semibold text-surface-200">{m.charts_keyboard_group_label()}</h3>
+			<p class="text-xs text-surface-500">{m.charts_keyboard_hint()}</p>
 		</div>
 
 		<!-- Match readout. Visual only; the hidden region below is what is announced. -->
@@ -162,19 +168,19 @@
 							: 'text-surface-200'}"
 					>
 						{#if onPitch}
-							On it ✨
+							{m.charts_keyboard_on_it()}
 						{:else}
 							{formatCents(cents)}
 							<span class="text-xs font-medium text-surface-400">
-								{cents > 0 ? 'sharp' : 'flat'}
+								{cents > 0 ? m.charts_keyboard_sharp() : m.charts_keyboard_flat()}
 							</span>
 						{/if}
 					</div>
 				{:else}
-					<div class="text-sm text-surface-500">hum to compare</div>
+					<div class="text-sm text-surface-500">{m.charts_keyboard_hum_to_compare()}</div>
 				{/if}
 			{:else}
-				<div class="text-sm text-surface-500">no note chosen</div>
+				<div class="text-sm text-surface-500">{m.charts_keyboard_no_note()}</div>
 			{/if}
 		</div>
 		<div class="sr-only" role="status" aria-live="polite">{announcement}</div>
@@ -185,7 +191,7 @@
 	<div
 		bind:this={strip}
 		role="group"
-		aria-label="Reference notes"
+		aria-label={m.charts_keyboard_group_label()}
 		class="flex flex-wrap gap-1.5"
 		onkeydown={onKeydown}
 	>
@@ -195,7 +201,9 @@
 				data-midi={key.midi}
 				onclick={() => toggle(key)}
 				aria-pressed={selected?.midi === key.midi}
-				title="{key.name} · {Math.round(key.hz)} Hz{key.inRange ? '' : ' (outside target range)'}"
+				title="{key.name} · {Math.round(key.hz)} Hz{key.inRange
+					? ''
+					: ` (${m.charts_keyboard_outside_range()})`}"
 				class="min-w-13 px-2 py-1.5 rounded-full border text-center transition-colors {keyClass(
 					key
 				)}"
@@ -219,10 +227,10 @@
 				onchange={(e) => setSustain(e.currentTarget.checked)}
 				class="accent-accent-500"
 			/>
-			Sustain until tapped again
+			{m.charts_keyboard_sustain()}
 		</label>
 		{#if sustain}
-			<span class="text-surface-500">Headphones recommended, or the tone ends up in the take.</span>
+			<span class="text-surface-500">{m.charts_keyboard_headphones()}</span>
 		{/if}
 		{#if selected}
 			<button
@@ -230,7 +238,7 @@
 				onclick={clear}
 				class="ml-auto text-surface-400 hover:text-surface-200 underline underline-offset-2"
 			>
-				Clear note
+				{m.charts_keyboard_clear()}
 			</button>
 		{/if}
 	</div>

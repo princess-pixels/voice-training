@@ -5,6 +5,7 @@
 	import { getAudioDevices, getMicrophoneStream } from '$lib/audio/mic';
 	import { describeMicError } from '$lib/audio/micErrors';
 	import { errorMessage, request } from '$lib/api';
+	import { m } from '$lib/paraglide/messages';
 	import LanguagePicker from '$lib/components/LanguagePicker.svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -31,9 +32,9 @@
 
 	// Presets
 	const PRESETS = {
-		feminine: { label: 'Feminine', ...DEFAULT_TARGET_RANGE },
-		androgynous: { label: 'Androgynous', low: 150, high: 220 },
-		custom: { label: 'Custom', low: null, high: null }
+		feminine: { label: m.settings_preset_feminine(), ...DEFAULT_TARGET_RANGE },
+		androgynous: { label: m.settings_preset_androgynous(), low: 150, high: 220 },
+		custom: { label: m.settings_preset_custom(), low: null, high: null }
 	} as const;
 
 	const activePreset = $derived.by(() => {
@@ -161,27 +162,27 @@
 			}, 2000);
 		} catch (err) {
 			saveStatus = 'error';
-			saveError = errorMessage(err, 'Failed to save settings');
+			saveError = errorMessage(err, m.settings_save_failed());
 		}
 	}
 </script>
 
 <svelte:head>
-	<title>Settings — Voice Training</title>
+	<title>{m.common_page_title({ page: m.settings_title() })}</title>
 </svelte:head>
 
 <div class="max-w-2xl mx-auto px-4 py-8">
 	<h1
 		class="text-3xl font-bold mb-8 bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent"
 	>
-		Settings
+		{m.settings_title()}
 	</h1>
 
 	<LanguagePicker />
 
 	<!-- Target Pitch Range Section -->
 	<section class="bg-surface-900 rounded-2xl p-6 mb-6 border border-surface-800">
-		<h2 class="text-xl font-semibold mb-6 text-surface-100">Target Pitch Range</h2>
+		<h2 class="text-xl font-semibold mb-6 text-surface-100">{m.settings_pitch_range_heading()}</h2>
 
 		<!-- Preset Buttons -->
 		<div class="flex flex-wrap gap-3 mb-8">
@@ -223,7 +224,9 @@
 			<!-- Low Hz Slider -->
 			<div>
 				<div class="flex justify-between items-center mb-2">
-					<label for="low-hz" class="text-sm font-medium text-surface-300">Low Frequency</label>
+					<label for="low-hz" class="text-sm font-medium text-surface-300"
+						>{m.settings_low_frequency()}</label
+					>
 					<span class="text-lg font-semibold text-primary-400">{lowHz} Hz</span>
 				</div>
 				<input
@@ -239,7 +242,9 @@
 			<!-- High Hz Slider -->
 			<div>
 				<div class="flex justify-between items-center mb-2">
-					<label for="high-hz" class="text-sm font-medium text-surface-300">High Frequency</label>
+					<label for="high-hz" class="text-sm font-medium text-surface-300"
+						>{m.settings_high_frequency()}</label
+					>
 					<span class="text-lg font-semibold text-primary-400">{highHz} Hz</span>
 				</div>
 				<input
@@ -256,7 +261,7 @@
 		<!-- Current Range Display -->
 		<div class="mt-6 p-4 bg-surface-950/50 rounded-xl border border-surface-800">
 			<div class="flex items-center justify-between">
-				<span class="text-surface-400">Current Range</span>
+				<span class="text-surface-400">{m.settings_current_range()}</span>
 				<span class="text-2xl font-bold text-surface-100">
 					{Math.min(lowHz, highHz)} - {Math.max(lowHz, highHz)} Hz
 				</span>
@@ -266,12 +271,12 @@
 
 	<!-- Microphone Section -->
 	<section class="bg-surface-900 rounded-2xl p-6 mb-6 border border-surface-800">
-		<h2 class="text-xl font-semibold mb-6 text-surface-100">Microphone</h2>
+		<h2 class="text-xl font-semibold mb-6 text-surface-100">{m.settings_mic_heading()}</h2>
 
 		<!-- Device Selection -->
 		<div class="mb-6">
 			<label for="mic-device" class="block text-sm font-medium text-surface-300 mb-2">
-				Input Device
+				{m.settings_input_device()}
 			</label>
 			{#if audioDevices.length > 0}
 				<select
@@ -281,13 +286,14 @@
 				>
 					{#each audioDevices as device}
 						<option value={device.deviceId}>
-							{device.label || `Microphone ${audioDevices.indexOf(device) + 1}`}
+							{device.label ||
+								m.settings_mic_fallback_name({ number: audioDevices.indexOf(device) + 1 })}
 						</option>
 					{/each}
 				</select>
 				{#if !micPermissionGranted}
 					<p class="mt-2 text-xs text-surface-400">
-						Device names appear after microphone access is granted. Test Microphone asks for it.
+						{m.settings_mic_names_hint({ button: m.settings_test_mic() })}
 					</p>
 				{/if}
 			{:else if micError}
@@ -297,24 +303,24 @@
 						onclick={() => enumerateDevices(true)}
 						class="mt-2 text-sm text-red-400 hover:text-red-300 underline"
 					>
-						Try Again
+						{m.settings_try_again()}
 					</button>
 				</div>
 			{:else if devicesChecked}
 				<!-- enumerateDevices resolves with an empty list both when there is no input
 				     and, in some browsers, before permission has been granted. -->
 				<div class="p-4 bg-surface-950 border border-surface-800 rounded-xl">
-					<p class="text-surface-400 text-sm">No microphone found, or access not granted yet.</p>
+					<p class="text-surface-400 text-sm">{m.settings_no_mic_found()}</p>
 					<button
 						onclick={() => enumerateDevices(true)}
 						class="mt-2 text-sm text-primary-400 hover:text-primary-300 underline"
 					>
-						Ask for microphone access
+						{m.settings_ask_mic_access()}
 					</button>
 				</div>
 			{:else}
 				<div class="p-4 bg-surface-950 border border-surface-800 rounded-xl">
-					<p class="text-surface-500 text-sm">Looking for microphones...</p>
+					<p class="text-surface-500 text-sm">{m.settings_looking_for_mics()}</p>
 				</div>
 			{/if}
 		</div>
@@ -341,7 +347,7 @@
 							d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
 						></path>
 					</svg>
-					<span>Testing...</span>
+					<span>{m.settings_testing()}</span>
 				{:else}
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -355,7 +361,7 @@
 							clip-rule="evenodd"
 						/>
 					</svg>
-					<span>Test Microphone</span>
+					<span>{m.settings_test_mic()}</span>
 				{/if}
 			</button>
 
@@ -363,7 +369,7 @@
 			{#if isTestingMic || micLevel > 0}
 				<div class="mt-4">
 					<div class="flex items-center gap-3">
-						<span class="text-sm text-surface-400 w-12">Level</span>
+						<span class="text-sm text-surface-400 w-12">{m.settings_level()}</span>
 						<div
 							class="flex-1 h-4 bg-surface-950 rounded-full overflow-hidden border border-surface-800"
 						>
@@ -385,11 +391,9 @@
 
 	<!-- Export Section -->
 	<div class="bg-surface-900 rounded-2xl p-6 sm:p-8 border border-surface-800 mb-8">
-		<h2 class="text-xl font-semibold mb-2 text-surface-100">Export</h2>
+		<h2 class="text-xl font-semibold mb-2 text-surface-100">{m.settings_export_heading()}</h2>
 		<p class="text-sm text-surface-400 mb-6">
-			Download every session, recording, range test and these settings as one archive. Your data
-			should not live only in this app's database; keep a copy somewhere else now and then. Large
-			libraries take a moment to pack before the download starts.
+			{m.settings_export_body()}
 		</p>
 		<!-- A form post, not a link: the export is built on request and the
 		     server only accepts it from this origin. The reply is a download. -->
@@ -412,7 +416,7 @@
 						d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 4v12m0 0l-4-4m4 4l4-4"
 					/>
 				</svg>
-				Download everything (.tar.gz)
+				{m.settings_export_button()}
 			</button>
 		</form>
 	</div>
@@ -421,15 +425,15 @@
 	<section class="bg-surface-900 rounded-2xl p-6 border border-surface-800">
 		<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
 			<div>
-				<h2 class="text-xl font-semibold text-surface-100">Save Changes</h2>
+				<h2 class="text-xl font-semibold text-surface-100">{m.settings_save_heading()}</h2>
 				{#if saveStatus === 'success'}
-					<p role="status" class="text-sm text-green-400 mt-1">Settings saved successfully!</p>
+					<p role="status" class="text-sm text-green-400 mt-1">{m.settings_save_success()}</p>
 				{:else if saveStatus === 'error'}
 					<p role="alert" class="text-sm text-red-400 mt-1">
-						{saveError || 'Failed to save settings'}
+						{saveError || m.settings_save_failed()}
 					</p>
 				{:else}
-					<p class="text-sm text-surface-400 mt-1">Update your voice training preferences</p>
+					<p class="text-sm text-surface-400 mt-1">{m.settings_save_hint()}</p>
 				{/if}
 			</div>
 			<button
@@ -452,7 +456,7 @@
 							d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
 						></path>
 					</svg>
-					<span>Saving...</span>
+					<span>{m.settings_saving()}</span>
 				{:else if saveStatus === 'success'}
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -466,7 +470,7 @@
 							clip-rule="evenodd"
 						/>
 					</svg>
-					<span>Saved!</span>
+					<span>{m.settings_saved()}</span>
 				{:else}
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -480,7 +484,7 @@
 							clip-rule="evenodd"
 						/>
 					</svg>
-					<span>Save Settings</span>
+					<span>{m.settings_save_button()}</span>
 				{/if}
 			</button>
 		</div>

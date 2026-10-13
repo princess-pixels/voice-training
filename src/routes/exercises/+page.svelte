@@ -2,6 +2,8 @@
 	import type { ExerciseCategory, Difficulty } from '$lib/types';
 	import { CATEGORY_ORDER, categoryLabel, categoryBadgeClass } from '$lib/categories';
 	import type { PageData } from './$types';
+	import { m } from '$lib/paraglide/messages';
+	import { difficultyLabel } from '$lib/difficulty';
 
 	interface Props {
 		data: PageData;
@@ -39,10 +41,6 @@
 		}
 	}
 
-	function formatDifficultyLabel(difficulty: string): string {
-		return difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
-	}
-
 	function buildFilterUrl(category: string, difficulty: string): string {
 		const params = new URLSearchParams();
 		if (category !== 'all') params.set('category', category);
@@ -53,14 +51,14 @@
 </script>
 
 <svelte:head>
-	<title>Exercises — Voice Training</title>
+	<title>{m.common_page_title({ page: m.exercises_title() })}</title>
 </svelte:head>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 	<!-- Header -->
 	<div class="mb-8">
-		<h1 class="text-3xl font-bold text-surface-100">Exercise Library</h1>
-		<p class="text-surface-400 mt-2">Browse and practice voice training exercises</p>
+		<h1 class="text-3xl font-bold text-surface-100">{m.exercises_heading()}</h1>
+		<p class="text-surface-400 mt-2">{m.exercises_subtitle()}</p>
 	</div>
 
 	<!-- Filter Bar -->
@@ -76,14 +74,14 @@
 						? 'bg-primary-500 text-white shadow-lg shadow-primary-500/25'
 						: 'bg-surface-900 text-surface-400 hover:text-surface-200 hover:bg-surface-800 border border-surface-800'}"
 				>
-					{category === 'all' ? 'All' : categoryLabel(category)}
+					{category === 'all' ? m.exercises_filter_all() : categoryLabel(category)}
 				</a>
 			{/each}
 		</div>
 
 		<!-- Difficulty Filter -->
 		<div class="flex flex-wrap gap-2 items-center">
-			<span class="text-sm text-surface-500 mr-2">Difficulty:</span>
+			<span class="text-sm text-surface-500 mr-2">{m.exercises_filter_difficulty()}</span>
 			{#each difficulties as difficulty}
 				{@const isActive =
 					(difficulty === 'all' && !data.activeDifficulty) || data.activeDifficulty === difficulty}
@@ -93,7 +91,7 @@
 						? 'bg-primary-500 text-white shadow-lg shadow-primary-500/25'
 						: 'bg-surface-900 text-surface-400 hover:text-surface-200 hover:bg-surface-800 border border-surface-800'}"
 				>
-					{formatDifficultyLabel(difficulty)}
+					{difficulty === 'all' ? m.exercises_filter_all() : difficultyLabel(difficulty)}
 				</a>
 			{/each}
 		</div>
@@ -120,7 +118,7 @@
 								exercise.difficulty
 							)}"
 						>
-							{formatDifficultyLabel(exercise.difficulty)}
+							{difficultyLabel(exercise.difficulty)}
 						</span>
 					</div>
 
@@ -166,7 +164,7 @@
 							aria-expanded={expandedExercises.has(exercise._id)}
 							onclick={() => toggleInstructions(exercise._id)}
 						>
-							<span>Instructions</span>
+							<span>{m.exercises_instructions()}</span>
 							<svg
 								class="w-4 h-4 transition-transform duration-200 {expandedExercises.has(
 									exercise._id
@@ -205,7 +203,7 @@
 								d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
 							/>
 						</svg>
-						Start Practice
+						{m.exercises_start()}
 					</a>
 				</div>
 			{/each}
@@ -223,16 +221,15 @@
 					/>
 				</svg>
 			</div>
-			<h3 class="text-lg font-medium text-surface-300 mb-2">No exercises found</h3>
+			<h3 class="text-lg font-medium text-surface-300 mb-2">{m.exercises_empty_title()}</h3>
 			<p class="text-surface-500 max-w-sm">
-				No exercises match your current filters. Try adjusting the category or difficulty filters
-				above.
+				{m.exercises_empty_hint()}
 			</p>
 			<a
 				href="/exercises"
 				class="mt-4 px-4 py-2 bg-surface-800 hover:bg-surface-700 text-surface-300 rounded-lg transition-colors"
 			>
-				Clear filters
+				{m.exercises_clear_filters()}
 			</a>
 		</div>
 	{/if}

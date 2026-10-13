@@ -1,12 +1,13 @@
 import type { PageServerLoad } from './$types';
 import { getExerciseById, getSettings } from '$lib/server/db';
 import { error } from '@sveltejs/kit';
+import { m } from '$lib/paraglide/messages';
 
 export const load: PageServerLoad = async ({ params }) => {
 	const [exercise, settings] = await Promise.all([
 		getExerciseById(params.exerciseId),
 		getSettings()
 	]);
-	if (!exercise) error(404, { message: 'Exercise not found' });
+	if (!exercise) error(404, { message: m.recording_exercise_not_found() });
 	return { exercise, settings };
 };
